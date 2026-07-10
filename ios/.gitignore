@@ -1,0 +1,8 @@
+DerivedData/
+xcuserdata/
+*.xcuserstate
+.build/
+
+# xcodegen-generated project file: project.yml is the source of truth,
+# and `xcodegen generate` regenerates this deterministically.
+SmallTalkCoach.xcodeproj/
