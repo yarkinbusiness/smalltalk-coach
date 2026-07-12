@@ -16,6 +16,8 @@ from app.scenarios import SCENARIOS, SCENARIOS_BY_ID
 from app.schemas import (
     CoachReport,
     EndPracticeResponse,
+    OnboardingRequest,
+    OnboardingResponse,
     ProgressSummaryResponse,
     RecommendationResponse,
     ReportStatusResponse,
@@ -128,6 +130,64 @@ def list_scenarios():
 def bootstrap_user(user_id: str, client: Anthropic = Depends(get_anthropic_client)):
     memory_store_id = memory.ensure_user_memory_store(client, user_id)
     return {"user_id": user_id, "memory_store_id": memory_store_id}
+
+
+@app.post("/users/{user_id}/onboarding", response_model=OnboardingResponse)
+def onboard_user(
+    user_id: str,
+    req: OnboardingRequest | None = None,
+    client: Anthropic = Depends(get_anthropic_client),
+):
+    """T14: called once, at the end of the iOS app's first-run
+    `OnboardingView` (see ios/SmallTalkCoach/Views/OnboardingView.swift),
+    right before the main `TabView` ever appears -- whether the user stated
+    a struggle on the third screen or tapped "Skip".
+
+    `req` is optional (defaults to `None`, not an empty-but-required body)
+    so a bare `POST .../onboarding` with no JSON body at all -- the "Skip"
+    case -- is valid rather than a 422 for a missing request body.
+
+    Two things happen here, both safe to call more than once (matching
+    every other route in this file that touches a user's memory store):
+
+    1. `ensure_user_memory_store(...)` -- exactly the same idempotent call
+       `bootstrap_user` above and `POST /practice/sessions` (lazily, on a
+       user's first session) already make. Kept here too rather than
+       relying on the client to also call `.../bootstrap` first, so
+       onboarding is a single, self-contained network call from the iOS
+       flow: one request, and the user's memory store is guaranteed to
+       exist by the time it returns, regardless of which pick (if any) was
+       made.
+    2. If `req.struggle` is a stated pick (one of `memory.STRUGGLE_OPTIONS`,
+       not the "Skip" case), record it into that same memory store via
+       `memory.record_struggle_pick` -- the exact same
+       `client.beta.memory_stores.memories.create(...)` mechanism
+       `memory.record_session_summary` already uses to write a session's
+       report, just a different `path`. An unrecognized `struggle` value is
+       rejected with a 422 (the closed-set-of-known-values convention this
+       app already uses for `scenario_id` -- see `start_practice` above --
+       rather than silently normalizing or storing an arbitrary string.
+
+    Skipping (`req` is `None`, or `req.struggle` is `None`) still runs step
+    1 -- the memory store exists either way -- but never calls
+    `record_struggle_pick`, so no bogus/empty struggle-pick memory is ever
+    written for a user who tapped "Skip".
+    """
+    memory_store_id = memory.ensure_user_memory_store(client, user_id)
+
+    struggle = req.struggle if req is not None else None
+    struggle_recorded = False
+    if struggle is not None:
+        if struggle not in memory.STRUGGLE_OPTIONS:
+            raise HTTPException(422, f"Unknown struggle option {struggle!r}")
+        memory.record_struggle_pick(client, memory_store_id, user_id, struggle)
+        struggle_recorded = True
+
+    return OnboardingResponse(
+        user_id=user_id,
+        memory_store_id=memory_store_id,
+        struggle_recorded=struggle_recorded,
+    )
 
 
 @app.post("/practice/sessions", response_model=StartPracticeResponse)

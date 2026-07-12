@@ -21,6 +21,33 @@ class SendMessageRequest(BaseModel):
     text: str
 
 
+class OnboardingRequest(BaseModel):
+    """Body of POST /users/{user_id}/onboarding -- T14. `struggle` is an
+    optional pick from the iOS OnboardingView's third screen ("what do you
+    struggle with most?"): one of `memory.STRUGGLE_OPTIONS`'s keys, or
+    `None` if the user tapped "Skip". A closed set (like `scenario_id` is a
+    closed set of known scenarios in scenarios.py) rather than free text --
+    an unrecognized value is rejected with a 422 by main.py's
+    `onboard_user`, never silently normalized or stored as-is. Defaults to
+    an empty body (`struggle=None`) so a bare `POST .../onboarding` with no
+    JSON body at all -- the "Skip" case -- is valid, not a 422 for a
+    missing request body."""
+
+    struggle: str | None = None
+
+
+class OnboardingResponse(BaseModel):
+    """Body of POST /users/{user_id}/onboarding. `struggle_recorded` is
+    True only when a stated (non-None) `struggle` was actually written to
+    the user's memory store via `memory.record_struggle_pick` -- False for
+    the "Skip" case, so a caller can tell the two apart from the response
+    alone rather than having to remember what it just sent."""
+
+    user_id: str
+    memory_store_id: str
+    struggle_recorded: bool
+
+
 class CoachReport(BaseModel):
     # Constrained to `dict[str, int]` (not a bare `dict`) so this model is a
     # real second line of defense behind coach.normalize_report — a bare

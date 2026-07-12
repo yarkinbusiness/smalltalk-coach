@@ -49,6 +49,24 @@ def test_record_session_summary_handles_missing_report_fields():
     )
 
 
+def test_record_struggle_pick_sends_expected_payload():
+    """T14: same call shape/assertion style as
+    test_record_session_summary_sends_expected_payload above -- pins the
+    exact memory_store_id/path/content record_struggle_pick sends for a
+    stated onboarding struggle pick."""
+    fake = FakeAnthropic()
+
+    memory.record_struggle_pick(fake, "store-123", "user-9", "awkward_exits")
+
+    assert len(fake.memories_create_calls) == 1
+    call = fake.memories_create_calls[0]
+    assert call["memory_store_id"] == "store-123"
+    assert call["path"] == "/onboarding/struggle_pick.md"
+    assert "user-9" in call["content"]
+    assert "awkward_exits" in call["content"]
+    assert memory.STRUGGLE_OPTIONS["awkward_exits"] in call["content"]
+
+
 def test_ensure_user_memory_store_creates_once_then_reuses(tmp_path, monkeypatch):
     monkeypatch.setattr(db, "DB_PATH", tmp_path / "memory-test.sqlite3")
     db.init_db()

@@ -25,6 +25,29 @@ struct ScenarioRecommendation: Codable, Equatable {
     }
 }
 
+/// Body of POST /users/{user_id}/onboarding -- mirrors the backend's
+/// `OnboardingResponse` (see backend's app/schemas.py) 1:1. Kept directly
+/// here (not in the Core package) for the same reason
+/// `ScenarioRecommendation`/`StartPracticeResponse` are: a thin wire-response
+/// shape specific to one APIClient call, not a domain model reused across
+/// views/tests.
+struct OnboardingResponse: Codable {
+    let userId: String
+    let memoryStoreId: String
+    /// True only when a stated (non-nil) struggle pick was actually
+    /// recorded into the user's memory store server-side -- false for the
+    /// "Skip" case. Not currently read by any view (onboarding proceeds to
+    /// the main app either way -- see OnboardingView), but decoded here so
+    /// this struct is a complete, honest mirror of the wire shape.
+    let struggleRecorded: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case userId = "user_id"
+        case memoryStoreId = "memory_store_id"
+        case struggleRecorded = "struggle_recorded"
+    }
+}
+
 struct StartPracticeResponse: Codable {
     let sessionId: String
     let scenario: Scenario
@@ -342,6 +365,31 @@ final class APIClient {
         let (data, response) = try await session.data(from: url)
         try Self.checkOK(response)
         return try decoder.decode(ScenarioRecommendation.self, from: data)
+    }
+
+    /// POST /users/{user_id}/onboarding -- T14: called once, from
+    /// `OnboardingView`'s third screen, right before it hands control back
+    /// to `RootView` (see `OnboardingState.hasCompletedOnboarding`) --
+    /// whether the user stated a struggle or tapped "Skip". `struggle` is
+    /// one of `StrugglePick`'s raw values (see OnboardingView.swift) or
+    /// `nil` for "Skip" -- mirrors the backend's closed set
+    /// (`memory.STRUGGLE_OPTIONS`) wire-value for wire-value. Always sends
+    /// a `struggle` key (`null` for "Skip") rather than omitting the body
+    /// entirely -- the backend treats an explicit `null` identically to no
+    /// body at all (see backend's test_onboarding_explicit_null_struggle_is_same_as_skip),
+    /// so there's no behavioral difference, just one fewer branch here.
+    @discardableResult
+    func onboardUser(userId: String, struggle: String?) async throws -> OnboardingResponse {
+        var request = URLRequest(
+            url: APIConfig.baseURL.appendingPathComponent("users/\(userId)/onboarding")
+        )
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try encoder.encode(["struggle": struggle])
+
+        let (data, response) = try await session.data(for: request)
+        try Self.checkOK(response)
+        return try decoder.decode(OnboardingResponse.self, from: data)
     }
 
     private static func checkOK(_ response: URLResponse) throws {

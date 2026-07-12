@@ -71,3 +71,27 @@ blocked, log that and stop — don't invent busywork.
   fallback branch (currently marked "should not happen in practice" with no
   direct test), or move to backlog item 2 (dead-code/TODO review of
   `agents_setup.py`/`coach.py`/`partner.py`).
+
+- **2026-07-12 (separate session, same worker/brain loop)**: T12 (session
+  history detail/transcript replay), T13 (staged grading UX — fixed
+  `APIClient.endPractice`, which had been decoding a raw `CoachReport` from
+  `/end` even though `/end` returns `202 {"status":"grading"}`; added
+  `GradingPhase` state machine + polling with a 90s timeout, staged waiting
+  UI, "Practice again"/"Back to scenarios" actions), and T14 (onboarding: 3
+  screens + a `POST /users/{id}/onboarding` endpoint recording a struggle
+  pick into the user's memory store) all implemented and independently
+  brain-reviewed. Two brain-review follow-ups also fixed: a `GET
+  .../report` ownership gap (no owner check at all — now matches the
+  session-detail endpoint's guard), and two T13 UX bugs (a post-report dead
+  end when the report sheet is dismissed via Done/swipe instead of the
+  action buttons; `ChatView` constructing its view model inline via
+  `@ObservedObject` instead of `@StateObject`, risking silent state loss on
+  parent re-render). Backend suite: 145 passed. Both human-gated items
+  (CMA key, Xcode) remain blocked, re-checked and unchanged. Backlog items
+  1-4 above are still fair game and don't overlap with this work. Next
+  actionable item for either loop: T18 launch hardening (app icon, a
+  shared-secret auth token between the app and backend — right now the
+  backend is an open relay to whatever Anthropic key it holds — ATS/LAN-IP
+  device config, privacy disclosure copy) is the only remaining unblocked
+  item from the original T1-T18 plan; sequence it after, not before, if
+  more product-feature backlog turns up first.
