@@ -45,7 +45,18 @@ struct ScenarioPickerView: View {
         }
         .navigationTitle("Practice small talk")
         .navigationDestination(for: Scenario.self) { scenario in
-            ChatView(viewModel: PracticeSessionViewModel(scenario: scenario))
+            // ChatView owns its view model as a `@StateObject`, constructed
+            // once from `scenario` via its own `init(scenario:)` -- not
+            // `ChatView(viewModel: PracticeSessionViewModel(scenario:))`.
+            // That older, inline-@ObservedObject shape let SwiftUI silently
+            // reconstruct a fresh view model (wiping the in-progress
+            // transcript/grading state) whenever this view's body
+            // re-evaluated while ChatView was pushed on the nav stack --
+            // e.g. `viewModel` above (an `@StateObject`) changing for any
+            // reason re-runs this closure. Passing just the value-type
+            // `scenario` here keeps ChatView's view model identity stable
+            // across those re-renders.
+            ChatView(scenario: scenario)
         }
         .task {
             await viewModel.load()

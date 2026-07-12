@@ -3,15 +3,32 @@ import Foundation
 import SwiftUI
 
 struct ChatView: View {
-    @ObservedObject var viewModel: PracticeSessionViewModel
+    /// Owned as a `@StateObject`, not `@ObservedObject`, so this view model's
+    /// identity survives ScenarioPickerView's body re-evaluating while this
+    /// view is pushed on the nav stack (e.g. its own `@StateObject` scenario
+    /// list changing triggers a re-render of the `navigationDestination`
+    /// closure that produced this `ChatView`). An inline
+    /// `ChatView(viewModel: PracticeSessionViewModel(scenario:))` at that
+    /// call site would let SwiftUI reconstruct a fresh view model on such a
+    /// re-render and silently wipe the in-progress transcript/grading state
+    /// -- a known footgun with `@ObservedObject` + inline construction in a
+    /// `navigationDestination` closure. Constructing it here via this custom
+    /// initializer instead means SwiftUI only ever creates it once per
+    /// `ChatView` identity.
+    @StateObject private var viewModel: PracticeSessionViewModel
     @State private var showReport = false
     /// Pops this view off the navigation stack -- used by "Back to
     /// scenarios" (see `CoachReportView`'s action section and
-    /// `GradingStatusView` below). Distinct from `CoachReportView`'s own
-    /// `\.dismiss`, which only closes that view's sheet; this one resolves
-    /// to whatever presented *this* view (a plain push from
-    /// ScenarioPickerView's `navigationDestination(for: Scenario.self)`).
+    /// `ReadyActionsView`/`GradingStatusView` below). Distinct from
+    /// `CoachReportView`'s own `\.dismiss`, which only closes that view's
+    /// sheet; this one resolves to whatever presented *this* view (a plain
+    /// push from ScenarioPickerView's `navigationDestination(for:
+    /// Scenario.self)`).
     @Environment(\.dismiss) private var dismiss
+
+    init(scenario: Scenario) {
+        _viewModel = StateObject(wrappedValue: PracticeSessionViewModel(scenario: scenario))
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -67,6 +84,22 @@ struct ChatView: View {
                     )
                 }
                 .padding()
+            } else if viewModel.gradingPhase == .ready {
+                // The report sheet only auto-presents once, on the
+                // `.notEnded` -> `.ready` transition (see the `onChange`
+                // below). If the user dismisses that sheet any way -- the
+                // "Done" button, a system swipe-to-dismiss, or just
+                // backgrounding and returning later -- `gradingPhase` is
+                // still `.ready` and the composer stays hidden (it's only
+                // shown for `.notEnded`), so without this branch there would
+                // be nothing left on screen: no composer, no toolbar button,
+                // a frozen transcript and a true dead end. This gives the
+                // user a real way forward every time that happens.
+                ReadyActionsView(
+                    onViewReport: { showReport = true },
+                    onPracticeAgain: { Task { await viewModel.startNewSession() } },
+                    onBackToScenarios: { dismiss() }
+                )
             } else {
                 GradingStatusView(phase: viewModel.gradingPhase) {
                     Task { await viewModel.endPractice() }
@@ -110,12 +143,47 @@ struct ChatView: View {
     }
 }
 
-/// Shown in place of the message composer for the whole stretch between
-/// tapping "End practice" and either a ready report or a retryable failure
-/// (see `PracticeSessionViewModel.GradingPhase`). No real progress signal
-/// exists server-side beyond the coarse grading/ready/failed status this
-/// mirrors, so this is deliberately simple: an honest spinner plus
-/// time-based staged copy, not a fake progress bar.
+/// Shown in place of the message composer once grading has finished
+/// (`gradingPhase == .ready`) and the report sheet isn't currently up --
+/// either because the user dismissed it (Done button or swipe-to-dismiss)
+/// or because they backgrounded the app and returned later. Without this,
+/// there is nothing else on screen at that point (the composer is only
+/// shown for `.notEnded`, and `GradingStatusView` renders `.ready` as empty
+/// since it expects the sheet to be covering the screen) -- a true dead
+/// end. All three actions are also reachable from inside the sheet itself
+/// (see `CoachReportView`'s action section); this just makes sure they're
+/// still reachable once that sheet is gone.
+private struct ReadyActionsView: View {
+    let onViewReport: () -> Void
+    let onPracticeAgain: () -> Void
+    let onBackToScenarios: () -> Void
+
+    var body: some View {
+        VStack(spacing: 12) {
+            Text("Your coaching report is ready.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+            Button("View report", action: onViewReport)
+                .buttonStyle(.borderedProminent)
+            Button("Practice again", action: onPracticeAgain)
+            Button("Back to scenarios", action: onBackToScenarios)
+        }
+        .padding()
+        .frame(maxWidth: .infinity)
+    }
+}
+
+/// Shown in place of the message composer for the stretch between tapping
+/// "End practice" and either a ready report or a retryable failure (see
+/// `PracticeSessionViewModel.GradingPhase`). No real progress signal exists
+/// server-side beyond the coarse grading/ready/failed status this mirrors,
+/// so this is deliberately simple: an honest spinner plus time-based staged
+/// copy, not a fake progress bar.
+///
+/// `.ready` is included in `phase`'s type only for `Equatable` symmetry with
+/// the rest of `GradingPhase` -- ChatView's body routes `.ready` to
+/// `ReadyActionsView` before this view is ever reached, so the case below is
+/// defensive/unreachable dead code, not a live UI state.
 private struct GradingStatusView: View {
     let phase: GradingPhase
     let onRetry: () -> Void
