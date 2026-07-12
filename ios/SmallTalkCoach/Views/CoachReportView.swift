@@ -1,7 +1,17 @@
+import Core
 import SwiftUI
 
 struct CoachReportView: View {
     let report: CoachReport
+    /// Non-nil only when this report is being shown right after a live
+    /// practice session just ended (ChatView) -- both default to `nil`, so
+    /// SessionDetailView's historical-replay usage (just browsing a past
+    /// report) gets the exact same view it always had: no action section,
+    /// just "Done". Each closure both dismisses this sheet and tells the
+    /// caller which action was picked -- this view has no opinion on what
+    /// "practice again"/"back to scenarios" actually do.
+    var onPracticeAgain: (() -> Void)? = nil
+    var onBackToScenarios: (() -> Void)? = nil
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -41,6 +51,23 @@ struct CoachReportView: View {
                 if !report.drillSuggestion.isEmpty {
                     Section("Try this next time") {
                         Text(report.drillSuggestion)
+                    }
+                }
+            }
+
+            if onPracticeAgain != nil || onBackToScenarios != nil {
+                Section {
+                    if let onPracticeAgain {
+                        Button("Practice again") {
+                            dismiss()
+                            onPracticeAgain()
+                        }
+                    }
+                    if let onBackToScenarios {
+                        Button("Back to scenarios") {
+                            dismiss()
+                            onBackToScenarios()
+                        }
                     }
                 }
             }

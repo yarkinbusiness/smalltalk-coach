@@ -119,10 +119,14 @@ def _ensure_agent(
     system: str,
     multiagent: dict | None = None,
 ) -> dict:
-    """Create the agent if unknown, or update (new version) if its prompt
-    changed since last run. Returns the state entry {id, version, hash}."""
+    """Create the agent if unknown, or update (new version) if its prompt,
+    multiagent roster, or model changed since last run. Returns the state
+    entry {id, version, hash, model} — `model` in the returned/stored entry
+    always reflects the `model` argument this call was invoked with, on
+    every path (create, update, unchanged), so config drift can never leave
+    a stale value cached."""
     entry = state.get(key)
-    prompt_hash = _hash(system + (str(multiagent) if multiagent else ""))
+    prompt_hash = _hash(model + system + (str(multiagent) if multiagent else ""))
 
     if entry is None:
         kwargs = {"name": name, "model": model, "system": system}
@@ -132,13 +136,14 @@ def _ensure_agent(
         entry = {"id": agent.id, "version": agent.version, "hash": prompt_hash, "model": model}
         print(f"created {key}: {agent.id} v{agent.version}")
     elif entry.get("hash") != prompt_hash:
-        kwargs = {"system": system}
+        kwargs = {"system": system, "model": model}
         if multiagent:
             kwargs["multiagent"] = multiagent
         agent = client.beta.agents.update(entry["id"], **kwargs)
         entry = {"id": agent.id, "version": agent.version, "hash": prompt_hash, "model": model}
         print(f"updated {key}: {agent.id} -> v{agent.version}")
     else:
+        entry = {**entry, "model": model}
         print(f"unchanged {key}: {entry['id']} v{entry['version']}")
 
     state[key] = entry

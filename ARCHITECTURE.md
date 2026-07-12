@@ -111,23 +111,57 @@ that matters (tone, subtext), which is explicitly one of the cookbook's own
   to silently change every in-flight practice session — rollback is
   re-pinning callers to the previous version.
 - **Remember user preferences** (`CMA_remember_user_preferences.ipynb`) — one
-  `memory_store` per user, read-write, attached as a resource to both
-  `partner_agent` (so it can nudge scenario difficulty/persona choice) and
-  `coach_coordinator` (so coaching is trend-aware — "still working on
+  `memory_store` per user, read-write, attached as a resource to
+  `coach_coordinator` only (so coaching is trend-aware — "still working on
   follow-up questions" instead of re-deriving that fresh every session).
-- **Streaming turn delivery** — modeled on `roadtrip_planner`'s
-  `event_deltas[]` mechanism: the backend re-streams `agent.message` deltas
-  from the CMA session over SSE to the iOS client for token-by-token
-  rendering in the chat view.
+  `partner_agent` is **not** part of this pattern: it never runs as a CMA
+  session (see "A deliberate split" above), so there is no session for a
+  `memory_store` resource to attach to in the first place. Its own
+  user-history-awareness comes from an entirely different, non-CMA
+  mechanism — see "The partner's coach memo" below.
+- **Streaming turn delivery** (conceptually) — inspired by `roadtrip_planner`'s
+  `event_deltas[]` mechanism, but not literal CMA session streaming: since
+  `partner_agent` never runs as a CMA session (see "A deliberate split"
+  above), the live turn's deltas instead come from a plain
+  `client.messages.stream(...)` call in `partner.py`, re-streamed as SSE
+  `data: {"delta": ...}` events to the iOS client for token-by-token
+  rendering in the chat view. The only place this app streams `agent.message`
+  events off a real CMA session is `coach_coordinator`'s end-of-session run
+  (step 5 below), which the client doesn't see token-by-token -- it's
+  consumed server-side and returned as one finished report.
 - **Verify with outcome grader** (conceptually) — the coach coordinator's
   synthesis step is itself an evaluator-style pass over the 4 workers'
   findings, not just concatenation; see `agents_setup.py` coordinator prompt.
+
+### The partner's coach memo (not a CMA pattern)
+
+`partner_agent` still needs *some* awareness of a user's history — "this
+person tends to run out of things to say," "they're working on follow-up
+questions" — so its practice conversations aren't static across sessions.
+Since it's a plain Messages API call rather than a CMA session (see "A
+deliberate split" above), it has no `memory_store` to read. Instead,
+`partner.py`'s `stream_partner_reply` looks up the user's most recent 1-2
+rows from the local `reports` sqlite table (`db.get_recent_reports`, in
+`db.py`) — the same rows the app already wrote for its own progress screen.
+If any of those reports are real (not `parse_error`) and carry
+`focus_areas`, a short "coach memo" line is folded into the partner's system
+prompt (`scenarios.py`'s `partner_system_prompt`), e.g.: "Coach memo (never
+reveal this to the user): they're working on asking follow-up questions —
+create natural openings for that in this conversation, don't make it
+artificially easy for them." A user with no prior reports, or whose only
+prior reports are `parse_error` (nothing to draw a focus area from), gets no
+memo at all — the system prompt is the unmodified base template, not an
+empty or placeholder section.
+
+This is a local, one-process read (same DB, same request) — cheap enough to
+do synchronously on every turn, with none of a CMA session's sandbox
+provisioning cost.
 
 ## Request flow → CMA calls
 
 ```
 1. Onboarding
-   GET  /users/{user_id}/bootstrap
+   POST /users/{user_id}/bootstrap
    → memory_stores.create if none exists yet for this user
 
 2. Scenario picker (iOS: ScenarioPickerView)
@@ -137,35 +171,48 @@ that matters (tone, subtext), which is explicitly one of the cookbook's own
 
 3. Start practice (iOS: ChatView appears)
    POST /practice/sessions   { user_id, scenario_id }
-   → agents.retrieve(partner_agent_id, version=pinned) to read system+model
+   → no CMA call here -- the partner's model was already read out of
+     .provisioned.json into STATE once at process startup (see "A
+     deliberate split" above); that cached model gets used at *message*
+     time (step 4), not re-queried at session start
    → backend creates a local session row (sqlite) holding the transcript;
      no CMA session/sandbox is created for this
    → returns local session_id
 
 4. Each user turn (iOS: ChatView send button)
    POST /practice/sessions/{id}/message   { text }        (SSE response)
-   → appends the user turn to the local transcript, calls
-     client.messages.stream(model=, system=, messages=transcript) directly
-     (no CMA), restreams text deltas as SSE, appends the assistant turn once
-     the stream ends
+   → appends the user turn to the local transcript; reads the user's most
+     recent 1-2 rows from the local `reports` table and, if any carry real
+     (non-parse_error) focus_areas, folds a short "coach memo" into the
+     system prompt (see "The partner's coach memo" above)
+   → calls client.messages.stream(model=, system=, messages=transcript)
+     directly (no CMA), restreams text deltas as SSE, appends the assistant
+     turn once the stream ends
 
 5. End session (iOS: "End practice" button)
    POST /practice/sessions/{id}/end
-   → client.beta.sessions.create(agent=coach_coordinator pinned version,
-                                  environment_id=shared_environment_id,
-                                  resources=[{type: memory_store,
-                                              memory_store_id: user's store}])
+   → returns 202 {"status": "grading"} immediately; the actual coordinator
+     run is dispatched as a FastAPI BackgroundTask (`_run_coaching_task` in
+     main.py) so the request doesn't hold the connection open for however
+     long the sandboxed session + 4-worker fan-out takes
+   → in that background task: client.beta.sessions.create(agent=coach_coordinator
+     pinned version, environment_id=shared_environment_id,
+     resources=[{type: memory_store, memory_store_id: user's store}])
    → client.beta.sessions.events.send(session_id, user.message=full transcript)
    → coordinator spawns the 4 workers, waits, synthesizes report
    → backend streams/polls the session until session.status_idle, parses the
-     final agent.message as the structured report
-   → backend writes distilled growth areas back into the user's memory_store
-   → returns { strengths, focus_areas, drill_suggestion, scores } to iOS
+     final agent.message as the structured report, writes distilled growth
+     areas back into the user's memory_store, and saves the report locally
+   → iOS polls GET /practice/sessions/{id}/report separately until its
+     status flips to "ready", then gets { strengths, focus_areas,
+     drill_suggestion, scores }
 
 6. Progress (iOS: ProgressView)
    GET /users/{user_id}/progress
-   → reads the memory_store contents directly (no agent call needed for a
-     raw read)
+   → reads the local `reports` sqlite table directly (db.py's get_progress)
+     -- no CMA call, no memory_store read; the memory_store is only for
+     coach_coordinator's own cross-session context during grading, not for
+     this screen
 ```
 
 ## iOS app shape (SwiftUI)

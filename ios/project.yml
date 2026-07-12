@@ -1,6 +1,9 @@
 name: SmallTalkCoach
 options:
   bundleIdPrefix: com.yarkinyavuz
+packages:
+  Core:
+    path: Core
 targets:
   SmallTalkCoach:
     type: application
@@ -8,6 +11,8 @@ targets:
     deploymentTarget: "17.0"
     sources:
       - SmallTalkCoach
+    dependencies:
+      - package: Core
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.yarkinyavuz.smalltalkcoach
