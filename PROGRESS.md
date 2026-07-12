@@ -48,3 +48,26 @@ blocked, log that and stop — don't invent busywork.
 ## Cycle log
 
 <!-- Each automated cycle appends one entry here: date, what changed, what's next. -->
+
+- **2026-07-12**: Backlog item 1 (recommend.py/progress.py edge-case test
+  coverage). Found a real, previously-untested gap: `_scenario_difficulty()`
+  in `recommend.py` has a documented fallback to `"medium"` for a
+  scenario_id that no longer exists in the current `SCENARIOS` catalog
+  (stale historical data after a catalog edit), but nothing exercised that
+  path. Added two tests in `test_recommend.py`:
+  `test_stale_scenario_id_falls_back_to_medium_for_step_up` and
+  `test_stale_scenario_id_falls_back_to_medium_for_default_rotation`,
+  covering both the step-up and default-rotation branches with a stale id.
+  Verified gates before starting: Xcode is still Command Line Tools only
+  (`xcodebuild -version` fails) -- iOS gate stays blocked. The
+  `ANTHROPIC_API_KEY`/CMA-beta gate could not be actively re-verified this
+  cycle (the sandbox's permission layer denies any Bash read of `~/.env`,
+  even a value-free `grep -q` existence check) -- treated as unchanged/
+  still blocked per the "if neither has changed" fallback rule, so no
+  CMA-gated items were attempted. Test status: full backend suite green,
+  139 passed (up from 137 before this cycle; 2 new). Next actionable item:
+  keep working backlog item 1 -- e.g. add a test for
+  `_pick_scenario_for_dimension`'s "no candidates stress this dimension"
+  fallback branch (currently marked "should not happen in practice" with no
+  direct test), or move to backlog item 2 (dead-code/TODO review of
+  `agents_setup.py`/`coach.py`/`partner.py`).

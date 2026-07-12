@@ -364,6 +364,56 @@ def test_parse_error_reports_are_excluded_from_weak_dimension_computation():
     assert "reciprocity" in result["reason"].lower()
 
 
+# --- stale scenario_id (removed from the current catalog) -----------------
+
+
+def test_stale_scenario_id_falls_back_to_medium_for_step_up():
+    """A report's scenario_id may reference a scenario that has since been
+    removed/renamed from SCENARIOS (catalog edits shouldn't corrupt old
+    history). `_scenario_difficulty` falls back to "medium" for such an id
+    rather than crashing -- this exercises that fallback all the way through
+    the step-up branch: two consistently-high reports both attributed to a
+    stale id should be treated as "medium" tier (not KeyError, not silently
+    dropped), so the recommendation should still step up to "hard"."""
+    progress = [
+        _entry(
+            "legacy-mixer-v1",  # no longer in SCENARIOS
+            _report({"warmth": 5, "curiosity": 4, "reciprocity": 5, "flow": 5}),
+            created_at="2026-01-01T00:00:00+00:00",
+        ),
+        _entry(
+            "legacy-mixer-v1",
+            _report({"warmth": 4, "curiosity": 5, "reciprocity": 5, "flow": 5}),
+            created_at="2026-01-02T00:00:00+00:00",
+        ),
+    ]
+    result = recommend_next_scenario(progress)
+
+    recommended = SCENARIOS_BY_ID[result["scenario_id"]]
+    assert recommended["difficulty"] == "hard"
+    assert "step up" in result["reason"].lower()
+
+
+def test_stale_scenario_id_falls_back_to_medium_for_default_rotation():
+    """Same stale-id fallback, but with too little history to trigger
+    step-up (MIN_ATTEMPTS_FOR_STEP_UP == 2, and only one report here) --
+    falls through to `_pick_default`, which should treat the stale id's
+    difficulty as "medium" and prefer an unattempted medium-tier scenario,
+    not crash or silently default to easy."""
+    progress = [
+        _entry(
+            "legacy-mixer-v1",  # no longer in SCENARIOS
+            _report({"warmth": 3, "curiosity": 3, "reciprocity": 3, "flow": 3}),
+            created_at="2026-01-01T00:00:00+00:00",
+        ),
+    ]
+    result = recommend_next_scenario(progress)
+
+    recommended = SCENARIOS_BY_ID[result["scenario_id"]]
+    assert recommended["difficulty"] == "medium"
+    assert result["scenario_id"] == "networking-mixer"  # first unattempted medium scenario
+
+
 def test_parse_error_reports_do_not_count_as_attempts():
     """A scenario the user "tried" but which parse_error'd should still be
     eligible to be *recommended back* -- it doesn't count as a real,
