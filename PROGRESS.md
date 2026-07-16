@@ -1,5 +1,17 @@
 # Progress & backlog
 
+**2026-07-12: read `VISION.md` before picking up any new work.** The
+product vision was substantially expanded in a planning discussion (a
+daily-habit/lesson system + real-conversation coaching via screenshot
+import, not just the roleplay-practice app described below) and
+implementation is deliberately paused for planning as of this commit. The
+backlog/blocked items below still describe Phase 0 (the roleplay-practice
+foundation, already built) accurately — keep polishing those if you want,
+they're not wasted — but do not start any new *feature* work without
+checking `VISION.md`'s Phase 2 section first, since several items there
+change what "done" means for pieces already built (e.g. the grading
+engine's output needs to eventually double as a lesson router).
+
 State file for the automated brain-worker-loop (Fable-5 coordinator +
 Sonnet-5 workers, "Plan big, execute small" cost-tiering pattern — see
 ARCHITECTURE.md and `backend/app/agents_setup.py`). Every scheduled cycle:
