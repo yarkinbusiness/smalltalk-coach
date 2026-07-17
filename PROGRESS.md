@@ -12,8 +12,24 @@ checking `VISION.md`'s Phase 2 section first, since several items there
 change what "done" means for pieces already built (e.g. the grading
 engine's output needs to eventually double as a lesson router).
 
-State file for the automated brain-worker-loop (Fable-5 coordinator +
-Sonnet-5 workers, "Plan big, execute small" cost-tiering pattern — see
+**2026-07-18: build-loop model rules changed — final.** The brain/worker
+harness now lives in `.claude/skills/brain-worker-loop/` (SKILL.md protocol
++ `worker.sh` runner): brain = Claude Fable 5 only (plans, delegates,
+reviews, accepts — never implements), workers = Codex (GPT 5.6) only
+(`gpt-5.6-terra` default, `gpt-5.6-luna` allowed), enforced in `worker.sh`.
+Decision record: `smalltalk-coach-planning/DECISIONS.md` ("2026-07-18 —
+Worker Model Locked to Codex (GPT 5.6)"). The Fable-5+Sonnet-5 loop
+described in the next paragraph and the two skills in
+`~/.claude/scheduled-tasks/` (smalltalk-brain-worker-loop,
+smalltalk-coach-loop-resume) are **superseded — do not start a cycle from
+them.** No scheduled loop is active as of this note (CronList and crontab
+checked 2026-07-18). The loop stays dormant until the planning repo's
+`VALIDATION_PLAN.md` thresholds are met (scope gate in
+`smalltalk-coach-planning/ORCHESTRATION.md`).
+
+State file for the automated brain-worker-loop (previously Fable-5
+coordinator + Sonnet-5 workers, "Plan big, execute small" cost-tiering
+pattern — see
 ARCHITECTURE.md and `backend/app/agents_setup.py`). Every scheduled cycle:
 reads this file, does the next actionable item, runs tests, commits, pushes
 to `master`, then appends a cycle log entry below. If every open item is
