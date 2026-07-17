@@ -30,6 +30,33 @@ project's `DECISIONS.md` ("2026-07-18 — Worker Model Locked to Codex (GPT 5.6)
 4. First action of any new loop: update `PROGRESS.md` (what the loop is doing,
    under which model rules) — not as an afterthought.
 
+## Project-resident memory (single source of truth)
+
+The brain (`.claude`) and Codex workers (`.codex`) have disjoint native
+memory systems — neither can read the other's. All shared loop memory
+therefore lives in this repository (decision: repo `DECISIONS.md`,
+"2026-07-18 — Project-Resident Memory for the Build Loop"):
+
+- `PROGRESS.md` — status, backlog, cycle log. The brain updates it after
+  every accepted work unit and at loop start/stop.
+- `DECISIONS.md` (repo root) — append-only engineering decisions. Product
+  decisions go to `smalltalk-coach-planning/DECISIONS.md` instead; the brain
+  routes each decision to the right file.
+- `WORKER_LOG.md` (repo root) — append-only, one structured entry per worker
+  task, format documented at the top of the file. `worker.sh` injects this
+  requirement into every spec and **exits 4** when a worker finishes without
+  appending — treat exit 4 as an automatic reject, with the missing log
+  entry named in the feedback.
+
+**Cycle start (every cycle, before defining any task):** the brain reads
+`PROGRESS.md`, both `DECISIONS.md` files, and the recent tail of
+`WORKER_LOG.md`. **After each review:** the brain writes its verdict and
+feedback into `PROGRESS.md` (cycle log), appends durable lessons to the
+right `DECISIONS.md`, and mirrors durable lessons to its persistent memory
+(auto-memory files; a claude-mem/cmem observation when that plugin is
+active). Mirrors are best-effort copies — the repository is the source of
+truth, and no loop state may live only in a mirror.
+
 ## Loop protocol (per work unit)
 
 1. **Brain defines the task.** Write a precise spec: exact files/areas, expected
@@ -45,10 +72,14 @@ project's `DECISIONS.md` ("2026-07-18 — Worker Model Locked to Codex (GPT 5.6)
      - < /path/to/spec.md
    ```
 
-   The worker executes and reports back (`report.txt` + the diff it leaves in
-   the working tree).
-3. **Brain reviews.** Read the actual `git diff` and run the acceptance
-   checks yourself (e.g. `cd backend && source .venv/bin/activate && pytest`);
+   The worker executes and reports back (`report.txt`, the diff it leaves in
+   the working tree, and its `WORKER_LOG.md` entry — worker.sh injects the
+   memory protocol into the spec automatically and exits 4 if the entry is
+   missing).
+3. **Brain reviews.** Read the actual `git diff` (including the new
+   `WORKER_LOG.md` entry — it must be a true append matching the documented
+   format) and run the acceptance checks yourself (e.g. `cd backend &&
+   source .venv/bin/activate && pytest`);
    never accept the worker's self-report as evidence. Known repo trap: `swift
    test` on this machine always exits 0 without running tests — verify Swift
    via `swiftc` compile-and-run of a standalone harness, or `swiftc -parse`
@@ -65,7 +96,9 @@ project's `DECISIONS.md` ("2026-07-18 — Worker Model Locked to Codex (GPT 5.6)
 ## Conventions
 
 - One task in flight at a time; the brain reviews before defining the next.
-- Commits happen only after brain acceptance, message describing the increment.
+  (`WORKER_LOG.md`'s append-only model assumes this single-writer setup.)
+- Commits happen only after brain acceptance, message describing the
+  increment; the accepted work's `WORKER_LOG.md` entries commit with it.
 - Never commit red tests; never fabricate verification claims.
 - Secrets stay in `~/.env` (which Bash cannot read here — check keys only via
   tools that work, or ask the user); never inline them or let a worker spec

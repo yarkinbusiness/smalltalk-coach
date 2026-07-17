@@ -27,6 +27,15 @@ checked 2026-07-18). The loop stays dormant until the planning repo's
 `VALIDATION_PLAN.md` thresholds are met (scope gate in
 `smalltalk-coach-planning/ORCHESTRATION.md`).
 
+**2026-07-18 (later): project-resident memory layer added (founder
+decision).** Shared loop memory lives in this repo, not in either model's
+native memory: this file (status), `DECISIONS.md` at the repo root
+(engineering decisions, append-only), and `WORKER_LOG.md` (one structured
+entry per worker task, enforced by `worker.sh` — exit 4 = worker didn't
+log = automatic reject). Brain and workers read these at every cycle
+start. Record: repo `DECISIONS.md` → "2026-07-18 — Project-Resident Memory
+for the Build Loop".
+
 State file for the automated brain-worker-loop (previously Fable-5
 coordinator + Sonnet-5 workers, "Plan big, execute small" cost-tiering
 pattern — see
