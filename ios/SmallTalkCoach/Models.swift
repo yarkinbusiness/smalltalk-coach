@@ -3,10 +3,197 @@ import Foundation
 struct HealthResponse: Codable, Equatable {
     let status: String
     let lessonsLoaded: Int
+    let coachingEnabled: Bool
 
     enum CodingKeys: String, CodingKey {
-        case status
+        case status, coachingEnabled = "coaching_enabled"
         case lessonsLoaded = "lessons_loaded"
+    }
+}
+
+struct CoachingDiagnosisRequest: Codable, Equatable {
+    let userID: String
+    let consentToProcess: Bool
+    let source: CoachingTextSource
+
+    enum CodingKeys: String, CodingKey {
+        case source
+        case userID = "user_id"
+        case consentToProcess = "consent_to_process"
+    }
+}
+
+struct CoachingTextSource: Codable, Equatable {
+    let kind: String
+    let text: String
+
+    init(text: String) {
+        self.kind = "text"
+        self.text = text
+    }
+}
+
+struct CoachingTranscript: Codable, Equatable {
+    let schemaVersion: Int
+    let sourceKind: String
+    let userSpeakerID: String?
+    let turns: [CoachingTurn]
+
+    enum CodingKeys: String, CodingKey {
+        case turns
+        case schemaVersion = "schema_version"
+        case sourceKind = "source_kind"
+        case userSpeakerID = "user_speaker_id"
+    }
+}
+
+struct CoachingTurn: Codable, Equatable, Identifiable {
+    let index: Int
+    let speakerID: String
+    let speaker: String
+    let text: String
+    let source: String
+
+    var id: Int { index }
+
+    enum CodingKeys: String, CodingKey {
+        case index, speaker, text, source
+        case speakerID = "speaker_id"
+    }
+}
+
+struct CoachingDiagnosis: Codable, Equatable {
+    let schemaVersion: Int
+    let dimensions: [String: CoachingDimension]
+    let strengths: [CoachingEvidence]
+    let improvements: [CoachingImprovement]
+    let smallPracticeAction: String
+    let safety: CoachingSafety
+
+    enum CodingKeys: String, CodingKey {
+        case dimensions, strengths, improvements, safety
+        case schemaVersion = "schema_version"
+        case smallPracticeAction = "small_practice_action"
+    }
+}
+
+struct CoachingDimension: Codable, Equatable {
+    let score: Int
+    let observations: [CoachingEvidence]
+}
+
+struct CoachingEvidence: Codable, Equatable, Identifiable {
+    let kind: String?
+    let text: String
+    let turnIndices: [Int]
+    let quotes: [String]
+
+    var id: String { "\(text)-\(turnIndices.map(String.init).joined(separator: ","))" }
+
+    enum CodingKeys: String, CodingKey {
+        case kind, text, quotes
+        case turnIndices = "turn_indices"
+    }
+}
+
+struct CoachingImprovement: Codable, Equatable, Identifiable {
+    let dimension: String
+    let priority: Int
+    let kind: String
+    let text: String
+    let turnIndices: [Int]
+    let quotes: [String]
+
+    var id: String { "\(priority)-\(dimension)-\(text)" }
+
+    enum CodingKeys: String, CodingKey {
+        case dimension, priority, kind, text, quotes
+        case turnIndices = "turn_indices"
+    }
+}
+
+struct CoachingSafety: Codable, Equatable {
+    let status: String
+    let category: String?
+}
+
+struct CoachingRecommendation: Codable, Equatable {
+    let weakestDimension: String
+    let selectionReason: String
+    let lesson: CoachingRecommendedLesson
+
+    enum CodingKeys: String, CodingKey {
+        case lesson
+        case weakestDimension = "weakest_dimension"
+        case selectionReason = "selection_reason"
+    }
+}
+
+struct CoachingRecommendedLesson: Codable, Equatable {
+    let id: String
+    let title: String
+    let concept: String
+    let skillObjective: String
+    let recommendationKind: String
+
+    enum CodingKeys: String, CodingKey {
+        case id, title, concept
+        case skillObjective = "skill_objective"
+        case recommendationKind = "recommendation_kind"
+    }
+}
+
+struct CoachingReport: Codable, Equatable, Identifiable {
+    let id: String
+    let status: String
+    let transcript: CoachingTranscript
+    let diagnosis: CoachingDiagnosis
+    let recommendation: CoachingRecommendation
+    let practiceAction: String
+
+    enum CodingKeys: String, CodingKey {
+        case id, status, transcript, diagnosis, recommendation
+        case practiceAction = "practice_action"
+    }
+}
+
+struct CoachingSafetyGuidance: Codable, Equatable {
+    let status: String
+    let category: String
+    let guidance: String
+}
+
+enum CoachingDiagnosisResponse: Decodable, Equatable {
+    case report(CoachingReport)
+    case safetyGuidance(CoachingSafetyGuidance)
+
+    private enum CodingKeys: String, CodingKey { case status }
+    private enum Status: String, Decodable { case completed, safetyGuidance = "safety_guidance" }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        switch try container.decode(Status.self, forKey: .status) {
+        case .completed:
+            self = .report(try CoachingReport(from: decoder))
+        case .safetyGuidance:
+            self = .safetyGuidance(try CoachingSafetyGuidance(from: decoder))
+        }
+    }
+}
+
+struct CoachingReportSummary: Codable, Equatable, Identifiable {
+    let id: String
+    let createdAt: String
+    let sourceKind: String
+    let weakestDimension: String
+    let lessonID: String
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case createdAt = "created_at"
+        case sourceKind = "source_kind"
+        case weakestDimension = "weakest_dimension"
+        case lessonID = "lesson_id"
     }
 }
 

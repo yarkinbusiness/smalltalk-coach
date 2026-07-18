@@ -6,6 +6,14 @@ protocol LessonAPI {
     func completeLesson(id: String, answers: [String: Int]) async throws -> CompletionResponse
 }
 
+protocol CoachingAPI {
+    func health() async throws -> HealthResponse
+    func diagnose(text: String, consentToProcess: Bool) async throws -> CoachingDiagnosisResponse
+    func coachingReports() async throws -> [CoachingReportSummary]
+    func coachingReport(id: String) async throws -> CoachingReport
+    func deleteCoachingReport(id: String) async throws
+}
+
 struct APIConfiguration {
     static let baseURLOverrideKey = "smalltalkCoach.apiBaseURL"
     static let defaultBaseURL = URL(string: "http://127.0.0.1:8000")!
@@ -59,19 +67,24 @@ final class UserIdentityStore {
 
 enum APIClientError: LocalizedError {
     case invalidResponse
-    case server(statusCode: Int)
+    case server(statusCode: Int, detail: String?)
+
+    var backendDetail: String? {
+        guard case .server(_, let detail) = self else { return nil }
+        return detail
+    }
 
     var errorDescription: String? {
         switch self {
         case .invalidResponse:
             return "The server returned an invalid response."
-        case .server(let statusCode):
-            return "The server returned an error (\(statusCode))."
+        case .server(let statusCode, let detail):
+            return detail ?? "The server returned an error (\(statusCode))."
         }
     }
 }
 
-struct APIClient: LessonAPI {
+struct APIClient: LessonAPI, CoachingAPI {
     private let session: URLSession
     private let configuration: APIConfiguration
     private let userIdentityStore: UserIdentityStore
@@ -114,6 +127,42 @@ struct APIClient: LessonAPI {
         return try await send(urlRequest)
     }
 
+    func diagnose(text: String, consentToProcess: Bool) async throws -> CoachingDiagnosisResponse {
+        let request = CoachingDiagnosisRequest(
+            userID: userIdentityStore.userID(),
+            consentToProcess: consentToProcess,
+            source: CoachingTextSource(text: text)
+        )
+        var urlRequest = URLRequest(url: try url(path: "coaching/diagnoses"))
+        urlRequest.httpMethod = "POST"
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        urlRequest.httpBody = try encoder.encode(request)
+        return try await send(urlRequest)
+    }
+
+    func coachingReports() async throws -> [CoachingReportSummary] {
+        try await send(
+            path: "coaching/reports",
+            queryItems: [URLQueryItem(name: "user_id", value: userIdentityStore.userID())]
+        )
+    }
+
+    func coachingReport(id: String) async throws -> CoachingReport {
+        try await send(
+            path: "coaching/reports/\(id)",
+            queryItems: [URLQueryItem(name: "user_id", value: userIdentityStore.userID())]
+        )
+    }
+
+    func deleteCoachingReport(id: String) async throws {
+        var request = URLRequest(url: try url(
+            path: "coaching/reports/\(id)",
+            queryItems: [URLQueryItem(name: "user_id", value: userIdentityStore.userID())]
+        ))
+        request.httpMethod = "DELETE"
+        _ = try await sendData(request)
+    }
+
     private func send<Response: Decodable>(path: String, queryItems: [URLQueryItem] = []) async throws -> Response {
         var request = URLRequest(url: try url(path: path, queryItems: queryItems))
         request.httpMethod = "GET"
@@ -121,14 +170,20 @@ struct APIClient: LessonAPI {
     }
 
     private func send<Response: Decodable>(_ request: URLRequest) async throws -> Response {
+        let data = try await sendData(request)
+        return try decoder.decode(Response.self, from: data)
+    }
+
+    private func sendData(_ request: URLRequest) async throws -> Data {
         let (data, response) = try await session.data(for: request)
         guard let response = response as? HTTPURLResponse else {
             throw APIClientError.invalidResponse
         }
         guard (200..<300).contains(response.statusCode) else {
-            throw APIClientError.server(statusCode: response.statusCode)
+            let detail = try? decoder.decode(APIErrorResponse.self, from: data).detail
+            throw APIClientError.server(statusCode: response.statusCode, detail: detail)
         }
-        return try decoder.decode(Response.self, from: data)
+        return data
     }
 
     private func url(path: String, queryItems: [URLQueryItem] = []) throws -> URL {
@@ -142,4 +197,8 @@ struct APIClient: LessonAPI {
         }
         return url
     }
+}
+
+private struct APIErrorResponse: Decodable {
+    let detail: String?
 }

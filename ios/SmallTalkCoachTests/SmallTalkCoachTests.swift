@@ -123,6 +123,117 @@ final class SmallTalkCoachTests: XCTestCase {
         XCTAssertNil(response.unlockedNext)
     }
 
+    func testDecodesFullCoachingReportFixture() throws {
+        let fixture = """
+        {
+          "id": "cr_123", "status": "completed",
+          "transcript": { "schema_version": 1, "source_kind": "text", "user_speaker_id": "user", "turns": [
+            { "index": 0, "speaker_id": "user", "speaker": "user", "text": "I just moved here.", "source": "pasted" },
+            { "index": 1, "speaker_id": "other", "speaker": "other", "text": "How is it going?", "source": "pasted" }
+          ] },
+          "diagnosis": {
+            "schema_version": 1,
+            "dimensions": {
+              "warmth": { "score": 3, "observations": [] },
+              "curiosity": { "score": 3, "observations": [] },
+              "reciprocity": { "score": 2, "observations": [] },
+              "flow": { "score": 4, "observations": [{ "kind": "observation", "text": "The exchange keeps moving.", "turn_indices": [0, 1], "quotes": ["I just moved here.", "How is it going?"] }] }
+            },
+            "strengths": [{ "text": "You offered a concrete detail.", "turn_indices": [0], "quotes": ["I just moved here."] }],
+            "improvements": [{ "dimension": "reciprocity", "priority": 1, "kind": "suggestion", "text": "Add a related question.", "turn_indices": [0, 1], "quotes": ["How is it going?"] }],
+            "small_practice_action": "Share one detail and ask one related question.",
+            "safety": { "status": "clear", "category": null }
+          },
+          "recommendation": { "weakest_dimension": "reciprocity", "selection_reason": "lowest_score", "lesson": {
+            "id": "l04-answer-and-return", "title": "Answer, then return", "concept": "Keep both people active.", "skill_objective": "Respond with room to continue.", "recommendation_kind": "new"
+          } },
+          "practice_action": "Share one detail and ask one related question."
+        }
+        """
+
+        let response = try JSONDecoder().decode(CoachingDiagnosisResponse.self, from: Data(fixture.utf8))
+
+        guard case .report(let report) = response else { return XCTFail("Expected completed report") }
+        XCTAssertEqual(report.diagnosis.dimensions["reciprocity"]?.score, 2)
+        XCTAssertEqual(report.diagnosis.strengths.first?.quotes, ["I just moved here."])
+        XCTAssertEqual(report.recommendation.lesson.recommendationKind, "new")
+    }
+
+    func testDecodesSafetyGuidanceFixture() throws {
+        let fixture = """
+        { "status": "safety_guidance", "category": "crisis", "guidance": "Contact local emergency services now." }
+        """
+
+        let response = try JSONDecoder().decode(CoachingDiagnosisResponse.self, from: Data(fixture.utf8))
+
+        XCTAssertEqual(response, .safetyGuidance(CoachingSafetyGuidance(
+            status: "safety_guidance", category: "crisis", guidance: "Contact local emergency services now."
+        )))
+    }
+
+    func testCoachingErrorDetailMapping() {
+        XCTAssertEqual(
+            CoachingErrorState.from(APIClientError.server(statusCode: 422, detail: "unreadable_transcript")),
+            .unreadableTranscript
+        )
+        XCTAssertEqual(
+            CoachingErrorState.from(APIClientError.server(statusCode: 502, detail: "ai_unavailable")),
+            .aiUnavailable
+        )
+    }
+
+    @MainActor
+    func testCoachingSubmitRequiresTextAndConsent() {
+        let viewModel = CoachingViewModel(client: StubCoachingAPI())
+
+        XCTAssertFalse(viewModel.canSubmit)
+        viewModel.text = "Me: Hello"
+        XCTAssertFalse(viewModel.canSubmit)
+        viewModel.consentGiven = true
+        XCTAssertTrue(viewModel.canSubmit)
+        viewModel.beginNewComposition()
+        XCTAssertFalse(viewModel.consentGiven)
+        XCTAssertFalse(viewModel.canSubmit)
+    }
+
+    @MainActor
+    func testCoachingViewModelTransitionsForReportSafetyAndError() async {
+        let client = StubCoachingAPI(diagnosisResult: .success(.report(StubCoachingAPI.sampleReport)))
+        let viewModel = CoachingViewModel(client: client)
+        viewModel.text = "Me: Hello\nThem: Hi"
+        viewModel.consentGiven = true
+
+        await viewModel.submit()
+        guard case .report = viewModel.submissionState else { return XCTFail("Expected report state") }
+
+        client.diagnosisResult = .success(.safetyGuidance(CoachingSafetyGuidance(
+            status: "safety_guidance", category: "abuse", guidance: "Seek local support."
+        )))
+        await viewModel.submit()
+        guard case .safetyGuidance = viewModel.submissionState else { return XCTFail("Expected safety state") }
+
+        viewModel.beginNewComposition()
+        viewModel.text = "Me: Hello\nThem: Hi"
+        viewModel.consentGiven = true
+        client.diagnosisResult = .failure(APIClientError.server(statusCode: 502, detail: "ai_unavailable"))
+        await viewModel.submit()
+        XCTAssertEqual(viewModel.submissionState, .composing)
+        XCTAssertEqual(viewModel.error, .aiUnavailable)
+    }
+
+    @MainActor
+    func testHistoryDeleteRemovesReportAfterNoContentResponse() async {
+        let summary = CoachingReportSummary(id: "cr_123", createdAt: "2026-07-18T12:00:00+00:00", sourceKind: "text", weakestDimension: "flow", lessonID: "l06-follow-the-thread")
+        let client = StubCoachingAPI(summariesResult: .success([summary]))
+        let viewModel = CoachingHistoryViewModel(client: client)
+
+        await viewModel.load()
+        await viewModel.delete(summary)
+
+        XCTAssertTrue(viewModel.reports.isEmpty)
+        XCTAssertEqual(client.deletedIDs, ["cr_123"])
+    }
+
     @MainActor
     func testDetailViewModelRequiresAllChoicesAndBuildsStringKeyedAnswers() {
         let viewModel = LessonDetailViewModel(lesson: detailLesson(), client: StubLessonAPI())
@@ -259,4 +370,39 @@ private enum StubError: LocalizedError {
             return "This stub response was not configured."
         }
     }
+}
+
+private final class StubCoachingAPI: CoachingAPI {
+    var diagnosisResult: Result<CoachingDiagnosisResponse, Error>
+    var summariesResult: Result<[CoachingReportSummary], Error>
+    var deletedIDs: [String] = []
+
+    init(
+        diagnosisResult: Result<CoachingDiagnosisResponse, Error> = .failure(StubError.unused),
+        summariesResult: Result<[CoachingReportSummary], Error> = .success([])
+    ) {
+        self.diagnosisResult = diagnosisResult
+        self.summariesResult = summariesResult
+    }
+
+    func health() async throws -> HealthResponse { HealthResponse(status: "ok", lessonsLoaded: 12, coachingEnabled: true) }
+    func diagnose(text: String, consentToProcess: Bool) async throws -> CoachingDiagnosisResponse { try diagnosisResult.get() }
+    func coachingReports() async throws -> [CoachingReportSummary] { try summariesResult.get() }
+    func coachingReport(id: String) async throws -> CoachingReport { Self.sampleReport }
+    func deleteCoachingReport(id: String) async throws { deletedIDs.append(id) }
+
+    static let sampleReport = CoachingReport(
+            id: "cr_123", status: "completed",
+            transcript: CoachingTranscript(schemaVersion: 1, sourceKind: "text", userSpeakerID: "user", turns: []),
+            diagnosis: CoachingDiagnosis(
+                schemaVersion: 1,
+                dimensions: ["warmth": CoachingDimension(score: 3, observations: []), "curiosity": CoachingDimension(score: 3, observations: []), "reciprocity": CoachingDimension(score: 2, observations: []), "flow": CoachingDimension(score: 3, observations: [])],
+                strengths: [], improvements: [], smallPracticeAction: "Practice one follow-up.", safety: CoachingSafety(status: "clear", category: nil)
+            ),
+            recommendation: CoachingRecommendation(
+                weakestDimension: "reciprocity", selectionReason: "lowest_score",
+                lesson: CoachingRecommendedLesson(id: "l04-answer-and-return", title: "Answer, then return", concept: "Keep both people active.", skillObjective: "Respond with room to continue.", recommendationKind: "new")
+            ),
+            practiceAction: "Practice one follow-up."
+        )
 }

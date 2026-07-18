@@ -188,3 +188,17 @@ Entry format (keep an entry under ~15 lines):
 - **Result / verification:** `backend/.venv/bin/python -m pytest backend/tests -q`:
   27 passed, 1 skipped, 1 warning in 1.18s; `git diff --check` passed.
 - **Open issues:** none
+
+## 2026-07-18 23:40 UTC — Build iOS Coaching text diagnosis, reports, and history
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Replaced the Coaching placeholder with consent-gated pasted-text diagnosis,
+  coaching-disabled and safety-guidance states, evidence-backed report/lesson navigation, and report history/detail/delete.
+  Added a typed CoachingAPI seam, backend-detail error mapping, backend-shape Codable models, and injected-fake XCTest coverage.
+- **Files touched:** ios/SmallTalkCoach/APIClient.swift; ios/SmallTalkCoach/Models.swift;
+  ios/SmallTalkCoach/CoachingView.swift; ios/SmallTalkCoach/CoachingViewModel.swift; ios/SmallTalkCoach/RootView.swift;
+  ios/SmallTalkCoachTests/SmallTalkCoachTests.swift; WORKER_LOG.md
+- **Result / verification:** `xcodegen generate --spec ios/project.yml --project ios` passed; generic simulator build and
+  `build-for-testing` passed; `git diff --check` passed. iPhone 16 / iOS 18.2 `xcodebuild test` was attempted but
+  CoreSimulatorService/simdiskimaged is unavailable in this sandbox, so tests could not execute.
+- **Open issues:** Simulator test execution needs a working CoreSimulatorService; reviewer can run the compiled tests.

@@ -31,11 +31,14 @@ cycles under the existing safety rules (never force-push, clean-tree gate,
    c. Coaching tab real UI once the pipeline exists.
 7. Coaching pipeline: ~~design doc~~ (cycle 12); ~~text-path backend
    implementation~~ — done, accepted 2026-07-18 (cycle 14, 2 rounds).
-   Remaining: **(a)** live smoke run once founder confirms the key is in
-   `~/.env` (watch-item: schema `minLength` is SDK-stripped — confirm the
-   real call succeeds); **(b)** screenshot path (202+poll, vision
-   extraction, Haiku 4.5 pending real-screenshot eval); **(c)** iOS
-   Coaching tab UI against the new endpoints.
+   ~~(c) iOS Coaching tab~~ — done, accepted 2026-07-18 (cycle 15).
+   **LOOP PAUSED — remaining work is founder-gated:** **(a)** live smoke
+   run once founder confirms the key is in `~/.env` (watch-item: schema
+   `minLength` is SDK-stripped — confirm the real call succeeds);
+   **(b)** screenshot path — implementation could start mocked, but
+   pinning the vision model requires the real-screenshot eval
+   (COACHING_PIPELINE_V1 §6), which needs the key and founder-provided
+   consented screenshots.
 
 **2026-07-18: LOOP ACTIVATED — interview gate waived (founder
 decision).** The validation-interview gate is consciously skipped (records:
@@ -150,6 +153,22 @@ blocked, log that and stop — don't invent busywork.
    4 workers → synthesized report) against real CMA.
 
 ## Cycle log
+
+- **2026-07-18 (cycle 15 — iOS Coaching tab; founder-independent queue
+  complete):** Worker: `gpt-5.6-terra`, one round, honest partial
+  (sandbox blocks CoreSimulatorService). Shipped `CoachingView` +
+  `CoachingViewModel` + typed `CoachingAPI` seam: consent-gated compose
+  (all four §5 disclosure elements, toggle defaults off and resets per
+  composition, visual attention state on consent_required),
+  201-report / 200-safety_guidance discriminated handling, report view
+  with quoted evidence + recommendation card deep-linking into
+  LessonDetailView, history list/detail/delete, coaching-disabled state
+  from /health, full error-taxonomy mapping. Brain verification:
+  regenerated project, built, and ran **16 tests — all passed on
+  iPhone 16 / iOS 18.2** (own run); consent copy and reset behavior
+  verified in source — ACCEPTED. **Loop paused: remaining items are
+  founder-gated (key for live smoke; key + consented screenshots for
+  the vision eval gating the screenshot path).**
 
 - **2026-07-18 (cycle 14 — coaching backend, text path; FIRST REJECTION
   ROUND):** Worker: `gpt-5.6-terra`, **two rounds**. Round 1 implemented
