@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "id": "l08-handle-the-pause",
+  "title": "Let a pause be normal",
+  "unit": 3,
+  "sequence": 8,
+  "concept": "Treat a short pause as a normal moment to notice, extend, or close—not proof that the interaction has failed.",
+  "skill_objective": "User can choose a low-pressure next move after a brief pause rather than rushing into unrelated talk.",
+  "dimensions": [
+    "flow",
+    "warmth"
+  ],
+  "concept_intro": {
+    "text": "A pause is often just a pause. People may be looking at the room, thinking of what to say, finishing a drink, or getting ready to rejoin something else. You do not have to fill every second. Notice what is happening, then choose a proportionate move: extend the current topic, use something shared in the setting, or end warmly. The goal is not to rescue the conversation; it is to respond without pressure."
+  },
+  "example": {
+    "setting": "During a break after a campus workshop, Maya and a classmate have been talking about the session. The chat pauses while both look toward the refreshment table.",
+    "dialogue": [
+      {
+        "speaker": "Maya",
+        "text": "The example about group projects was useful."
+      },
+      {
+        "speaker": "Classmate",
+        "text": "Yes, especially the part about dividing the first task."
+      },
+      {
+        "speaker": "Narration",
+        "text": "They pause and both look toward the refreshment table."
+      },
+      {
+        "speaker": "Maya",
+        "text": "I am going to get some water. Want to continue comparing notes after the break?"
+      }
+    ]
+  },
+  "responses": {
+    "bad": {
+      "text": "Why did you stop talking? Tell me something interesting about yourself.",
+      "explanation": "This treats the pause as a problem and puts the other person on the spot with an unrelated demand."
+    },
+    "better": {
+      "text": "So... anyway.",
+      "explanation": "This acknowledges the silence, but it does not use the shared moment or offer a clear, easy next move."
+    },
+    "best": {
+      "text": "I am going to look at the refreshments. Do you want to grab something, or should we catch the next part of the workshop?",
+      "explanation": "It uses the shared setting and gives two ordinary, low-pressure paths. The classmate can join, continue later, or simply return to the workshop."
+    }
+  },
+  "exercise": {
+    "prompt": "After a workshop conversation pauses, you and the classmate both glance at the refreshment table. What is the most proportionate next move?",
+    "options": [
+      {
+        "text": "Ask three unrelated questions quickly so there is no silence.",
+        "feedback": "Rushing into unrelated questions can make a normal pause feel more demanding."
+      },
+      {
+        "text": "Say, “I am going to get some water. Want to head over, or should we find our seats for the next part?”",
+        "feedback": "Correct. Their shared glance at the table is an observable cue for a simple setting-based move, and either answer is easy."
+      },
+      {
+        "text": "Leave without saying anything because any pause means the chat failed.",
+        "feedback": "A short pause does not prove anything about the conversation. A warm close or small next move is usually more proportionate."
+      }
+    ],
+    "correct_option_index": 1
+  },
+  "practice": {
+    "type": "Choose-the-next-move",
+    "scenario_setup": "During a campus workshop break, a chat with a classmate pauses while both of you look toward the refreshment table. In other rounds, the classmate may be adding a detail to the workshop topic or may be turning back toward the room as the break ends.",
+    "user_task": "Choose whether to extend the current topic, use the shared setting, or end kindly. Name the observable cue that makes your move proportionate, and keep the wording easy to decline."
+  },
+  "completion_check": {
+    "parts": [
+      {
+        "kind": "choice",
+        "question": "Pause 1: The classmate says, “I am still thinking about the group-project example,” then looks at the handout for a moment. What is the best next move?",
+        "options": [
+          {
+            "text": "That example stayed with me too. Which part of it are you thinking about?",
+            "feedback": "Correct. Their spoken reference to the example and attention to the handout give you a current thread to extend gently."
+          },
+          {
+            "text": "Tell me your most embarrassing school story.",
+            "feedback": "This abandons the available thread for a personal, unrelated question."
+          },
+          {
+            "text": "Never mind, I should not have talked to you.",
+            "feedback": "The brief silence is not evidence that conversation was unwelcome; this response gives it too much meaning."
+          }
+        ],
+        "correct_option_index": 0
+      },
+      {
+        "kind": "choice",
+        "question": "Pause 2: You and the classmate finish a sentence, pause, and both look toward the refreshment table. What is the best next move?",
+        "options": [
+          {
+            "text": "Why are you looking over there? Are you bored?",
+            "feedback": "This makes an assumption about the classmate instead of using the visible, shared setting."
+          },
+          {
+            "text": "Keep speaking about a new topic before the classmate can answer.",
+            "feedback": "Filling the pause immediately ignores the easy shared cue and can crowd the other person."
+          },
+          {
+            "text": "I am going to get some tea. Would you like to head over, or are you all set?",
+            "feedback": "Correct. The shared glance toward refreshments supports a simple offer with an easy yes or no."
+          }
+        ],
+        "correct_option_index": 2
+      },
+      {
+        "kind": "choice",
+        "question": "Pause 3: The workshop facilitator calls everyone back. The classmate gathers their notes and turns toward the seats after a short pause. What is the best next move?",
+        "options": [
+          {
+            "text": "Wait, we cannot stop now. I have more questions.",
+            "feedback": "This resists a clear situational transition and pressures the classmate to continue."
+          },
+          {
+            "text": "It was nice comparing notes. I will see you in there.",
+            "feedback": "Correct. The facilitator's call, gathered notes, and turn toward the seats support a warm, brief close."
+          },
+          {
+            "text": "Follow the classmate to their seat and keep asking about the workshop.",
+            "feedback": "The return to the session is a cue to let the interaction close rather than continue it physically or verbally."
+          }
+        ],
+        "correct_option_index": 1
+      },
+      {
+        "kind": "free_draft",
+        "prompt": "For each of the three pauses above, write one sentence naming the observable cue and one proportionate response: one that extends a current thread, one that uses the refreshment-table setting, and one that closes warmly as the workshop resumes.",
+        "good_answer_demonstrates": "Three responses matched to the stated cues: a connected follow-up for the handout/topic, a low-pressure setting-based option for the shared look toward refreshments, and a warm close for the facilitator's call and return to seats, without treating a pause as proof of failure.",
+        "grading": "deferred-v1"
+      }
+    ]
+  }
+}

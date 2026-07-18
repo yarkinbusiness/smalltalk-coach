@@ -1,0 +1,122 @@
+{
+  "schema_version": 1,
+  "id": "l09-read-the-room",
+  "title": "Read the room",
+  "unit": 3,
+  "sequence": 9,
+  "concept": "Use observable signs of engagement or disengagement to decide whether to continue, lighten the interaction, or give the person space.",
+  "skill_objective": "User can name a visible cue and choose a respectful next step without claiming to know another person’s intent.",
+  "dimensions": [
+    "curiosity",
+    "flow"
+  ],
+  "concept_intro": {
+    "text": "Reading the room means noticing what you can actually observe, not deciding what another person feels or means. A person who asks a related question and stays in the exchange may leave room to continue gently. A person who gives short answers while repeatedly looking toward newly arrived friends may need space. You can check once, lighten the interaction, or close warmly—but you do not need to persuade anyone to keep talking."
+  },
+  "example": {
+    "setting": "At an after-class social, Maya talks with a classmate, Devon. Devon answers briefly and repeatedly looks toward friends who have just arrived across the room.",
+    "dialogue": [
+      {
+        "speaker": "Maya",
+        "text": "How did you find the workshop today?"
+      },
+      {
+        "speaker": "Devon",
+        "text": "It was good."
+      },
+      {
+        "speaker": "Narration",
+        "text": "Devon looks toward a group of friends who have just arrived, then looks back briefly."
+      },
+      {
+        "speaker": "Maya",
+        "text": "It was nice meeting you. I will let you catch up with your friends—enjoy the evening."
+      }
+    ]
+  },
+  "responses": {
+    "bad": {
+      "text": "Please stay for one more question before you go over there.",
+      "explanation": "This asks Devon to override the visible pull of the moment. It creates pressure instead of leaving room for an easy exit."
+    },
+    "better": {
+      "text": "Your friends just arrived.",
+      "explanation": "This notices a real cue, but on its own it leaves Devon to manage the next move and may sound pointed."
+    },
+    "best": {
+      "text": "It was nice meeting you. I will let you catch up with your friends—enjoy the evening.",
+      "explanation": "It responds to observable cues without assigning an intention. The close is warm, clear, and gives Devon space without requiring an explanation."
+    }
+  },
+  "exercise": {
+    "prompt": "Sort these observable cues by the least pressuring next move. Which grouping is most respectful?",
+    "options": [
+      {
+        "text": "Continue gently: their reason for staying nearby. Check once: whether they want more conversation. Give space: whether they are busy.",
+        "feedback": "These are unobserved private reasons or preferences, not observable cues. You cannot reliably sort a situation from assumptions like these."
+      },
+      {
+        "text": "Continue gently: they ask a related question and stay facing you. Check once: they answer, then pause while looking at the schedule. Give space: they answer briefly and repeatedly look toward friends who just arrived.",
+        "feedback": "Correct. Each category uses visible or spoken evidence, and the give-space option does not require deciding why the person is looking away."
+      },
+      {
+        "text": "Continue gently: keep asking until they open up. Check once: ask why they are quiet. Give space: leave without a word.",
+        "feedback": "These are actions without observable evidence, and the first two can pressure someone. A warm close is often better than disappearing."
+      }
+    ],
+    "correct_option_index": 1
+  },
+  "practice": {
+    "type": "Cue-sort exercise",
+    "scenario_setup": "At an after-class social, you notice three short exchanges: one classmate asks a related question and faces you; one answers and pauses while looking at the event schedule; one answers briefly while repeatedly looking toward friends who have just arrived.",
+    "user_task": "Sort the observable cues into “continue gently,” “check once,” and “give space.” For each, name only what was said or visible, then choose a response that is easy to decline or a warm close."
+  },
+  "completion_check": {
+    "parts": [
+      {
+        "kind": "choice",
+        "question": "In this exchange, which is the strongest observable cue? “How was the seminar?” “Good.” The classmate looks toward friends who just arrived, then looks that way again while holding a short answer.",
+        "options": [
+          {
+            "text": "Their reason for looking toward their friends.",
+            "feedback": "That is not an observable cue. The exchange does not establish a reason."
+          },
+          {
+            "text": "Whether they plan to leave the event soon.",
+            "feedback": "This is an unobserved plan, not evidence that has been stated or shown."
+          },
+          {
+            "text": "They gave a brief answer and repeatedly looked toward friends who had just arrived.",
+            "feedback": "Correct. This names only what was spoken and visible, which is the evidence you can use for a respectful next step."
+          }
+        ],
+        "correct_option_index": 2
+      },
+      {
+        "kind": "choice",
+        "question": "Given that cue, which response is the least pressuring?",
+        "options": [
+          {
+            "text": "I will let you catch up with your friends. It was nice meeting you.",
+            "feedback": "Correct. It is a warm close that gives space without requiring the classmate to explain their attention or stay."
+          },
+          {
+            "text": "Your friends can wait—tell me more about yourself first.",
+            "feedback": "This asks the classmate to ignore the visible situation and continues the interaction by pressure."
+          },
+          {
+            "text": "Why do you keep looking away? Did I say something wrong?",
+            "feedback": "This turns an observable cue into a demand for reassurance and assumes the reason for it."
+          }
+        ],
+        "correct_option_index": 0
+      },
+      {
+        "kind": "free_draft",
+        "prompt": "Read this exchange: “Did you enjoy the event?” “Yeah, it was good.” The classmate glances twice toward friends who have just arrived. Identify the observable cue, then write the least pressuring next response. Do not state or guess why the classmate is looking toward them.",
+        "good_answer_demonstrates": "A clear description of the brief answer and repeated glances toward newly arrived friends, followed by a warm, non-demanding close or space-giving response; it avoids claims about the classmate's feelings, motives, or intentions.",
+        "grading": "deferred-v1"
+      }
+    ]
+  }
+}

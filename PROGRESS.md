@@ -16,9 +16,9 @@ cycles under the existing safety rules (never force-push, clean-tree gate,
    accepted 2026-07-18 (cycle 5 below). 10 tests green.
 3. ~~Author remaining Unit 1 content (`l02`, `l03`)~~ — done, accepted
    2026-07-18 (cycle 6 below). Unit 1 fully authored.
-4. Author remaining units, one per cycle: ~~Unit 2 (`l04`–`l06`)~~ done,
-   accepted 2026-07-18 (cycle 7); **(next)** Unit 3 (`l07`–`l09`), then
-   Unit 4 (`l10`–`l12`).
+4. Author remaining units, one per cycle: ~~Unit 2 (`l04`–`l06`)~~ done
+   (cycle 7); ~~Unit 3 (`l07`–`l09`)~~ done, accepted 2026-07-18 (cycle 8);
+   **(next)** Unit 4 (`l10`–`l12`) — completes the curriculum.
 5. Persistence/code hardening: close sqlite connections explicitly; move
    PRACTICE_TYPES into the manifest (schema_version 2 or manifest field).
 6. Coaching/diagnosis pipeline — **blocked: needs Anthropic API key**.
@@ -137,6 +137,17 @@ blocked, log that and stop — don't invent busywork.
    4 workers → synthesized report) against real CMA.
 
 ## Cycle log
+
+- **2026-07-18 (cycle 8 — Unit 3 content: L07–L09):** Worker:
+  `gpt-5.6-terra`, one round. Authored `l07-share-and-make-space`,
+  `l08-handle-the-pause` (three-pause scenario-judgment check, cues named
+  in every feedback), `l09-read-the-room` (safety-reviewed: observable
+  cues only, no intent claims, give-space modeled as a good outcome per
+  PRODUCT_BRIEF §12) + minimal test updates (lessons_loaded 9, chain
+  probes l10). Brain verification: suite run independently — 10 passed;
+  all three lessons read in full — ACCEPTED. **Next:** Unit 4 (l10–l12),
+  which completes the curriculum; content_pending test coverage moves to
+  a synthetic fixture since the chain will exhaust the path.
 
 - **2026-07-18 (cycle 7 — Unit 2 content: L04–L06):** Worker:
   `gpt-5.6-terra`, one round. Authored `l04-answer-and-return`,

@@ -92,3 +92,12 @@ Entry format (keep an entry under ~15 lines):
 - **Files touched:** content/lessons/l04-answer-and-return.json; content/lessons/l05-show-you-heard.json; content/lessons/l06-follow-the-thread.json; backend/tests/test_content.py; backend/tests/test_api.py; WORKER_LOG.md
 - **Result / verification:** All three JSON files parsed with `python3 -m json.tool`; metadata exactly matched the manifest; `backend/.venv/bin/python -m pytest backend/tests -q`: 10 passed, 1 warning in 0.35s; `git diff --check` passed.
 - **Open issues:** none
+
+## 2026-07-18 15:23 UTC — Author Unit 3 lessons L07 through L09
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Authored L07–L09 with balance, scenario-judgment, and
+  evidence-and-boundary checks; updated content/API expectations for nine authored lessons.
+- **Files touched:** content/lessons/l07-share-and-make-space.json; content/lessons/l08-handle-the-pause.json; content/lessons/l09-read-the-room.json; backend/tests/test_content.py; backend/tests/test_api.py; WORKER_LOG.md
+- **Result / verification:** All three JSON files parsed with `python3 -m json.tool`; the validating loader accepted them; `backend/.venv/bin/python -m pytest backend/tests -q`: 10 passed, 1 warning in 0.39s; `git diff --check` passed.
+- **Open issues:** L09 uses the loader-enforced manifest title `Read the room`; the planning document’s L09 title line says `Notice interest and boundaries`.

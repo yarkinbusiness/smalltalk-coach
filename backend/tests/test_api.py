@@ -39,7 +39,7 @@ def _correct_choice_answers(lesson: dict[str, object]) -> dict[str, int]:
 
 def test_health_and_initial_curriculum(tmp_path: Path) -> None:
     with _client(tmp_path) as client:
-        assert client.get("/health").json() == {"status": "ok", "lessons_loaded": 6}
+        assert client.get("/health").json() == {"status": "ok", "lessons_loaded": 9}
         response = client.get("/curriculum", params={"user_id": "maya"})
 
     assert response.status_code == 200
@@ -61,6 +61,9 @@ def test_health_and_initial_curriculum(tmp_path: Path) -> None:
         "l04-answer-and-return",
         "l05-show-you-heard",
         "l06-follow-the-thread",
+        "l07-share-and-make-space",
+        "l08-handle-the-pause",
+        "l09-read-the-room",
     ]
 
 
@@ -86,6 +89,9 @@ def test_lesson_error_distinctions_and_locked_completion(tmp_path: Path) -> None
             "l04-answer-and-return",
             "l05-show-you-heard",
             "l06-follow-the-thread",
+            "l07-share-and-make-space",
+            "l08-handle-the-pause",
+            "l09-read-the-room",
         ):
             lesson = client.get(f"/lessons/{lesson_id}", params={"user_id": "maya"})
             assert lesson.status_code == 200
@@ -94,7 +100,7 @@ def test_lesson_error_distinctions_and_locked_completion(tmp_path: Path) -> None
                 json={"user_id": "maya", "answers": _correct_choice_answers(lesson.json())},
             )
             assert completion.json()["completed"] is True
-        pending = client.get("/lessons/l07-share-and-make-space", params={"user_id": "maya"})
+        pending = client.get("/lessons/l10-build-on-common-ground", params={"user_id": "maya"})
 
     assert pending.status_code == 404
     assert pending.json()["detail"] == "content_pending"

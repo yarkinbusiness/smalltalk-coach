@@ -27,6 +27,9 @@ def test_real_manifest_is_consistent_and_authored_lessons_load() -> None:
         "l04-answer-and-return",
         "l05-show-you-heard",
         "l06-follow-the-thread",
+        "l07-share-and-make-space",
+        "l08-handle-the-pause",
+        "l09-read-the-room",
     }
     assert {name: len(ids) for name, ids in curriculum.routing.items()} == {
         "warmth": 5,

@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "id": "l07-share-and-make-space",
+  "title": "Share, then make space",
+  "unit": 3,
+  "sequence": 7,
+  "concept": "Offer a small, relevant personal detail and leave room for the other person to respond or take the topic elsewhere.",
+  "skill_objective": "User can contribute to common ground without turning a conversation into a monologue.",
+  "dimensions": [
+    "reciprocity",
+    "curiosity"
+  ],
+  "concept_intro": {
+    "text": "A small personal detail can make a shared topic feel real: it says, \"I have been there too,\" without asking the other person to carry a long story. Keep the detail connected to what is already being discussed, then leave a little space. A related question, a pause, or an open ending lets the other person decide whether to add their own experience or move on."
+  },
+  "example": {
+    "setting": "At a new-neighbor building event, Maya meets another resident, Leo, who also arrived in the building recently. They are talking about getting used to the neighborhood.",
+    "dialogue": [
+      {
+        "speaker": "Leo",
+        "text": "I moved in last month, so I am still learning where everything is."
+      },
+      {
+        "speaker": "Maya",
+        "text": "Me too. I have enjoyed finding the little grocery shop around the corner; it made the area feel easier to navigate. Have you found a place that has helped you settle in?"
+      },
+      {
+        "speaker": "Leo",
+        "text": "The park has been useful for me. I walk there after work."
+      }
+    ]
+  },
+  "responses": {
+    "bad": {
+      "text": "I moved here last month too, and the first week was difficult because my boxes were late, my internet did not work, I had to change banks, and then I spent all weekend trying to find furniture.",
+      "explanation": "It begins with a relevant connection but becomes a long list. Leo has no clear opening to respond, and the shared topic has become Maya's account."
+    },
+    "better": {
+      "text": "I moved in recently too.",
+      "explanation": "This creates a point of common ground, but it is so brief that it gives Leo little to respond to or build on."
+    },
+    "best": {
+      "text": "I moved in recently too. I have enjoyed finding the small grocery shop nearby; it made the neighborhood feel more familiar. Have you found a place you like yet?",
+      "explanation": "It offers one concrete, relevant detail and returns room to Leo with an optional, connected question. Leo can answer, add a different adjustment, or let the topic rest."
+    }
+  },
+  "exercise": {
+    "prompt": "Another new resident says, “I am still getting used to this area.” Which reply shares enough while making space for them?",
+    "options": [
+      {
+        "text": "I know exactly what you mean. Let me tell you every problem I had during my first month here.",
+        "feedback": "A long story can take over before the other resident has chosen how much they want to share."
+      },
+      {
+        "text": "Same.",
+        "feedback": "This signals connection, but it gives the conversation little detail or direction."
+      },
+      {
+        "text": "I arrived recently too. Finding the library nearby has been one adjustment I have enjoyed. Has anything made the area easier for you?",
+        "feedback": "Correct. It offers one small, relevant detail, then gives the other resident an easy choice to add their own experience."
+      }
+    ],
+    "correct_option_index": 2
+  },
+  "practice": {
+    "type": "Draft-then-compare",
+    "scenario_setup": "At a building event, another resident says they also arrived recently. You want to mention one adjustment you have enjoyed, such as finding a nearby shop, park, bus route, or library.",
+    "user_task": "Draft a reply with one specific detail. Then compare it with an oversharing version and an undersharing version: keep the detail concise and add a question, pause, or open ending that leaves room for the other resident."
+  },
+  "completion_check": {
+    "parts": [
+      {
+        "kind": "choice",
+        "question": "A resident says, “I am still working out where to buy basic things around here.” Which reply has the best balance?",
+        "options": [
+          {
+            "text": "When I moved, I compared six supermarkets, had opinions about every aisle, and spent two weekends making a spreadsheet of prices.",
+            "feedback": "This is much more detail than the moment needs and leaves little room for the other resident's experience."
+          },
+          {
+            "text": "I found a small market near the bus stop that I have liked so far. Have you found anywhere useful yet?",
+            "feedback": "Correct. It contributes one useful detail and opens a connected, low-pressure space for the other resident to answer."
+          },
+          {
+            "text": "You should try the market near the bus stop.",
+            "feedback": "Advice may be useful later, but this skips sharing a small personal experience and does not invite the resident into a mutual exchange."
+          }
+        ],
+        "correct_option_index": 1
+      },
+      {
+        "kind": "choice",
+        "question": "Which revision turns this overly long self-share into a concise contribution with space? “I have enjoyed the park, and I go there every morning, then I started listing all the paths, and my cousin visited, and we tried every cafe nearby...”",
+        "options": [
+          {
+            "text": "I have enjoyed the park nearby; it has become an easy place to take a walk. Have you found a spot you like?",
+            "feedback": "Correct. It keeps one relevant detail, removes the extra history, and makes room for the other person to respond."
+          },
+          {
+            "text": "The park has many paths, three cafes, weekend events, and a long history that I can explain.",
+            "feedback": "This is still a long information stream rather than a concise contribution."
+          },
+          {
+            "text": "Parks are nice.",
+            "feedback": "This is concise, but it loses the personal, concrete detail that could create common ground."
+          }
+        ],
+        "correct_option_index": 0
+      },
+      {
+        "kind": "free_draft",
+        "prompt": "Revise this reply to a fellow new resident: “I moved recently too, and first I had to unpack for days, then I changed my phone plan, then I got lost on several buses, and my whole family had opinions about the move.” Write a concise contribution that mentions one adjustment you have enjoyed and leaves genuine space for them to respond or choose another topic.",
+        "good_answer_demonstrates": "One short, relevant personal detail about an adjustment the user has enjoyed, without a long list or monologue, followed by a connected optional question, pause, or open ending that makes room for the other resident.",
+        "grading": "deferred-v1"
+      }
+    ]
+  }
+}
