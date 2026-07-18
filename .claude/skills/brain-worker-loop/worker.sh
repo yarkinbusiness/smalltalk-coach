@@ -78,6 +78,13 @@ $SPEC"
 
 OUT="${OUT:-$(mktemp -t worker-report)}"
 
+# Standard worker config (founder, 2026-07-18): gpt-5.6-terra at reasoning
+# effort "high". In the Codex CLI, model_reasoning_effort IS the thinking
+# control for GPT-5.6 (no separate toggle; terra supports low..ultra), so
+# effort=high means thinking is enabled and deep. Echoed here so every run
+# records its effective config.
+echo "worker: model=$MODEL, reasoning effort=$EFFORT (thinking enabled via model_reasoning_effort)"
+
 # workspace-write keeps the worker sandboxed to the workdir (no network); the
 # brain widens this per task only when the spec genuinely needs it.
 codex exec \

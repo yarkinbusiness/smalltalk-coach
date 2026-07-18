@@ -14,9 +14,13 @@ project's `DECISIONS.md` ("2026-07-18 — Worker Model Locked to Codex (GPT 5.6)
   work into tasks with acceptance criteria, delegates, reviews, and decides
   accept or iterate. **The brain never implements directly** — no source edits
   by the brain, even to "quickly fix" a near-miss.
-- **Workers: Codex (GPT 5.6) only** — `gpt-5.6-terra` (default) or
-  `gpt-5.6-luna` for routine tasks. Enforced by `worker.sh`; do not bypass it
-  by calling other models or the Agent tool for implementation.
+- **Workers: Codex (GPT 5.6) only** — standard config `gpt-5.6-terra` at
+  `model_reasoning_effort=high` (this is the CLI's thinking control for
+  GPT 5.6 — no separate toggle — so thinking is enabled and deep at high).
+  `gpt-5.6-luna` is allowed only when the brain explicitly picks it for a
+  routine task. Enforced by `worker.sh`, which prints the effective
+  model/effort at the start of every run; do not bypass it by calling other
+  models or the Agent tool for implementation.
 
 ## Activation guard (mandatory, every run)
 
