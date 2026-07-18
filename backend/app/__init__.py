@@ -1,0 +1,1 @@
+"""Smalltalk Coach backend package."""

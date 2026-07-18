@@ -12,11 +12,9 @@ cycles under the existing safety rules (never force-push, clean-tree gate,
 
 1. ~~**Cycle A (docs):** CONTENT_MODEL_V1.md + l01 fixture + gate sync~~ —
    done, accepted 2026-07-18 (cycle 4 below).
-2. **Cycle B (code, next):** backend skeleton + curriculum serving — FastAPI app,
-   curriculum/lesson/progress endpoints per LESSON_PATH_V1 (unlock rule
-   enforced), content loaded from schema-validated static files, pytest
-   suite green with no live-API dependency.
-3. Author remaining Unit 1 content (`l02`, `l03`) against the schema.
+2. ~~**Cycle B (code):** backend skeleton + curriculum serving~~ — done,
+   accepted 2026-07-18 (cycle 5 below). 10 tests green.
+3. **(next)** Author remaining Unit 1 content (`l02`, `l03`) against the schema.
 4. Completion-check flow + progress persistence hardening.
 5. Coaching/diagnosis pipeline — **blocked: needs Anthropic API key**.
 6. iOS app — **blocked: needs Xcode** (this machine has CLT only).
@@ -134,6 +132,21 @@ blocked, log that and stop — don't invent busywork.
    4 workers → synthesized report) against real CMA.
 
 ## Cycle log
+
+- **2026-07-18 (cycle 5 — backend skeleton + curriculum serving, first app
+  code):** Worker: `gpt-5.6-terra`, one round. Shipped
+  `content/lesson_path.json` (machine mirror of LESSON_PATH_V1, validated
+  for self-consistency), `backend/app/` (FastAPI; content loader enforcing
+  all seven CONTENT_MODEL_V1 §4 rules incl. per-lesson practice-type check;
+  sqlite3 progress store; curriculum/lesson/completion endpoints with
+  sequential unlock, 423-locked / 404-content_pending semantics, idempotent
+  deterministic grading), and a 10-test pytest suite. Brain verification:
+  suite run independently — **10 passed** (0.37s); manifest routing sizes
+  and spot-checked fields match the doc verbatim; no venv/db/pycache
+  leakage. ACCEPTED. Hardening notes for later: per-request sqlite
+  connections are never explicitly closed; PRACTICE_TYPES map duplicated in
+  code rather than manifest; no auth (documented in backend/README.md).
+  **Next:** author `l02`/`l03` content against the proven schema.
 
 - **2026-07-18 (cycle 4 — content model + L01 fixture; build phase begins):**
   First build-phase cycle after the founder delegated build start and the

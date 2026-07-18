@@ -64,3 +64,13 @@ Entry format (keep an entry under ~15 lines):
 - **Result / verification:** `python3 -m json.tool` parsed the L01 fixture;
   metadata/content-block assertions and `git diff --check` passed.
 - **Open issues:** none
+
+## 2026-07-18 15:07 UTC — Build backend skeleton and curriculum serving
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Added the validated lesson-path manifest, FastAPI
+  curriculum/lesson/completion endpoints, sqlite completion storage, and tests.
+- **Files touched:** backend/; content/lesson_path.json; .gitignore; WORKER_LOG.md
+- **Result / verification:** `backend/.venv/bin/python -m pytest backend/tests -q`:
+  10 passed, 1 warning in 0.37s; `git diff --check` passed.
+- **Open issues:** No authentication in v1; README documents caller-supplied user_id.
