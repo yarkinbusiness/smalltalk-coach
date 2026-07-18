@@ -91,6 +91,17 @@ blocked, log that and stop — don't invent busywork.
 
 ## Cycle log
 
+- **2026-07-18 (brain/worker loop v2 — first cycle, end-to-end test):**
+  First real cycle of the Fable-5-brain / Codex-GPT-5.6-worker harness,
+  run on founder request as a full-loop test. Task: fix README.md intro
+  drift against the v1 ARCHITECTURE.md (docs-only; app code remains
+  gated on VALIDATION_PLAN.md). Worker: `gpt-5.6-terra` via `worker.sh`;
+  one round, no iteration needed. Brain review: diff scope, v1 accuracy
+  (including the "v1 UI not yet implemented" caveat), and the
+  WORKER_LOG.md entry all verified independently — ACCEPTED. Pushed via
+  `auto_push.sh`. The full protocol (activation guard → spec →
+  delegate → review → accept → log → push) is now proven working.
+
 <!-- Each automated cycle appends one entry here: date, what changed, what's next. -->
 
 - **2026-07-12**: Backlog item 1 (recommend.py/progress.py edge-case test

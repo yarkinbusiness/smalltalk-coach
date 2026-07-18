@@ -20,3 +20,13 @@ Entry format (keep an entry under ~15 lines):
 ```
 
 ---
+
+## 2026-07-18 10:28 UTC — Align README intro with v1 architecture
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Rewrote only the README opening product description to
+  reflect v1's Home and AI Coaching tabs and the unimplemented v1 UI.
+- **Files touched:** README.md; WORKER_LOG.md
+- **Result / verification:** Reviewed the README diff against ARCHITECTURE.md;
+  the architecture pointer and placeholder-name paragraph are preserved.
+- **Open issues:** none

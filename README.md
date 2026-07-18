@@ -1,7 +1,12 @@
 # SmallTalkCoach
 
-Practice small talk against a role-played AI partner, then get a coaching
-report on the conversation. See [ARCHITECTURE.md](ARCHITECTURE.md) for the
+The v1 direction has two tabs: Home, a structured, Duolingo-style learning
+path and the primary experience; and AI Coaching, a utility whose primary
+flow is screenshot diagnosis of real conversations. AI Coaching also includes
+optional talk-with-the-coach and daily roleplay-practice surfaces. The code in
+this repository currently implements the pre-v1 Practice + Progress roleplay
+foundation; the v1 two-tab UI is not yet implemented.
+See [ARCHITECTURE.md](ARCHITECTURE.md) for the
 full design and why it uses Claude Managed Agents (CMA) the way it does.
 
 "SmallTalkCoach" is a placeholder name/bundle id (`com.yarkinyavuz.smalltalkcoach`)
