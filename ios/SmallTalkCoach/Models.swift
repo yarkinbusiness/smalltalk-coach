@@ -78,7 +78,8 @@ struct ConceptIntro: Codable, Equatable {
 
 struct LessonExample: Codable, Equatable {
     let setting: String
-    let dialogue: [DialogueLine]
+    let dialogue: [DialogueLine]?
+    let narration: String?
 }
 
 struct DialogueLine: Codable, Equatable, Identifiable {

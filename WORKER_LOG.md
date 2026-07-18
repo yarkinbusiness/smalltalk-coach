@@ -151,3 +151,18 @@ Entry format (keep an entry under ~15 lines):
   document is 350 lines, and whitespace validation reported no errors.
 - **Open issues:** Exact model ids require current API-doc review and vision-model
   pinning remains gated on the required real-chat-screenshot quality evaluation.
+
+## 2026-07-18 16:51 UTC — iOS lesson detail and completion-check flow
+- **Model:** gpt-5.6-terra
+- **Status:** partial
+- **What was done:** Added navigable unlocked/completed lesson rows, a six-block
+  SwiftUI lesson detail view, local exercise/free-draft state, and protocol-backed
+  completion submission with success, feedback, and retry states.
+- **Files touched:** ios/SmallTalkCoach/APIClient.swift; ios/SmallTalkCoach/HomeView.swift;
+  ios/SmallTalkCoach/Models.swift; ios/SmallTalkCoach/LessonDetailView.swift;
+  ios/SmallTalkCoach/LessonDetailViewModel.swift; ios/SmallTalkCoachTests/SmallTalkCoachTests.swift; WORKER_LOG.md
+- **Result / verification:** `xcodegen generate --spec ios/project.yml --project ios`, the
+  generic-simulator `xcodebuild build`, and `build-for-testing` all succeeded; `git diff --check`
+  passed. The required iPhone 16 / iOS 18.2 `xcodebuild test` attempt could not execute tests:
+  CoreSimulatorService returned `Connection refused` and no simulator runtimes were discoverable.
+- **Open issues:** Run the XCTest suite on a host with CoreSimulatorService available.

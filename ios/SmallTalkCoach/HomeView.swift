@@ -37,7 +37,17 @@ struct HomeView: View {
                 ForEach(curriculum.units) { unit in
                     Section("Unit \(unit.unit)") {
                         ForEach(unit.lessons) { lesson in
-                            LessonRow(lesson: lesson)
+                            if lesson.isNavigable {
+                                NavigationLink {
+                                    LessonDetailView(lessonID: lesson.id) { _ in
+                                        Task { await viewModel.load() }
+                                    }
+                                } label: {
+                                    LessonRow(lesson: lesson)
+                                }
+                            } else {
+                                LessonRow(lesson: lesson)
+                            }
                         }
                     }
                 }
@@ -81,7 +91,7 @@ private struct LessonRow: View {
                 .padding(.vertical, 4)
                 .background(badgeColor.opacity(0.14), in: Capsule())
         }
-        .opacity(lesson.contentAvailable ? 1 : 0.45)
+        .opacity(lesson.isNavigable ? 1 : 0.45)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Lesson \(lesson.sequence), \(lesson.title), \(lesson.state.rawValue)")
     }
@@ -92,6 +102,12 @@ private struct LessonRow: View {
         case .unlocked: .blue
         case .locked: .secondary
         }
+    }
+}
+
+private extension CurriculumLesson {
+    var isNavigable: Bool {
+        contentAvailable && (state == .unlocked || state == .completed)
     }
 }
 
@@ -107,9 +123,9 @@ final class CurriculumViewModel: ObservableObject {
     @Published private(set) var curriculum: CurriculumResponse?
     @Published private(set) var phase: Phase = .idle
 
-    private let client: APIClient
+    private let client: any LessonAPI
 
-    init(client: APIClient = APIClient()) {
+    init(client: any LessonAPI = APIClient()) {
         self.client = client
     }
 

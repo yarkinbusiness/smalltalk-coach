@@ -25,9 +25,9 @@ cycles under the existing safety rules (never force-push, clean-tree gate,
    unblocked.** iOS track, one cycle at a time:
    a. ~~iOS scaffold~~ — done, accepted 2026-07-18 (cycle 11). Builds +
       4 unit tests green on iPhone 16 sim (brain-run).
-   b. Lesson detail view (content blocks) + completion-check flow. Note
-      for this cycle: make `LessonExample.dialogue` optional + add
-      `narration` (schema allows narration-only lessons).
+   b. ~~Lesson detail + completion flow~~ — done, accepted 2026-07-18
+      (cycle 13). 10 tests green on sim (brain-run); narration model fix
+      included. **The full learning loop is now usable in-app.**
    c. Coaching tab real UI once the pipeline exists.
 7. Coaching pipeline: ~~design doc~~ — done, accepted 2026-07-18
    (cycle 12): `docs/planning/COACHING_PIPELINE_V1.md`. Implementation
@@ -149,6 +149,21 @@ blocked, log that and stop — don't invent busywork.
    4 workers → synthesized report) against real CMA.
 
 ## Cycle log
+
+- **2026-07-18 (cycle 13 — iOS lesson detail + completion flow):** Worker:
+  `gpt-5.6-terra`, one round, honest partial (sandbox still blocks
+  CoreSimulatorService; in-sandbox build + build-for-testing green).
+  Shipped `LessonDetailView` (six blocks, interactive exercise with
+  per-option feedback, choice parts with server feedback by string key,
+  free-draft TextEditor labeled ungraded/on-device),
+  `LessonDetailViewModel` behind a new `LessonAPI` protocol (injectable,
+  unit-tested), Home navigation gated to
+  contentAvailable && (unlocked||completed), models fixed for
+  narration-only examples, curriculum refresh on return. Brain
+  verification: regenerated project, built, and ran **10 tests — all
+  passed on iPhone 16 / iOS 18.2** (brain's own run) — ACCEPTED.
+  **Next:** coaching backend implementation, text path first
+  (mocked-API; live smoke test stays gated on founder key confirmation).
 
 - **2026-07-18 (cycle 12 — coaching pipeline design doc):** Worker:
   `gpt-5.6-terra`, one round. Shipped

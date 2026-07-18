@@ -1,5 +1,11 @@
 import Foundation
 
+protocol LessonAPI {
+    func curriculum() async throws -> CurriculumResponse
+    func lesson(id: String) async throws -> Lesson
+    func completeLesson(id: String, answers: [String: Int]) async throws -> CompletionResponse
+}
+
 struct APIConfiguration {
     static let baseURLOverrideKey = "smalltalkCoach.apiBaseURL"
     static let defaultBaseURL = URL(string: "http://127.0.0.1:8000")!
@@ -65,7 +71,7 @@ enum APIClientError: LocalizedError {
     }
 }
 
-struct APIClient {
+struct APIClient: LessonAPI {
     private let session: URLSession
     private let configuration: APIConfiguration
     private let userIdentityStore: UserIdentityStore
