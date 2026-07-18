@@ -7,8 +7,8 @@ from `master`; the complete pre-cleanup tree is archived at tag
 Decision record: `DECISIONS.md` → "2026-07-18 — Full Restart". Every
 section below that references backend/iOS files, their backlog items, or
 their blocked gates is **historical** — kept for the record, not
-actionable. Current actionable state: planning/validation only, per the
-planning project's `VALIDATION_PLAN.md`; the brain/worker loop harness
+actionable. Current actionable state: planning/validation only, per
+`docs/planning/VALIDATION_PLAN.md`; the brain/worker loop harness
 (`.claude/skills/brain-worker-loop/`) is active for approved non-app work.
 
 **2026-07-12: read `VISION.md` before picking up any new work.** The

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Codex worker runner for the brain/worker build loop (see SKILL.md in this
-# directory and smalltalk-coach-planning/ORCHESTRATION.md).
+# directory and docs/planning/ORCHESTRATION.md).
 #
-# Model rule is FINAL (planning DECISIONS.md, 2026-07-18 entry): every worker
+# Model rule is FINAL (docs/planning/DECISIONS.md, 2026-07-18 entry): every worker
 # runs Codex GPT 5.6 only — gpt-5.6-terra (default) or gpt-5.6-luna. The brain
 # (Claude Fable 5) never implements; it only writes the spec this script hands
 # to the worker, then reviews the resulting diff.

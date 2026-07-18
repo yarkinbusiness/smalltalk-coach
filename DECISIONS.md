@@ -1,8 +1,9 @@
 # SmallTalkCoach — Engineering Decision Log (build repo)
 
 Append-only: one dated entry per real engineering/build decision, never
-rewritten or restructured. Product-level decisions live in the planning
-project (`smalltalk-coach-planning/DECISIONS.md`) — do not mix them here.
+rewritten or restructured. Product-level decisions live in
+`docs/planning/DECISIONS.md` (migrated 2026-07-18 from the
+smalltalk-coach-planning project) — do not mix them here.
 Read by the brain and by every Codex worker at cycle start (see
 `.claude/skills/brain-worker-loop/SKILL.md`).
 
@@ -100,3 +101,25 @@ Read by the brain and by every Codex worker at cycle start (see
   exactly two commits with no collaborators or secrets involved.
 - **Revisit trigger:** None — the exception is spent. Any future
   force-push requires a new explicit founder authorization and entry here.
+
+### 2026-07-18 — Planning Docs Migrated Into This Repo
+
+- **Status:** Confirmed (founder-approved migration, pre-archival)
+- **Decision:** All five planning-project markdown documents were copied
+  byte-exact (checksum-verified) into `docs/planning/`:
+  `VALIDATION_PLAN.md` (the validation gate this repo's scope rules
+  depend on), `PRODUCT_BRIEF.md` (full product definition),
+  `DECISIONS.md` (product decision log), `ORCHESTRATION.md` (the
+  brain/worker loop spec that `SKILL.md` and `worker.sh` cite), and
+  `CLAUDE_DISCOVERY_PROMPT.md` (reusable discovery process prompt). The
+  two decision logs are deliberately separate and complementary: this
+  root file = engineering/build decisions; `docs/planning/DECISIONS.md`
+  = product decisions. Neither replaces the other. No merges were
+  performed — copies are exact; forward-looking references in README,
+  PROGRESS, SKILL.md, and worker.sh now point at the in-repo paths, while
+  dated historical entries keep their original wording.
+- **Why:** The repo referenced planning documents it did not contain; the
+  planning project is slated for archival, so the repo must be
+  self-contained first.
+- **Revisit trigger:** The planning project is archived — remaining
+  references to it become historical-only.

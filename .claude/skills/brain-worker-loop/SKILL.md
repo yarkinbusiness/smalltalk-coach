@@ -5,8 +5,8 @@ description: Run one brain/worker build cycle — Claude Fable 5 brain plans, de
 
 # Brain/Worker Build Loop
 
-Spec: `smalltalk-coach-planning/ORCHESTRATION.md`. Model rules locked in that
-project's `DECISIONS.md` ("2026-07-18 — Worker Model Locked to Codex (GPT 5.6)")
+Spec: `docs/planning/ORCHESTRATION.md`. Model rules locked in
+`docs/planning/DECISIONS.md` ("2026-07-18 — Worker Model Locked to Codex (GPT 5.6)")
 — final, not open to change:
 
 - **Brain / orchestrator: Claude Fable 5 only.** The session running this skill
@@ -28,7 +28,7 @@ project's `DECISIONS.md` ("2026-07-18 — Worker Model Locked to Codex (GPT 5.6)
    `crontab -l`. If any active loop exists, defer to it and stop.
 2. Read `PROGRESS.md` at the repo root and defer to its current state; a prior
    automated loop has committed to `master` before.
-3. Scope gate: **no app code until the planning repo's `VALIDATION_PLAN.md`
+3. Scope gate: **no app code until `docs/planning/VALIDATION_PLAN.md`
    thresholds are met and the v1 lesson path is defined.** Until then this
    skill may only be used for non-app work the user explicitly requests.
 4. First action of any new loop: update `PROGRESS.md` (what the loop is doing,
@@ -47,7 +47,7 @@ therefore lives in this repository (decision: repo `DECISIONS.md`,
 - `PROGRESS.md` — status, backlog, cycle log. The brain updates it after
   every accepted work unit and at loop start/stop.
 - `DECISIONS.md` (repo root) — append-only engineering decisions. Product
-  decisions go to `smalltalk-coach-planning/DECISIONS.md` instead; the brain
+  decisions go to `docs/planning/DECISIONS.md` instead; the brain
   routes each decision to the right file.
 - `WORKER_LOG.md` (repo root) — append-only, one structured entry per worker
   task, format documented at the top of the file. `worker.sh` injects this

@@ -11,7 +11,7 @@ founder approved a full restart: the Phase 0 implementation (a FastAPI
 backend and SwiftUI iOS app built around the earlier roleplay-practice
 concept) was removed from `master`. No application code exists in this
 repository right now, and none gets written until the validation
-thresholds in the planning project's `VALIDATION_PLAN.md` are met and the
+thresholds in `docs/planning/VALIDATION_PLAN.md` are met and the
 v1 lesson path is defined.
 
 The removed implementation is archived, not lost — tag `phase0-archive`
@@ -43,9 +43,9 @@ to its upstream only, never forced, dirty trees refused.
 
 ## Next steps
 
-1. Run the validation interviews defined in the planning project's
-   `VALIDATION_PLAN.md` (10–15 Relocated Newcomers, willingness-to-pay
-   probe) and evaluate against its thresholds.
+1. Run the validation interviews defined in
+   `docs/planning/VALIDATION_PLAN.md` (10–15 Relocated Newcomers,
+   willingness-to-pay probe) and evaluate against its thresholds.
 2. If thresholds hold: define the v1 lesson path, then re-derive the
    implementation plan from `VISION.md`/`ARCHITECTURE.md` and start
    brain/worker build cycles.
