@@ -154,6 +154,25 @@ blocked, log that and stop — don't invent busywork.
 
 ## Cycle log
 
+- **2026-07-19 (cycle 16 — first live simulator run; two runtime bugs
+  fixed):** Founder-requested run session: backend via uvicorn + app in
+  the iPhone 16 simulator. First launch rendered a blank letterboxed Home
+  tab. Brain diagnosis (empirical: zero /curriculum requests while the
+  Coaching health probe succeeded; app UserDefaults domain absent):
+  (1) missing `UILaunchScreen` in the generated Info.plist forced legacy
+  compatibility mode — fixed via worker micro-cycle adding
+  `INFOPLIST_KEY_UILaunchScreen_Generation` to project.yml; (2) HomeView
+  attached `.task` to content whose initial `.idle`/nil state resolved to
+  `EmptyView` (explicit `else { EmptyView() }`), and SwiftUI never fires
+  `.task` on EmptyView — the load could never start. Fixed via worker
+  micro-cycle: `.task` moved onto the NavigationStack, `.idle` and nil
+  states render the loading view, EmptyView branch removed. Verified
+  live: app fetches /curriculum with its persisted UUID and renders all
+  4 units with correct lock states (screenshot-verified); 16 XCTests
+  still green. Lesson recorded: SwiftUI `.task` on possibly-empty
+  content is a load-never-starts trap; unit tests cannot catch it —
+  only a real launch does.
+
 - **2026-07-18 (cycle 15 — iOS Coaching tab; founder-independent queue
   complete):** Worker: `gpt-5.6-terra`, one round, honest partial
   (sandbox blocks CoreSimulatorService). Shipped `CoachingView` +

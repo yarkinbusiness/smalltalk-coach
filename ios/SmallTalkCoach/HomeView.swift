@@ -7,6 +7,8 @@ struct HomeView: View {
         NavigationStack {
             Group {
                 switch viewModel.phase {
+                case .idle:
+                    ProgressView("Loading your learning path…")
                 case .loading where viewModel.curriculum == nil:
                     ProgressView("Loading your learning path…")
                 case .failed(let message) where viewModel.curriculum == nil:
@@ -24,9 +26,9 @@ struct HomeView: View {
                 }
             }
             .navigationTitle("Home")
-            .task {
-                await viewModel.loadIfNeeded()
-            }
+        }
+        .task {
+            await viewModel.loadIfNeeded()
         }
     }
 
@@ -64,7 +66,7 @@ struct HomeView: View {
                 }
             }
         } else {
-            EmptyView()
+            ProgressView("Loading your learning path…")
         }
     }
 }

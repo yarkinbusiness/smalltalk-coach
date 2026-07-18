@@ -17,6 +17,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.smalltalkcoach.app
         PRODUCT_NAME: SmallTalkCoach
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
   SmallTalkCoachTests:
     type: bundle.unit-test
     platform: iOS

@@ -202,3 +202,19 @@ Entry format (keep an entry under ~15 lines):
   `build-for-testing` passed; `git diff --check` passed. iPhone 16 / iOS 18.2 `xcodebuild test` was attempted but
   CoreSimulatorService/simdiskimaged is unavailable in this sandbox, so tests could not execute.
 - **Open issues:** Simulator test execution needs a working CoreSimulatorService; reviewer can run the compiled tests.
+
+## 2026-07-18 20:56 UTC — Fix generated iOS launch-screen configuration
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Added the app target's generated `UILaunchScreen` configuration key.
+- **Files touched:** ios/project.yml; WORKER_LOG.md
+- **Result / verification:** `xcodegen generate --spec ios/project.yml --project ios` and the required generic-simulator `xcodebuild build` both passed; `plutil -p` on the built app's Info.plist reported `UILaunchScreen`.
+- **Open issues:** none
+
+## 2026-07-18 21:00 UTC — Fix Home initial curriculum loading
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Moved Home's load task to NavigationStack and made both idle and nil-curriculum states visible loading UI. Reviewed CoachingView: its availability task already wraps visible content in every state, so no change was needed.
+- **Files touched:** ios/SmallTalkCoach/HomeView.swift; WORKER_LOG.md
+- **Result / verification:** Generic iOS Simulator `xcodebuild build` passed (`BUILD SUCCEEDED`); `git diff --check` passed. Attempted the iPhone 16/iOS 18.2 XCTest run, but CoreSimulatorService/simdiskimaged is unavailable in this sandbox, so tests could not execute.
+- **Open issues:** Simulator test execution requires a working CoreSimulatorService.
