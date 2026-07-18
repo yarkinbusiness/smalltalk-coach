@@ -20,12 +20,19 @@ cycles under the existing safety rules (never force-push, clean-tree gate,
    (cycle 8), Unit 4 (cycle 9). **Full 12-lesson curriculum authored and
    served.**
 5. ~~Persistence/code hardening~~ — done, accepted 2026-07-18 (cycle 10).
-   **Unblocked backlog exhausted; loop paused.** Next work requires either
-   founder externals (items 6–7) or a new product/design decision (e.g.
-   coaching-pipeline design pass, lesson content revision pass, free-draft
-   grading design).
-6. Coaching/diagnosis pipeline — **blocked: needs Anthropic API key**.
-7. iOS app — **blocked: needs Xcode** (this machine has CLT only).
+6. **LOOP RESUMED (2026-07-18, founder update): Xcode 26.6 installed and
+   verified (xcodebuild, xcodegen 2.45.4, iOS 18.2 simulators) — iOS
+   unblocked.** iOS track, one cycle at a time:
+   a. **(in flight)** iOS scaffold: xcodegen project, two-tab shell
+      (Home + Coaching placeholder), API models/client, Home curriculum
+      list with state badges; buildable + unit-testable via xcodebuild.
+   b. Lesson detail view (content blocks) + completion-check flow.
+   c. Coaching tab real UI once the pipeline exists.
+7. Coaching pipeline — founder is providing a test Anthropic key (to
+   `~/.env`, never in the repo). Order: design doc cycle first, then
+   implementation once the key is confirmed present. Key handling rules:
+   the key value never appears in specs, code, logs, worker output, or
+   git; backend reads it from the environment at runtime only.
 
 **2026-07-18: LOOP ACTIVATED — interview gate waived (founder
 decision).** The validation-interview gate is consciously skipped (records:
