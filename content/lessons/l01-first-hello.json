@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "id": "l01-first-hello",
+  "title": "First hello",
+  "unit": 1,
+  "sequence": 1,
+  "concept": "Open with a simple greeting plus a small, shared-context cue instead of searching for an impressive line.",
+  "skill_objective": "User can start a brief conversation with a new colleague or classmate using an observable cue from the moment.",
+  "dimensions": [
+    "warmth",
+    "flow"
+  ],
+  "concept_intro": {
+    "text": "On a first week, it can feel as if you need an impressive opening. You do not. A simple hello plus one small thing you both can see gives the other person an easy place to respond. The cue can be as ordinary as the coffee machine, a queue, or the meeting about to start."
+  },
+  "example": {
+    "setting": "It is Maya's first morning at a new office. Before the team stand-up, she and a colleague are waiting beside the coffee machine while it slowly finishes brewing.",
+    "dialogue": [
+      {
+        "speaker": "Maya",
+        "text": "Hi, I am Maya. I am still learning where everything is—does the coffee machine always take this long?"
+      },
+      {
+        "speaker": "Colleague",
+        "text": "Welcome, Maya. It is usually a little slow first thing."
+      },
+      {
+        "speaker": "Maya",
+        "text": "Good to know. At least I found it before the stand-up."
+      }
+    ]
+  },
+  "responses": {
+    "bad": {
+      "text": "I just moved here and I do not know anyone. What should I do around here?",
+      "explanation": "This asks a new colleague to solve a broad personal problem before there is any shared conversation. The other person may be kind, but they have little easy way to answer briefly or build from the moment."
+    },
+    "better": {
+      "text": "Hi, I am Maya. I am new to the team.",
+      "explanation": "This is warm and clear. It introduces Maya without pressure, but it leaves the colleague to invent the next topic if they want the conversation to continue."
+    },
+    "best": {
+      "text": "Hi, I am Maya. I am new to the team—have you found the coffee here worth the wait?",
+      "explanation": "The greeting makes the approach friendly, and the coffee is a small fact both people can observe. The colleague can answer with a preference, a joke, or simply a short comment, so the opening creates room without demanding personal information."
+    }
+  },
+  "exercise": {
+    "prompt": "You are waiting at the coffee machine with a colleague you have not met. Which detail is a shared-context cue you could use?",
+    "options": [
+      {
+        "text": "The line is longer than you expected this morning.",
+        "feedback": "Yes. Anyone in the queue can notice the line, so it is a low-pressure topic the other person can respond to or leave alone."
+      },
+      {
+        "text": "They look like they did not sleep much.",
+        "feedback": "This guesses something personal about the other person. A shared-context cue should come from the situation, not an assumption about them."
+      },
+      {
+        "text": "They seem like the most interesting person in the office.",
+        "feedback": "This is a big judgment, not a small observable detail you both share in the moment."
+      }
+    ],
+    "correct_option_index": 0
+  },
+  "practice": {
+    "type": "Short roleplay",
+    "scenario_setup": "It is your first week at a new office. You are at the coffee machine before the team stand-up, and a colleague is waiting beside you while the machine finishes.",
+    "user_task": "Write a greeting and add one small cue from this shared moment. Use words that sound like you. Aim for an easy opening, not a perfect line."
+  },
+  "completion_check": {
+    "parts": [
+      {
+        "kind": "choice",
+        "question": "Which opening best uses a shared-context cue with a new colleague while you both wait outside a meeting room?",
+        "options": [
+          {
+            "text": "Hi, I am Sam. This room has a very serious-looking waiting area—do meetings usually start on time here?",
+            "feedback": "Correct. It begins warmly and uses the waiting area and meeting timing, which both people can observe. The question is easy to answer without asking for private information."
+          },
+          {
+            "text": "Hi. You seem nervous. Is this meeting a big deal for you?",
+            "feedback": "This makes an assumption about the other person's feelings and asks them to explain themselves. It is not a shared-context cue."
+          },
+          {
+            "text": "Hi, I need to make friends here. Can you introduce me to everyone?",
+            "feedback": "It is honest, but it puts a large task on someone you have just met instead of starting with the small moment you share."
+          }
+        ],
+        "correct_option_index": 0
+      },
+      {
+        "kind": "free_draft",
+        "prompt": "Draft an opening for a shared waiting moment at your office or campus. Then name the shared-context cue you used.",
+        "good_answer_demonstrates": "A simple greeting plus one observable detail from the shared moment, leaving the other person room to respond in their own way rather than relying on a clever or overly personal line.",
+        "grading": "deferred-v1"
+      }
+    ]
+  }
+}

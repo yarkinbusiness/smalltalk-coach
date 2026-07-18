@@ -10,10 +10,9 @@ cycles under the existing safety rules (never force-push, clean-tree gate,
 
 ## v1 build backlog (current, maintained by the brain each cycle)
 
-1. **Cycle A (docs):** `docs/planning/CONTENT_MODEL_V1.md` — lesson content
-   schema + authoring approach + fully-authored `l01-first-hello` sample as
-   schema fixture; sync stale gate text in ORCHESTRATION.md/SKILL.md.
-2. **Cycle B (code):** backend skeleton + curriculum serving — FastAPI app,
+1. ~~**Cycle A (docs):** CONTENT_MODEL_V1.md + l01 fixture + gate sync~~ —
+   done, accepted 2026-07-18 (cycle 4 below).
+2. **Cycle B (code, next):** backend skeleton + curriculum serving — FastAPI app,
    curriculum/lesson/progress endpoints per LESSON_PATH_V1 (unlock rule
    enforced), content loaded from schema-validated static files, pytest
    suite green with no live-API dependency.
@@ -135,6 +134,19 @@ blocked, log that and stop — don't invent busywork.
    4 workers → synthesized report) against real CMA.
 
 ## Cycle log
+
+- **2026-07-18 (cycle 4 — content model + L01 fixture; build phase begins):**
+  First build-phase cycle after the founder delegated build start and the
+  brain selected content-model-first sequencing. Worker: `gpt-5.6-terra`,
+  one round. Shipped `docs/planning/CONTENT_MODEL_V1.md` (static-JSON
+  lesson schema: six content blocks, deterministic `choice` +
+  `deferred-v1` `free_draft` completion checks, load-time validation
+  rules) and `content/lessons/l01-first-hello.json` (first fully-authored
+  lesson, metadata verbatim-matched to LESSON_PATH_V1 §3); gate text in
+  ORCHESTRATION.md/SKILL.md now reflects the active build phase. Brain
+  review: JSON parses, schema/fixture conform field-for-field, quality
+  bar met — ACCEPTED. **Next:** Cycle B, backend skeleton + curriculum
+  serving against this schema.
 
 - **2026-07-18 (cycle 3 — v1 lesson path defined):** Task: write
   `docs/planning/LESSON_PATH_V1.md` (the locked v1 beginner path) + sync

@@ -52,3 +52,15 @@ Entry format (keep an entry under ~15 lines):
   12 lessons and 12 ids, completion checks, and dimension mappings; each lesson id
   appears in the routing table.
 - **Open issues:** none
+
+## 2026-07-18 14:57 UTC — Define lesson content model and author L01 fixture
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Added the v1 static JSON lesson schema and a complete
+  L01 authored fixture; synchronized the two stale build-scope statements.
+- **Files touched:** docs/planning/CONTENT_MODEL_V1.md;
+  content/lessons/l01-first-hello.json; docs/planning/ORCHESTRATION.md;
+  .claude/skills/brain-worker-loop/SKILL.md; WORKER_LOG.md
+- **Result / verification:** `python3 -m json.tool` parsed the L01 fixture;
+  metadata/content-block assertions and `git diff --check` passed.
+- **Open issues:** none
