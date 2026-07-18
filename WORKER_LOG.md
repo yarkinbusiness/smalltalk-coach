@@ -125,3 +125,16 @@ Entry format (keep an entry under ~15 lines):
   12 passed, 1 warning in 0.43s; a direct manifest-to-lesson check matched all
   12 practice types; `git diff --check` passed.
 - **Open issues:** none
+
+## 2026-07-18 16:32 UTC — Build iOS two-tab curriculum scaffold
+- **Model:** gpt-5.6-terra
+- **Status:** partial
+- **What was done:** Added the xcodegen iOS project, Home and AI Coaching tab shell,
+  typed API models/client, curriculum Home UI, and four focused XCTest cases.
+- **Files touched:** ios/project.yml; ios/SmallTalkCoach/; ios/SmallTalkCoachTests/;
+  ios/README.md; WORKER_LOG.md
+- **Result / verification:** `xcodegen generate` and the required generic-simulator
+  `xcodebuild build` succeeded; `build-for-testing` also succeeded. The required
+  iPhone 16 test command could not run: CoreSimulatorService returned connection refused.
+- **Open issues:** Tests were written and compiled but not executed; run them on a host
+  with the iPhone 16 / iOS 18.2 simulator service available.

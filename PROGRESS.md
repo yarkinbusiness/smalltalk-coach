@@ -23,10 +23,11 @@ cycles under the existing safety rules (never force-push, clean-tree gate,
 6. **LOOP RESUMED (2026-07-18, founder update): Xcode 26.6 installed and
    verified (xcodebuild, xcodegen 2.45.4, iOS 18.2 simulators) — iOS
    unblocked.** iOS track, one cycle at a time:
-   a. **(in flight)** iOS scaffold: xcodegen project, two-tab shell
-      (Home + Coaching placeholder), API models/client, Home curriculum
-      list with state badges; buildable + unit-testable via xcodebuild.
-   b. Lesson detail view (content blocks) + completion-check flow.
+   a. ~~iOS scaffold~~ — done, accepted 2026-07-18 (cycle 11). Builds +
+      4 unit tests green on iPhone 16 sim (brain-run).
+   b. Lesson detail view (content blocks) + completion-check flow. Note
+      for this cycle: make `LessonExample.dialogue` optional + add
+      `narration` (schema allows narration-only lessons).
    c. Coaching tab real UI once the pipeline exists.
 7. Coaching pipeline — founder is providing a test Anthropic key (to
    `~/.env`, never in the repo). Order: design doc cycle first, then
@@ -147,6 +148,23 @@ blocked, log that and stop — don't invent busywork.
    4 workers → synthesized report) against real CMA.
 
 ## Cycle log
+
+- **2026-07-18 (cycle 11 — iOS scaffold, first iOS cycle post-Xcode):**
+  Worker: `gpt-5.6-terra`, one round, honest partial report (sandbox
+  blocks CoreSimulatorService — tests written, not executed in-sandbox;
+  in-sandbox `xcodegen generate` + simulator build succeeded). Shipped
+  `ios/`: xcodegen project.yml (xcodeproj stays gitignored), two-tab
+  SwiftUI shell (Home + Coaching placeholder per ARCHITECTURE v1), Codable
+  models mirroring every backend shape (incl. kind-discriminated
+  completion-check parts), async APIClient (configurable base URL,
+  persisted UUID user id), Home curriculum list with unit sections and
+  state badges, 4 XCTests (one decodes the real l01 file embedded as a
+  test resource). Brain verification: regenerated project, simulator
+  build, and **all 4 tests executed and passed on iPhone 16 / iOS 18.2**
+  (brain's own run) — ACCEPTED. Known gap for cycle b:
+  `LessonExample.dialogue` non-optional though schema allows
+  narration-only. **Next:** coaching-pipeline design doc (key-independent),
+  then iOS lesson detail.
 
 - **2026-07-18 (cycle 10 — backend hardening; unblocked backlog complete):**
   Worker: `gpt-5.6-terra`, one round. sqlite connections now explicitly
