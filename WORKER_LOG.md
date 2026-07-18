@@ -138,3 +138,16 @@ Entry format (keep an entry under ~15 lines):
   iPhone 16 test command could not run: CoreSimulatorService returned connection refused.
 - **Open issues:** Tests were written and compiled but not executed; run them on a host
   with the iPhone 16 / iOS 18.2 simulator service available.
+
+## 2026-07-18 16:43 UTC — Design v1 AI Coaching pipeline
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Added the build-ready Messages-API coaching pipeline
+  contract: normalized transcript, structured diagnosis, deterministic manifest
+  routing, API/error shapes, safety/privacy boundaries, and test plan.
+- **Files touched:** docs/planning/COACHING_PIPELINE_V1.md; WORKER_LOG.md
+- **Result / verification:** Reviewed against the required architecture, brief,
+  routing manifest, decisions, and backend service; 7 required sections present,
+  document is 350 lines, and whitespace validation reported no errors.
+- **Open issues:** Exact model ids require current API-doc review and vision-model
+  pinning remains gated on the required real-chat-screenshot quality evaluation.

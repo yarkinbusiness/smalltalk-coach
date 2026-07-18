@@ -29,11 +29,12 @@ cycles under the existing safety rules (never force-push, clean-tree gate,
       for this cycle: make `LessonExample.dialogue` optional + add
       `narration` (schema allows narration-only lessons).
    c. Coaching tab real UI once the pipeline exists.
-7. Coaching pipeline — founder is providing a test Anthropic key (to
-   `~/.env`, never in the repo). Order: design doc cycle first, then
-   implementation once the key is confirmed present. Key handling rules:
-   the key value never appears in specs, code, logs, worker output, or
-   git; backend reads it from the environment at runtime only.
+7. Coaching pipeline: ~~design doc~~ — done, accepted 2026-07-18
+   (cycle 12): `docs/planning/COACHING_PIPELINE_V1.md`. Implementation
+   **waits on founder confirming the Anthropic key is in `~/.env`**
+   (instructions delivered; key value never in specs/code/logs/git; unit
+   tests mock the API regardless, so implementation could start key-less
+   if prioritized — live smoke test is the only key-dependent piece).
 
 **2026-07-18: LOOP ACTIVATED — interview gate waived (founder
 decision).** The validation-interview gate is consciously skipped (records:
@@ -148,6 +149,21 @@ blocked, log that and stop — don't invent busywork.
    4 workers → synthesized report) against real CMA.
 
 ## Cycle log
+
+- **2026-07-18 (cycle 12 — coaching pipeline design doc):** Worker:
+  `gpt-5.6-terra`, one round. Shipped
+  `docs/planning/COACHING_PIPELINE_V1.md` (350 lines): plain-Messages-API
+  v1 (no CMA dependency, upgrade path preserved), transcript/diagnosis
+  JSON contracts with quote-backed observation-vs-inference rules,
+  deterministic manifest routing (fixed tie-break, fail-closed), sync-text
+  / async-screenshot API surface with full error taxonomy, safety &
+  privacy section (per-request consent, no raw-image persistence, crisis
+  escalation suppresses report+routing), mocked-API test strategy + opt-in
+  live smoke test + the real-screenshot eval gating vision-model pinning.
+  Brain review: read in full against locked decisions and PRODUCT_BRIEF
+  §6/§11/§12 — ACCEPTED. **Next:** iOS lesson detail + completion flow
+  (backlog 6b); coaching implementation queued behind founder key
+  confirmation.
 
 - **2026-07-18 (cycle 11 — iOS scaffold, first iOS cycle post-Xcode):**
   Worker: `gpt-5.6-terra`, one round, honest partial report (sandbox
