@@ -101,6 +101,29 @@ Use this file to preserve important product decisions and prevent the same quest
   signals (waitlist behavior, store reviews, usage, refunds) contradict the
   wedge, payer, or pricing assumptions.
 
+### 2026-07-18 — Build Start Approved (Founder Delegation)
+
+- **Status:** Confirmed
+- **Decision:** The v1 build begins. The scope gate's remaining condition
+  (explicit founder approval of build start) is met: the founder authorized
+  build start if the brain's expert judgment selected it, and it did (see
+  root `DECISIONS.md` → "2026-07-18 — Build Start Approved;
+  Content-Model-First Sequencing" for the engineering rationale). Build
+  order is learning-path-first, per the product thesis: (1) lesson content
+  model + one authored sample lesson, (2) backend curriculum-serving
+  foundation, (3) remaining lesson content, (4) coaching/diagnosis surface,
+  (5) iOS app when the Xcode gate clears.
+- **Why:** Founder instruction 2026-07-18 delegating the go/no-go to the
+  brain; the learning path is the primary experience, so it is built and
+  made real first.
+- **Evidence:** Founder instruction; `LESSON_PATH_V1.md` accepted the same
+  day, closing the "first 5–10 lessons" open decision.
+- **Consequence:** The product is now in build phase under the brain/worker
+  loop's existing safety rules; interview-dependent assumptions in
+  `LESSON_PATH_V1.md` §6 remain unvalidated and carry into the build.
+- **Revisit trigger:** Founder redirects; or early build reveals the lesson
+  path/content model needs restructuring before more code lands.
+
 ## Decision Template
 
 ### YYYY-MM-DD — Short Decision Name

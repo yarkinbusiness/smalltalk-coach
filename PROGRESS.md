@@ -1,6 +1,28 @@
 # Progress & backlog
 
-**2026-07-18 (latest): LOOP ACTIVATED — interview gate waived (founder
+**2026-07-18 (latest): BUILD MODE — build start approved, scope gate
+lifted.** Founder delegated the go/no-go to the brain (records: root
+`DECISIONS.md` → "2026-07-18 — Build Start Approved; Content-Model-First
+Sequencing"; `docs/planning/DECISIONS.md` → "2026-07-18 — Build Start
+Approved (Founder Delegation)"). The loop now runs autonomous bounded
+cycles under the existing safety rules (never force-push, clean-tree gate,
+3-round cap, brain reviews everything before commit/push).
+
+## v1 build backlog (current, maintained by the brain each cycle)
+
+1. **Cycle A (docs):** `docs/planning/CONTENT_MODEL_V1.md` — lesson content
+   schema + authoring approach + fully-authored `l01-first-hello` sample as
+   schema fixture; sync stale gate text in ORCHESTRATION.md/SKILL.md.
+2. **Cycle B (code):** backend skeleton + curriculum serving — FastAPI app,
+   curriculum/lesson/progress endpoints per LESSON_PATH_V1 (unlock rule
+   enforced), content loaded from schema-validated static files, pytest
+   suite green with no live-API dependency.
+3. Author remaining Unit 1 content (`l02`, `l03`) against the schema.
+4. Completion-check flow + progress persistence hardening.
+5. Coaching/diagnosis pipeline — **blocked: needs Anthropic API key**.
+6. iOS app — **blocked: needs Xcode** (this machine has CLT only).
+
+**2026-07-18: LOOP ACTIVATED — interview gate waived (founder
 decision).** The validation-interview gate is consciously skipped (records:
 `docs/planning/DECISIONS.md` → "2026-07-18 — Validation Interviews Deferred;
 Build Gate Waived (Founder)" and root `DECISIONS.md` → "2026-07-18 — Build

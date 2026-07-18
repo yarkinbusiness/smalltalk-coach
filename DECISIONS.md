@@ -124,6 +124,35 @@ Read by the brain and by every Codex worker at cycle start (see
   path is accepted and the founder gives build go-ahead (the gate then
   lifts entirely and this entry becomes historical).
 
+### 2026-07-18 — Build Start Approved; Content-Model-First Sequencing
+
+- **Status:** Confirmed (founder delegation + brain decision)
+- **Decision:** The founder granted build-start approval contingent on the
+  brain's expert judgment (instruction, 2026-07-18); the brain selects
+  **build start** with exactly one prerequisite planning cycle: define the
+  lesson content schema and authoring approach
+  (`docs/planning/CONTENT_MODEL_V1.md` + one fully-authored sample lesson
+  as a schema fixture) before the first app-code cycle (backend skeleton +
+  curriculum serving). The scope gate is **lifted** — its remaining
+  condition (explicit founder approval) is met via the delegated grant.
+- **Why:** Curriculum-serving code cannot be correctly specified against an
+  undefined content model — the schema is the single blocking dependency
+  between `LESSON_PATH_V1.md` and the backend, and data-model rework is the
+  expensive failure mode. Everything else that "more planning" would cover
+  (implementation sequencing) lives as a maintained backlog in
+  `PROGRESS.md` instead of a standalone doc — planning bloat is the other
+  failure mode. Environment constraints reinforce backend-first: iOS is
+  Xcode-blocked and live coaching needs the CMA key; curriculum serving
+  needs neither.
+- **Consequence:** Gate text in `docs/planning/ORCHESTRATION.md` and
+  `SKILL.md` gets synced (worker task, same cycle as the content model).
+  The backend is rebuilt fresh; `phase0-archive` is consulted selectively
+  only where a component genuinely fits (per the Full Restart entry).
+  Coaching pipeline and iOS remain sequenced after curriculum serving.
+- **Revisit trigger:** The content schema proves unstable across the first
+  authored lessons (pause serving work and fix the schema), or the founder
+  redirects the build order.
+
 ### 2026-07-18 — Planning Docs Migrated Into This Repo
 
 - **Status:** Confirmed (founder-approved migration, pre-archival)
