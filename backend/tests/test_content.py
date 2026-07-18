@@ -16,11 +16,15 @@ MANIFEST_PATH = REPO_ROOT / "content" / "lesson_path.json"
 LESSONS_DIR = REPO_ROOT / "content" / "lessons"
 
 
-def test_real_manifest_is_consistent_and_l01_loads_as_authored() -> None:
+def test_real_manifest_is_consistent_and_authored_lessons_load() -> None:
     curriculum = load_curriculum(MANIFEST_PATH, LESSONS_DIR)
 
     assert len(curriculum.lessons) == 12
-    assert set(curriculum.content) == {"l01-first-hello"}
+    assert set(curriculum.content) == {
+        "l01-first-hello",
+        "l02-use-the-setting",
+        "l03-easy-first-question",
+    }
     assert {name: len(ids) for name, ids in curriculum.routing.items()} == {
         "warmth": 5,
         "curiosity": 6,

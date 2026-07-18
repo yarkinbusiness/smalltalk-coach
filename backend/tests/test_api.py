@@ -29,9 +29,17 @@ def _states(payload: dict[str, object]) -> dict[str, str]:
     }
 
 
+def _correct_choice_answers(lesson: dict[str, object]) -> dict[str, int]:
+    return {
+        str(index): part["correct_option_index"]
+        for index, part in enumerate(lesson["completion_check"]["parts"])
+        if part["kind"] == "choice"
+    }
+
+
 def test_health_and_initial_curriculum(tmp_path: Path) -> None:
     with _client(tmp_path) as client:
-        assert client.get("/health").json() == {"status": "ok", "lessons_loaded": 1}
+        assert client.get("/health").json() == {"status": "ok", "lessons_loaded": 3}
         response = client.get("/curriculum", params={"user_id": "maya"})
 
     assert response.status_code == 200
@@ -46,7 +54,11 @@ def test_health_and_initial_curriculum(tmp_path: Path) -> None:
         (11, "end-warmly"), (12, "make-continuity-easy"),
     ])
     lessons = [lesson for unit in payload["units"] for lesson in unit["lessons"]]
-    assert [lesson["id"] for lesson in lessons if lesson["content_available"]] == ["l01-first-hello"]
+    assert [lesson["id"] for lesson in lessons if lesson["content_available"]] == [
+        "l01-first-hello",
+        "l02-use-the-setting",
+        "l03-easy-first-question",
+    ]
 
 
 def test_lesson_error_distinctions_and_locked_completion(tmp_path: Path) -> None:
@@ -58,12 +70,22 @@ def test_lesson_error_distinctions_and_locked_completion(tmp_path: Path) -> None
             json={"user_id": "maya", "answers": {}},
         ).status_code == 423
 
+        first_lesson = client.get("/lessons/l01-first-hello", params={"user_id": "maya"})
+        assert first_lesson.status_code == 200
         complete = client.post(
             "/lessons/l01-first-hello/complete",
-            json={"user_id": "maya", "answers": {"0": 0}},
+            json={"user_id": "maya", "answers": _correct_choice_answers(first_lesson.json())},
         )
         assert complete.json() == {"completed": True, "unlocked_next": "l02-use-the-setting"}
-        pending = client.get("/lessons/l02-use-the-setting", params={"user_id": "maya"})
+        for lesson_id in ("l02-use-the-setting", "l03-easy-first-question"):
+            lesson = client.get(f"/lessons/{lesson_id}", params={"user_id": "maya"})
+            assert lesson.status_code == 200
+            completion = client.post(
+                f"/lessons/{lesson_id}/complete",
+                json={"user_id": "maya", "answers": _correct_choice_answers(lesson.json())},
+            )
+            assert completion.json()["completed"] is True
+        pending = client.get("/lessons/l04-answer-and-return", params={"user_id": "maya"})
 
     assert pending.status_code == 404
     assert pending.json()["detail"] == "content_pending"

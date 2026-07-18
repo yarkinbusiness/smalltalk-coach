@@ -74,3 +74,12 @@ Entry format (keep an entry under ~15 lines):
 - **Result / verification:** `backend/.venv/bin/python -m pytest backend/tests -q`:
   10 passed, 1 warning in 0.37s; `git diff --check` passed.
 - **Open issues:** No authentication in v1; README documents caller-supplied user_id.
+
+## 2026-07-18 15:12 UTC — Author Unit 1 lessons L02 and L03
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Authored the locked L02 and L03 lessons with setting-led
+  exercises, practice, and deterministic plus deferred completion checks; updated content/API tests for all authored lessons.
+- **Files touched:** content/lessons/l02-use-the-setting.json; content/lessons/l03-easy-first-question.json; backend/tests/test_content.py; backend/tests/test_api.py; WORKER_LOG.md
+- **Result / verification:** Both JSON files parsed with `python3 -m json.tool`; `backend/.venv/bin/python -m pytest backend/tests -q`: 10 passed, 1 warning in 0.37s; `git diff --check` passed.
+- **Open issues:** none

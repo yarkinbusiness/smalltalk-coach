@@ -14,10 +14,14 @@ cycles under the existing safety rules (never force-push, clean-tree gate,
    done, accepted 2026-07-18 (cycle 4 below).
 2. ~~**Cycle B (code):** backend skeleton + curriculum serving~~ — done,
    accepted 2026-07-18 (cycle 5 below). 10 tests green.
-3. **(next)** Author remaining Unit 1 content (`l02`, `l03`) against the schema.
-4. Completion-check flow + progress persistence hardening.
-5. Coaching/diagnosis pipeline — **blocked: needs Anthropic API key**.
-6. iOS app — **blocked: needs Xcode** (this machine has CLT only).
+3. ~~Author remaining Unit 1 content (`l02`, `l03`)~~ — done, accepted
+   2026-07-18 (cycle 6 below). Unit 1 fully authored.
+4. **(next)** Author Unit 2 content (`l04`, `l05`, `l06`), then Unit 3
+   (`l07`–`l09`), then Unit 4 (`l10`–`l12`) — one unit per cycle.
+5. Persistence/code hardening: close sqlite connections explicitly; move
+   PRACTICE_TYPES into the manifest (schema_version 2 or manifest field).
+6. Coaching/diagnosis pipeline — **blocked: needs Anthropic API key**.
+7. iOS app — **blocked: needs Xcode** (this machine has CLT only).
 
 **2026-07-18: LOOP ACTIVATED — interview gate waived (founder
 decision).** The validation-interview gate is consciously skipped (records:
@@ -132,6 +136,19 @@ blocked, log that and stop — don't invent busywork.
    4 workers → synthesized report) against real CMA.
 
 ## Cycle log
+
+- **2026-07-18 (cycle 6 — Unit 1 content complete: L02 + L03):** Worker:
+  `gpt-5.6-terra`, one round. Authored `l02-use-the-setting.json` and
+  `l03-easy-first-question.json` (metadata verbatim vs LESSON_PATH_V1,
+  validated by the loader; completion checks faithfully implement the
+  locked situation-match and revise-and-reason types) and made the minimal
+  test updates (lessons_loaded 3, content set, content_pending probe moved
+  to l04 via a programmatic completion chain using derived correct
+  answers). Brain verification: suite run independently — 10 passed;
+  both lessons read in full against the L01 quality bar — ACCEPTED.
+  Nit: L02's correct answers all sit at index 0 (L03 varies placement);
+  randomize/shuffle placement in a later content pass. **Next:** Unit 2
+  content (l04–l06).
 
 - **2026-07-18 (cycle 5 — backend skeleton + curriculum serving, first app
   code):** Worker: `gpt-5.6-terra`, one round. Shipped

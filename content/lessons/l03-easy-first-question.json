@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "id": "l03-easy-first-question",
+  "title": "Ask an easy first question",
+  "unit": 1,
+  "sequence": 3,
+  "concept": "Use one open, answerable question that gives the other person room to choose what to share.",
+  "skill_objective": "User can turn a context cue into one natural first question without interrogating the other person.",
+  "dimensions": [
+    "curiosity",
+    "flow"
+  ],
+  "concept_intro": {
+    "text": "After you notice a shared cue, one easy question can keep the moment moving. Easy does not mean clever or deeply personal. It is a question the other person can answer from what is happening now, in as much detail as they choose. Start with one question, listen to the answer, and let the next turn grow from there."
+  },
+  "example": {
+    "setting": "Before their first project meeting, Maya and a new teammate are waiting for the video room to become available. The booking screen still shows another team using it.",
+    "dialogue": [
+      {
+        "speaker": "Maya",
+        "text": "Hi, I am Maya. Do you know if this room usually frees up close to the meeting time?"
+      },
+      {
+        "speaker": "Teammate",
+        "text": "Usually, yes. The team inside tends to finish a few minutes before the hour."
+      },
+      {
+        "speaker": "Maya",
+        "text": "That is reassuring. I was wondering whether we had the right room."
+      }
+    ]
+  },
+  "responses": {
+    "bad": {
+      "text": "Why are you alone outside the room? Do you have trouble meeting people here?",
+      "explanation": "These questions ask the teammate to explain their social situation before there is any reason to share it. They also stack questions, which can make a first exchange feel like an interview."
+    },
+    "better": {
+      "text": "Is this the video room?",
+      "explanation": "This is relevant and easy to answer, but it is so closed that the exchange may end with only yes or no. It does not give the teammate much room to add a useful detail."
+    },
+    "best": {
+      "text": "Do you know whether this room usually opens up just before the meeting starts?",
+      "explanation": "The question is about a shared, visible situation and invites a range of answers: a quick yes, a useful detail, or uncertainty. It shows curiosity without asking the teammate to reveal anything personal."
+    }
+  },
+  "exercise": {
+    "prompt": "You and a new teammate are waiting for a booked video room. Which first question gives them the most comfortable room to answer?",
+    "options": [
+      {
+        "text": "Do you know whether the team inside normally finishes before the hour?",
+        "feedback": "Yes. It is tied to the shared room and lets the teammate answer with what they know, a short uncertainty, or an observation."
+      },
+      {
+        "text": "Are you the kind of person who is always early to meetings?",
+        "feedback": "This asks the teammate to describe themselves rather than responding to the room you are both waiting for."
+      },
+      {
+        "text": "Have you had a difficult time fitting in with this team?",
+        "feedback": "This is personal and heavy for a first question. The shared waiting moment offers a much lighter place to begin."
+      }
+    ],
+    "correct_option_index": 0
+  },
+  "practice": {
+    "type": "Draft-then-compare",
+    "scenario_setup": "You are waiting with a new teammate for a video room to become free. You can notice the occupied-room sign, the meeting time on the booking screen, or the agenda open on your laptop.",
+    "user_task": "Turn each cue into one first question, then compare them: which question is easiest to answer, and which one asks for more personal information than the moment requires?"
+  },
+  "completion_check": {
+    "parts": [
+      {
+        "kind": "choice",
+        "question": "You are waiting for a shared video room. Which revision makes this question easier to answer: “Are you worried this meeting will go badly?”",
+        "options": [
+          {
+            "text": "Do you know whether this room usually becomes free before the next meeting?",
+            "feedback": "Correct. It moves from guessing about feelings to a shared, observable situation and gives the teammate room for a short or detailed answer."
+          },
+          {
+            "text": "Are you always this nervous before meetings?",
+            "feedback": "This keeps the personal assumption and makes it broader, so it is not easier to answer comfortably."
+          },
+          {
+            "text": "Are you worried too?",
+            "feedback": "This is shorter, but it still assumes worry and invites only a yes-or-no answer about a personal feeling."
+          }
+        ],
+        "correct_option_index": 0
+      },
+      {
+        "kind": "choice",
+        "question": "Which revision improves the closed question “Is this our room?” while you wait outside it?",
+        "options": [
+          {
+            "text": "What makes you think we are in the wrong place?",
+            "feedback": "This can sound as if the teammate has made a mistake and asks them to defend a concern they may not have."
+          },
+          {
+            "text": "Do you know whether the booking screen updates when the room is ready?",
+            "feedback": "Correct. It stays with the shared cue and invites information beyond yes or no without questioning the teammate personally."
+          },
+          {
+            "text": "Are you sure this is our room?",
+            "feedback": "This remains a closed question and can make the teammate feel tested rather than invited into a shared check."
+          }
+        ],
+        "correct_option_index": 1
+      },
+      {
+        "kind": "free_draft",
+        "prompt": "Revise one closed or over-personal first question for a shared waiting moment. Then state what makes your revision easier for the other person to answer.",
+        "good_answer_demonstrates": "A single question based on an observable shared cue, with enough openness for the other person to choose a brief or fuller answer and no assumption about their feelings or private circumstances.",
+        "grading": "deferred-v1"
+      }
+    ]
+  }
+}

@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "id": "l02-use-the-setting",
+  "title": "Use the setting",
+  "unit": 1,
+  "sequence": 2,
+  "concept": "Turn a neutral detail in the environment into a low-pressure conversation opening.",
+  "skill_objective": "User can spot a relevant, non-invasive conversation opener in a shared office or campus setting.",
+  "dimensions": [
+    "warmth",
+    "flow"
+  ],
+  "concept_intro": {
+    "text": "When you are new, the room can feel full of strangers. The setting gives you a starting point before you know anything about them. Notice a neutral detail you both share—a map, a queue, a sign, or the session about to begin—and make a small comment or question about it. Keep the focus on the moment, not on a guess about the person."
+  },
+  "example": {
+    "setting": "At campus orientation, Maya is waiting for the next session to begin. Several people nearby are unfolding the same campus maps and looking for the building marked on the schedule.",
+    "dialogue": [
+      {
+        "speaker": "Maya",
+        "text": "Hi, I think this map is more detailed than I expected. Have you worked out which building the next session is in?"
+      },
+      {
+        "speaker": "Student",
+        "text": "I think it is the one across the courtyard, but I was just checking too."
+      },
+      {
+        "speaker": "Maya",
+        "text": "Then we can both feel a little less lost before it starts."
+      }
+    ]
+  },
+  "responses": {
+    "bad": {
+      "text": "You look confused. Did you not prepare for orientation?",
+      "explanation": "This turns another person's possible uncertainty into a judgment. Even if they are looking at a map, Maya cannot know why, and the question may make them defend themselves instead of joining a simple conversation."
+    },
+    "better": {
+      "text": "These maps are everywhere today.",
+      "explanation": "This notices a shared detail and does not make a personal assumption. It is low pressure, but it is only a comment, so the other person has to do more work to find a direction for the exchange."
+    },
+    "best": {
+      "text": "Hi, I am Maya. Have you worked out which building the next session is in from this map?",
+      "explanation": "The map and next session are visible to both people, and the question has an easy, useful answer. It invites a response without implying that the other person is lost or asking them to share anything personal."
+    }
+  },
+  "exercise": {
+    "prompt": "You are waiting for an orientation session while people compare campus maps. Which opening best uses the setting without making an assumption?",
+    "options": [
+      {
+        "text": "Hi, do you know whether this map shows the shortcut to the library?",
+        "feedback": "Yes. The map is a shared, neutral detail, and the question is easy to answer whether the person knows or not."
+      },
+      {
+        "text": "Hi, are you worried you will get lost all year?",
+        "feedback": "Looking at a map does not tell you how the other person feels or what will happen to them. This makes the moment personal too quickly."
+      },
+      {
+        "text": "Hi, why did you choose this university instead of somewhere better?",
+        "feedback": "This leaves the shared moment and asks for a personal justification, which can feel confrontational with someone new."
+      }
+    ],
+    "correct_option_index": 0
+  },
+  "practice": {
+    "type": "Choose-the-better-reply",
+    "scenario_setup": "You are waiting outside the next campus-orientation session. A classmate is comparing the session schedule with the signs in the hallway.",
+    "user_task": "Choose the opening that stays with the schedule or signs instead of guessing about the classmate. Then say what makes it easier to answer."
+  },
+  "completion_check": {
+    "parts": [
+      {
+        "kind": "choice",
+        "question": "A long line forms outside the student-services desk. Which opening matches that environment cue?",
+        "options": [
+          {
+            "text": "This line is moving slowly—do you know if it is usually like this at the start of term?",
+            "feedback": "Correct. The line and its pace are shared facts, and the question can be answered briefly or not at all without pressure."
+          },
+          {
+            "text": "You seem impatient. Do you have somewhere more important to be?",
+            "feedback": "This guesses at the other person's feelings and priorities instead of using the line as a neutral shared cue."
+          }
+        ],
+        "correct_option_index": 0
+      },
+      {
+        "kind": "choice",
+        "question": "People are reading the same directional sign before a workshop. Which opening best matches that cue?",
+        "options": [
+          {
+            "text": "Do you think the workshop room is upstairs or through that door?",
+            "feedback": "Correct. The sign and the route are available to both people, so this offers a practical, low-pressure opening."
+          },
+          {
+            "text": "Why do you always need help finding things?",
+            "feedback": "A single moment at a sign cannot support a claim about the person. The wording is personal and judgmental."
+          }
+        ],
+        "correct_option_index": 0
+      },
+      {
+        "kind": "choice",
+        "question": "Several new students are comparing campus maps before a session. Which opening best matches that cue?",
+        "options": [
+          {
+            "text": "This map has a lot of buildings—have you found the one for our next session?",
+            "feedback": "Correct. It names the shared map and shared next step, while leaving room for a short answer or a mutual search."
+          },
+          {
+            "text": "You look overwhelmed by moving here. Are you okay?",
+            "feedback": "Looking at a map does not prove someone feels overwhelmed. This shifts from an observable cue to a personal assumption."
+          }
+        ],
+        "correct_option_index": 0
+      },
+      {
+        "kind": "free_draft",
+        "prompt": "Choose one shared environment cue from an office or campus waiting moment. Draft an opening from it, then name one possible cue that would be too personal and explain why.",
+        "good_answer_demonstrates": "An opening grounded in a neutral, observable shared detail and an explanation that a personal cue guesses at feelings, circumstances, or traits the learner cannot know.",
+        "grading": "deferred-v1"
+      }
+    ]
+  }
+}
