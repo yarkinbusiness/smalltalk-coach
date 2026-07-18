@@ -1,112 +1,52 @@
 # SmallTalkCoach
 
-The v1 direction has two tabs: Home, a structured, Duolingo-style learning
-path and the primary experience; and AI Coaching, a utility whose primary
-flow is screenshot diagnosis of real conversations. AI Coaching also includes
-optional talk-with-the-coach and daily roleplay-practice surfaces. The code in
-this repository currently implements the pre-v1 Practice + Progress roleplay
-foundation; the v1 two-tab UI is not yet implemented.
-See [ARCHITECTURE.md](ARCHITECTURE.md) for the
-full design and why it uses Claude Managed Agents (CMA) the way it does.
+A subscription app concept that helps people build durable small-talk and
+conversation skills: a structured, Duolingo-style learning path (the
+primary experience) plus an AI coaching utility whose primary flow is
+screenshot diagnosis of real conversations, feeding users back into the
+right lesson. See `VISION.md` for the product direction.
 
-"SmallTalkCoach" is a placeholder name/bundle id (`com.yarkinyavuz.smalltalkcoach`)
-— rename freely, it's not load-bearing anywhere.
+**Current state: planning-first, pre-implementation.** On 2026-07-18 the
+founder approved a full restart: the Phase 0 implementation (a FastAPI
+backend and SwiftUI iOS app built around the earlier roleplay-practice
+concept) was removed from `master`. No application code exists in this
+repository right now, and none gets written until the validation
+thresholds in the planning project's `VALIDATION_PLAN.md` are met and the
+v1 lesson path is defined.
 
-## What's here
+The removed implementation is archived, not lost — tag `phase0-archive`
+holds the full pre-cleanup tree. Recovery is one command:
+`git checkout phase0-archive -- backend ios`
 
-```
-backend/   FastAPI service — scenario catalog, live chat relay, CMA coach
-           coordinator, per-user memory store, sqlite for local session state
-ios/       SwiftUI app — project.yml (xcodegen spec) + Swift sources
-```
+## Source of truth
 
-## Build orchestration (brain/worker loop)
+- `VISION.md` — product direction (two-tab v1: Home learning path + AI Coaching)
+- `ARCHITECTURE.md` — v1 design reference (describes the removed Phase 0
+  implementation and how v1 was planned to grow out of it; kept as design
+  input for the rebuild)
+- `DECISIONS.md` — append-only engineering decision log
+- `PROGRESS.md` — current status and backlog
+- `WORKER_LOG.md` — append-only per-task worker execution log
+- `.claude/skills/brain-worker-loop/` — build orchestration: `SKILL.md`
+  (protocol), `worker.sh` (Codex GPT 5.6 worker runner), `auto_push.sh`
+  (safe post-commit push), `tests/`
 
-Development runs as a brain/worker loop — Claude Fable 5 plans, delegates,
-and reviews; Codex (GPT 5.6) workers implement. The harness lives in
-`.claude/skills/brain-worker-loop/` (`SKILL.md` protocol, `worker.sh`
-Codex runner, `auto_push.sh` safe post-commit push, `tests/`). Shared loop
-memory is repo-resident: `PROGRESS.md` (status), `DECISIONS.md`
-(engineering decisions), `WORKER_LOG.md` (per-task worker log). See those
-files before doing automated work on this repo.
+## How this repo gets built
 
-## Requirements you'll need to provide
+Development runs as a brain/worker loop: Claude Fable 5 is the brain —
+it plans, delegates, reviews, and accepts work, and never implements
+directly. Codex (GPT 5.6, `gpt-5.6-terra` at high reasoning effort)
+workers execute assigned tasks and report back; every worker task must
+append a structured entry to `WORKER_LOG.md` (enforced by `worker.sh`).
+Accepted work is committed and pushed via `auto_push.sh` — current branch
+to its upstream only, never forced, dirty trees refused.
 
-- An Anthropic API key **with Claude Managed Agents (CMA) beta access**
-  (`managed-agents-2026-04-01`). Without CMA access, agent/session/environment
-  creation calls in `backend/scripts/provision_agents.py` will fail — the live
-  chat path (`partner.py`) only needs a normal Messages API key, but the
-  coaching-report path needs CMA specifically.
-- **Xcode** (the full app from the App Store, not just Command Line Tools) to
-  build/run the iOS target. This was scaffolded in an environment that only
-  had Command Line Tools installed, so the iOS app has been syntax-checked
-  (`swiftc -parse`) and the project file generated/validated with `xcodegen`,
-  but never actually compiled or run in Simulator — see "What's been verified"
-  below before assuming it builds clean on the first try.
+## Next steps
 
-## Backend setup
-
-```bash
-cd backend
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-
-# Put your real key in ~/.env (chmod 600), never in this repo:
-#   ANTHROPIC_API_KEY=sk-ant-...
-
-python -m scripts.provision_agents   # creates/updates every CMA agent + environment,
-                                      # writes backend/.provisioned.json
-uvicorn app.main:app --reload --port 8000
-```
-
-Re-run `provision_agents.py` any time you edit a prompt in
-`backend/app/agents_setup.py` — it's idempotent and only creates a new agent
-version when the prompt text actually changed.
-
-## iOS setup
-
-```bash
-brew install xcodegen   # already done in this session
-cd ios
-xcodegen generate        # regenerate any time project.yml or the file list changes
-open SmallTalkCoach.xcodeproj
-```
-
-In Xcode: pick a simulator, hit Run. The app talks to `http://localhost:8000`
-by default (`ios/SmallTalkCoach/Networking/APIClient.swift`), which the
-Simulator can reach directly with no config.
-
-**Testing on a physical device**: plain HTTP only works unmodified against
-`localhost`/loopback under App Transport Security. Point `APIConfig.baseURL`
-at your Mac's LAN IP and you'll need either an ATS exception in
-`Info.plist`-equivalent build settings or to put the backend behind HTTPS
-(e.g. a local Caddy/ngrok tunnel) — not wired up yet, deliberately left out of
-this MVP scaffold.
-
-## What's been verified vs. not, in this environment
-
-Verified:
-- Every CMA SDK method the backend calls (`client.beta.agents.*`,
-  `client.beta.sessions.*`, `client.beta.environments.*`,
-  `client.beta.memory_stores.*`) exists on the installed `anthropic` SDK
-  (0.116.0) — checked with `hasattr`, not assumed from docs alone.
-- The backend installs cleanly in a venv and boots: `GET /scenarios` and
-  scenario-validation on `POST /practice/sessions` were hit directly with
-  FastAPI's `TestClient` against a fake `.provisioned.json` and a dummy API
-  key (no real network calls, no cost).
-- Every backend `.py` file byte-compiles (`py_compile`).
-- Every iOS `.swift` file parses (`swiftc -parse` — syntax only, no type
-  checking against the SwiftUI/Foundation SDKs, since that requires Xcode).
-- `xcodegen generate` produces a project file without error.
-
-Not verified (needs a real CMA-enabled API key and/or Xcode):
-- An actual end-to-end coaching-report run against live CMA (agent creation,
-  the coordinator fanning out to its 4 workers, memory_store read/write).
-- The iOS app actually compiling, running in Simulator, or a screenshot of
-  any screen — this needs Xcode installed, which this machine doesn't have.
-- The SSE relay (`/practice/sessions/{id}/message`) against a real streaming
-  Messages API response.
-
-Next real steps, in order: get a CMA-enabled key into `~/.env`, run
-`provision_agents.py` and watch it succeed against the real API, then install
-Xcode and do a first Simulator run of the chat flow end to end.
+1. Run the validation interviews defined in the planning project's
+   `VALIDATION_PLAN.md` (10–15 Relocated Newcomers, willingness-to-pay
+   probe) and evaluate against its thresholds.
+2. If thresholds hold: define the v1 lesson path, then re-derive the
+   implementation plan from `VISION.md`/`ARCHITECTURE.md` and start
+   brain/worker build cycles.
+3. Until then: documentation and planning changes only.

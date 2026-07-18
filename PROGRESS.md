@@ -1,5 +1,16 @@
 # Progress & backlog
 
+**2026-07-18: FULL RESTART EXECUTED (founder-approved).** The Phase 0
+implementation (`backend/` 38 files, `ios/` 27 files) has been removed
+from `master`; the complete pre-cleanup tree is archived at tag
+`phase0-archive` (recovery: `git checkout phase0-archive -- backend ios`).
+Decision record: `DECISIONS.md` → "2026-07-18 — Full Restart". Every
+section below that references backend/iOS files, their backlog items, or
+their blocked gates is **historical** — kept for the record, not
+actionable. Current actionable state: planning/validation only, per the
+planning project's `VALIDATION_PLAN.md`; the brain/worker loop harness
+(`.claude/skills/brain-worker-loop/`) is active for approved non-app work.
+
 **2026-07-12: read `VISION.md` before picking up any new work.** The
 product vision was substantially expanded in a planning discussion (a
 daily-habit/lesson system + real-conversation coaching via screenshot

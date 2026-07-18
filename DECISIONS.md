@@ -52,3 +52,28 @@ Read by the brain and by every Codex worker at cycle start (see
 - **Revisit trigger:** The repo gains collaborators or branch protection
   (then push targets a PR branch, not master), or repeated exit-5 failures
   show the remote/auth setup needs rework.
+
+### 2026-07-18 — Full Restart: Phase 0 Implementation Removed
+
+- **Status:** Confirmed (founder decision, explicitly approved after brain
+  review surfaced the contradiction with prior framing)
+- **Decision:** The Phase 0 implementation — `backend/` (38 files: FastAPI
+  service, CMA grading engine, memory store, recommendation logic, ~145
+  tests) and `ios/` (27 files: SwiftUI app + Core package) — is removed
+  from `master`. The repo becomes planning-first: loop harness plus
+  planning/coordination docs only, until the planning project's
+  `VALIDATION_PLAN.md` thresholds are met and the v1 lesson path is
+  defined. This supersedes the "Phase 0 carries into v1 as the foundation"
+  framing in `ARCHITECTURE.md` (2026-07-16) and PROGRESS.md's earlier
+  "they're not wasted" note — v1 will be re-derived from
+  `VISION.md`/`ARCHITECTURE.md` as design references, not built directly
+  on the old tree.
+- **Recovery:** Annotated tag `phase0-archive` (at `67ead32`, pushed to
+  origin) holds the complete pre-cleanup tree.
+  One-command rollback: `git checkout phase0-archive -- backend ios`.
+- **Why:** Founder wants a clean-slate repo where only the new
+  brain/worker loop and planning system exist, with no legacy code
+  implying the old app is active.
+- **Revisit trigger:** Validation passes and the rebuild would genuinely
+  reuse Phase 0 components — then restore selectively from
+  `phase0-archive` instead of rewriting from scratch.

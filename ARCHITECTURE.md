@@ -1,5 +1,13 @@
 # SmallTalkCoach — Architecture
 
+> **2026-07-18 — implementation removed, document retained as design
+> reference.** The Phase 0 code this document describes (`backend/`,
+> `ios/`) was removed from `master` under the founder-approved full
+> restart (see `DECISIONS.md` → "2026-07-18 — Full Restart"). The
+> complete tree is archived at tag `phase0-archive`. Nothing described
+> below is currently running or present in the repo; this document is
+> kept as the v1 design reference for the rebuild.
+
 **Product direction updated 2026-07-16 (v1 scope).** This document reflects
 a revised product structure agreed after the practice-mode foundation
 (Phase 0) was already built: the app is now organized around **two
