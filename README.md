@@ -15,6 +15,16 @@ backend/   FastAPI service — scenario catalog, live chat relay, CMA coach
 ios/       SwiftUI app — project.yml (xcodegen spec) + Swift sources
 ```
 
+## Build orchestration (brain/worker loop)
+
+Development runs as a brain/worker loop — Claude Fable 5 plans, delegates,
+and reviews; Codex (GPT 5.6) workers implement. The harness lives in
+`.claude/skills/brain-worker-loop/` (`SKILL.md` protocol, `worker.sh`
+Codex runner, `auto_push.sh` safe post-commit push, `tests/`). Shared loop
+memory is repo-resident: `PROGRESS.md` (status), `DECISIONS.md`
+(engineering decisions), `WORKER_LOG.md` (per-task worker log). See those
+files before doing automated work on this repo.
+
 ## Requirements you'll need to provide
 
 - An Anthropic API key **with Claude Managed Agents (CMA) beta access**

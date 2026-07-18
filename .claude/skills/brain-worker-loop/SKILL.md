@@ -29,6 +29,9 @@ project's `DECISIONS.md` ("2026-07-18 — Worker Model Locked to Codex (GPT 5.6)
    skill may only be used for non-app work the user explicitly requests.
 4. First action of any new loop: update `PROGRESS.md` (what the loop is doing,
    under which model rules) — not as an afterthought.
+5. Automated runs require a clean working tree (`git status --porcelain`
+   empty) — refuse to start otherwise. Then capture the run baseline:
+   `BASELINE="$(git rev-parse HEAD)"` (needed by auto-push, step 4 below).
 
 ## Project-resident memory (single source of truth)
 
@@ -85,7 +88,24 @@ truth, and no loop state may live only in a mirror.
    via `swiftc` compile-and-run of a standalone harness, or `swiftc -parse`
    plus explicit "not build-verified" wording.
 4. **Accept or iterate.** Accept → record the result in `PROGRESS.md` (cycle
-   log entry: date, what shipped, test status, next item) and move on.
+   log entry: date, what shipped, test status, next item), commit, then
+   auto-push:
+
+   ```bash
+   .claude/skills/brain-worker-loop/auto_push.sh -b "$BASELINE" \
+     -C "/Users/yarkinyavuz/Desktop/untitled folder/smalltalk-coach"
+   ```
+
+   Auto-push policy (verbatim, decision: repo `DECISIONS.md` "2026-07-18 —
+   Safe Auto-Push After Verified Runs"): "After every successful verified
+   run, if and only if the run created a commit, auto-push the current
+   branch to its configured upstream. Refuse automated runs on a dirty
+   tree. Never force-push or retry endlessly. Keep the local commit if push
+   fails and surface the failure. AUTO_PUSH=0 disables this behavior;
+   default is AUTO_PUSH=1."
+   Exit codes: 0 = pushed or clean no-op; 3 = dirty tree; 4 = detached
+   HEAD/no remote; 5 = push failed (local commit kept — surface the error,
+   do not retry). Tests: `tests/test_auto_push.sh`. Then move on.
    Reject → write specific, itemized feedback (exact files/lines/problems),
    append it to the spec, and re-run the worker with the combined spec.
 5. **Cap: 3 worker rounds per task.** If not converged, do NOT implement it

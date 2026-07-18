@@ -36,6 +36,13 @@ log = automatic reject). Brain and workers read these at every cycle
 start. Record: repo `DECISIONS.md` → "2026-07-18 — Project-Resident Memory
 for the Build Loop".
 
+**2026-07-18 (later still): safe auto-push enabled (founder decision).**
+After a successful verified run that created a commit, the brain runs
+`.claude/skills/brain-worker-loop/auto_push.sh -b <run-start HEAD>` —
+current branch to its upstream only, never force, no retries, dirty tree
+refused, `AUTO_PUSH=0` to disable. Record: repo `DECISIONS.md` →
+"2026-07-18 — Safe Auto-Push After Verified Runs".
+
 State file for the automated brain-worker-loop (previously Fable-5
 coordinator + Sonnet-5 workers, "Plan big, execute small" cost-tiering
 pattern — see
