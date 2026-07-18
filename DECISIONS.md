@@ -77,3 +77,26 @@ Read by the brain and by every Codex worker at cycle start (see
 - **Revisit trigger:** Validation passes and the rebuild would genuinely
   reuse Phase 0 components — then restore selectively from
   `phase0-archive` instead of rewriting from scratch.
+
+### 2026-07-18 — One-Time History Rewrite (Authorized Force-Push Exception)
+
+- **Status:** Confirmed (founder-approved, explicitly scoped)
+- **Decision:** A one-time `git filter-repo` rewrite of `master`'s last two
+  commits removed 1,478 accidentally committed build artifacts
+  (`ios/Core/.build/` SwiftPM output, `**/__pycache__/**`, `*.pyc`,
+  `ios/SmallTalkCoach.xcodeproj/`) that entered history via `git add -A`
+  during the restart cleanup, then were untracked in the follow-up commit.
+  Pushed with `--force-with-lease` under a founder-granted one-time
+  exception to the standing never-force-push rule; that rule remains in
+  force for all future work, automated and manual. Founder also explicitly
+  waived a separate backup clone; the pre-rewrite history remained in the
+  local working repo until verification passed.
+- **Result:** `294f296` → rewritten `6dbf73a`; final tree byte-identical
+  (verified by tree hash `548e80c`); all pre-junk commit hashes and the
+  `phase0-archive` tag unchanged; zero junk objects in any ref; `git fsck`
+  clean; fresh-clone `.git` size 59 MB → 332 KB.
+- **Why:** 112.5 MB of pure build-artifact blobs in a repo intended to be
+  a minimal planning/loop repo taxed every future clone; blast radius was
+  exactly two commits with no collaborators or secrets involved.
+- **Revisit trigger:** None — the exception is spent. Any future
+  force-push requires a new explicit founder authorization and entry here.
