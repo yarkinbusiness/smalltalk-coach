@@ -29,12 +29,13 @@ cycles under the existing safety rules (never force-push, clean-tree gate,
       (cycle 13). 10 tests green on sim (brain-run); narration model fix
       included. **The full learning loop is now usable in-app.**
    c. Coaching tab real UI once the pipeline exists.
-7. Coaching pipeline: ~~design doc~~ — done, accepted 2026-07-18
-   (cycle 12): `docs/planning/COACHING_PIPELINE_V1.md`. Implementation
-   **waits on founder confirming the Anthropic key is in `~/.env`**
-   (instructions delivered; key value never in specs/code/logs/git; unit
-   tests mock the API regardless, so implementation could start key-less
-   if prioritized — live smoke test is the only key-dependent piece).
+7. Coaching pipeline: ~~design doc~~ (cycle 12); ~~text-path backend
+   implementation~~ — done, accepted 2026-07-18 (cycle 14, 2 rounds).
+   Remaining: **(a)** live smoke run once founder confirms the key is in
+   `~/.env` (watch-item: schema `minLength` is SDK-stripped — confirm the
+   real call succeeds); **(b)** screenshot path (202+poll, vision
+   extraction, Haiku 4.5 pending real-screenshot eval); **(c)** iOS
+   Coaching tab UI against the new endpoints.
 
 **2026-07-18: LOOP ACTIVATED — interview gate waived (founder
 decision).** The validation-interview gate is consciously skipped (records:
@@ -149,6 +150,26 @@ blocked, log that and stop — don't invent busywork.
    4 workers → synthesized report) against real CMA.
 
 ## Cycle log
+
+- **2026-07-18 (cycle 14 — coaching backend, text path; FIRST REJECTION
+  ROUND):** Worker: `gpt-5.6-terra`, **two rounds**. Round 1 implemented
+  COACHING_PIPELINE_V1's text path (normalization, sonnet-4-6 structured
+  diagnosis via output_config.format with lazy env-key client, app-side
+  contract validation incl. quote fidelity + forbidden lesson-term sweep,
+  deterministic routing with fixed tie-break, report persistence with
+  get/list/delete, full error taxonomy, escalation persists nothing,
+  double-gated live smoke; anthropic==0.117.0 pinned). Brain review
+  REJECTED round 1 for one real bug: `completed_lesson_ids_at` compared
+  sqlite `CURRENT_TIMESTAMP` ("YYYY-MM-DD HH:MM:SS") against Python
+  isoformat ("...T...+00:00") lexicographically — space < 'T' means
+  same-day later completions passed the `<=` check, so re-fetched reports
+  could flip recommendation_kind "new"→"review". Round 2 fix (as
+  prescribed): `recommendation_kind` persisted immutably at creation,
+  reconstruction deleted, regression test added. Brain verification:
+  **27 passed, 1 skipped** (own run), fix + regression confirmed —
+  ACCEPTED. Watch-item for live smoke: schema `minLength` relies on
+  SDK-side stripping. **Next:** screenshot path or iOS Coaching tab;
+  live smoke on founder key confirmation.
 
 - **2026-07-18 (cycle 13 — iOS lesson detail + completion flow):** Worker:
   `gpt-5.6-terra`, one round, honest partial (sandbox still blocks

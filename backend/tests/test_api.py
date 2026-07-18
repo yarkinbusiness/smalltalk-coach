@@ -41,7 +41,9 @@ def _correct_choice_answers(lesson: dict[str, object]) -> dict[str, int]:
 
 def test_health_and_initial_curriculum(tmp_path: Path) -> None:
     with _client(tmp_path) as client:
-        assert client.get("/health").json() == {"status": "ok", "lessons_loaded": 12}
+        assert client.get("/health").json() == {
+            "status": "ok", "lessons_loaded": 12, "coaching_enabled": False,
+        }
         response = client.get("/curriculum", params={"user_id": "maya"})
 
     assert response.status_code == 200

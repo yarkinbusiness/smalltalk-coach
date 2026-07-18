@@ -166,3 +166,25 @@ Entry format (keep an entry under ~15 lines):
   passed. The required iPhone 16 / iOS 18.2 `xcodebuild test` attempt could not execute tests:
   CoreSimulatorService returned `Connection refused` and no simulator runtimes were discoverable.
 - **Open issues:** Run the XCTest suite on a host with CoreSimulatorService available.
+
+## 2026-07-18 17:03 UTC — Implement text coaching backend pipeline
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Added text normalization, lazy structured Anthropic diagnosis with retry/validation,
+  deterministic manifest routing, report storage, coaching endpoints, safety/refusal handling, and opt-in live smoke coverage.
+- **Files touched:** backend/app/transcript.py; backend/app/diagnosis.py; backend/app/routing.py;
+  backend/app/coaching.py; backend/app/main.py; backend/app/store.py; backend/requirements.txt; backend/tests/; WORKER_LOG.md
+- **Result / verification:** `backend/.venv/bin/python -m compileall -q backend/app` passed;
+  `backend/.venv/bin/python -m pytest backend/tests -q`: 26 passed, 1 skipped, 1 warning in 0.96s; `git diff --check` passed.
+- **Open issues:** The live smoke remains intentionally skipped unless both documented environment flags are set.
+
+## 2026-07-18 20:27 UTC — Persist immutable coaching recommendation kind
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Stored the routed recommendation kind with each coaching report and
+  made report reads use that immutable value; removed timestamp-based completion reconstruction.
+  Added a regression test that completes the routed lesson then verifies the report remains `new`.
+- **Files touched:** backend/app/store.py; backend/app/coaching.py; backend/tests/test_coaching.py; WORKER_LOG.md
+- **Result / verification:** `backend/.venv/bin/python -m pytest backend/tests -q`:
+  27 passed, 1 skipped, 1 warning in 1.18s; `git diff --check` passed.
+- **Open issues:** none

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
+import os
 from pathlib import Path
 from typing import Any, AsyncIterator, Annotated
 
@@ -10,6 +11,8 @@ from fastapi import FastAPI, HTTPException, Query, Request
 from pydantic import BaseModel
 
 from .content import Curriculum, load_curriculum
+from .coaching import setup_coaching
+from .diagnosis import DiagnosisAdapter
 from .store import ProgressStore
 
 
@@ -44,7 +47,8 @@ def _lesson_state(lesson_id: str, completed: set[str], unlocked_id: str | None) 
 
 
 def create_app(
-    *, manifest_path: Path | None = None, lessons_dir: Path | None = None, database_path: Path | None = None
+    *, manifest_path: Path | None = None, lessons_dir: Path | None = None,
+    database_path: Path | None = None, diagnosis_adapter: DiagnosisAdapter | None = None,
 ) -> FastAPI:
     """Create an app whose curriculum is loaded and validated at startup."""
     repo_root = _default_repo_root()
@@ -59,6 +63,7 @@ def create_app(
         yield
 
     app = FastAPI(title="Smalltalk Coach", lifespan=lifespan)
+    setup_coaching(app, (lambda: diagnosis_adapter) if diagnosis_adapter is not None else None)
 
     def curriculum_for(request: Request) -> Curriculum:
         return request.app.state.curriculum
@@ -69,7 +74,11 @@ def create_app(
     @app.get("/health")
     def health(request: Request) -> dict[str, object]:
         curriculum = curriculum_for(request)
-        return {"status": "ok", "lessons_loaded": len(curriculum.content)}
+        return {
+            "status": "ok",
+            "lessons_loaded": len(curriculum.content),
+            "coaching_enabled": "ANTHROPIC_API_KEY" in os.environ,
+        }
 
     @app.get("/curriculum")
     def get_curriculum(

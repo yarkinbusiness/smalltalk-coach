@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import sqlite3
 from contextlib import closing
+from datetime import UTC, datetime
+import json
 from pathlib import Path
+from typing import Any
 
 
 class ProgressStore:
@@ -26,6 +29,22 @@ class ProgressStore:
             )
             """
         )
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS coaching_reports (
+                id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                source_kind TEXT NOT NULL,
+                transcript_json TEXT NOT NULL,
+                diagnosis_json TEXT NOT NULL,
+                weakest_dimension TEXT NOT NULL,
+                lesson_id TEXT NOT NULL,
+                recommendation_kind TEXT NOT NULL,
+                practice_action TEXT NOT NULL
+            )
+            """
+        )
         return connection
 
     def completed_lesson_ids(self, user_id: str) -> set[str]:
@@ -43,3 +62,71 @@ class ProgressStore:
                     "INSERT OR IGNORE INTO lesson_completions (user_id, lesson_id) VALUES (?, ?)",
                     (user_id, lesson_id),
                 )
+
+    def save_coaching_report(
+        self,
+        *,
+        report_id: str,
+        user_id: str,
+        transcript: dict[str, Any],
+        diagnosis: dict[str, Any],
+        weakest_dimension: str,
+        lesson_id: str,
+        recommendation_kind: str,
+        practice_action: str,
+    ) -> str:
+        """Persist the report and its transcript as one sqlite record."""
+        created_at = datetime.now(UTC).isoformat()
+        with closing(self._connect()) as connection:
+            with connection:
+                connection.execute(
+                    """
+                    INSERT INTO coaching_reports
+                    (id, user_id, created_at, source_kind, transcript_json, diagnosis_json,
+                     weakest_dimension, lesson_id, recommendation_kind, practice_action)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        report_id,
+                        user_id,
+                        created_at,
+                        transcript["source_kind"],
+                        json.dumps(transcript, ensure_ascii=False),
+                        json.dumps(diagnosis, ensure_ascii=False),
+                        weakest_dimension,
+                        lesson_id,
+                        recommendation_kind,
+                        practice_action,
+                    ),
+                )
+        return created_at
+
+    def coaching_report(self, report_id: str, user_id: str) -> dict[str, Any] | None:
+        with closing(self._connect()) as connection:
+            connection.row_factory = sqlite3.Row
+            row = connection.execute(
+                "SELECT * FROM coaching_reports WHERE id = ? AND user_id = ?", (report_id, user_id)
+            ).fetchone()
+        return dict(row) if row is not None else None
+
+    def coaching_report_summaries(self, user_id: str) -> list[dict[str, str]]:
+        with closing(self._connect()) as connection:
+            connection.row_factory = sqlite3.Row
+            rows = connection.execute(
+                """
+                SELECT id, created_at, source_kind, weakest_dimension, lesson_id
+                FROM coaching_reports WHERE user_id = ?
+                ORDER BY created_at DESC, id DESC
+                """,
+                (user_id,),
+            ).fetchall()
+        return [dict(row) for row in rows]
+
+    def delete_coaching_report(self, report_id: str, user_id: str) -> bool:
+        """Delete the single record containing both report and transcript atomically."""
+        with closing(self._connect()) as connection:
+            with connection:
+                cursor = connection.execute(
+                    "DELETE FROM coaching_reports WHERE id = ? AND user_id = ?", (report_id, user_id)
+                )
+        return cursor.rowcount == 1
