@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "id": "l04-answer-and-return",
+  "title": "Answer, then return",
+  "unit": 2,
+  "sequence": 4,
+  "concept": "Give a brief answer with one useful detail, then return a related question so the exchange has two active participants.",
+  "skill_objective": "User can respond to a casual question without either stopping at one word or taking over the conversation.",
+  "dimensions": [
+    "reciprocity",
+    "curiosity"
+  ],
+  "concept_intro": {
+    "text": "A question is an invitation, not a test you need to answer perfectly. Give enough of an answer that the other person learns one real thing about your experience, then ask a related question back. This keeps the exchange shared: you are not disappearing behind a one-word answer, and you are not carrying the whole conversation alone."
+  },
+  "example": {
+    "setting": "At a cafeteria table during her first week in a new city, Maya sits with a colleague from her team. The colleague asks how she is finding the city so far.",
+    "dialogue": [
+      {
+        "speaker": "Colleague",
+        "text": "How are you finding the city so far?"
+      },
+      {
+        "speaker": "Maya",
+        "text": "I like it so far, although I am still learning which streets lead where. I found a small market near my apartment yesterday. Have you lived here long?"
+      },
+      {
+        "speaker": "Colleague",
+        "text": "About three years. That market is a good find—there is also a bakery around the corner."
+      }
+    ]
+  },
+  "responses": {
+    "bad": {
+      "text": "It is fine.",
+      "explanation": "This is not wrong, but it closes the opening quickly. The colleague has little to respond to and must choose whether to ask another question or let the conversation stop."
+    },
+    "better": {
+      "text": "It is going well. I found a small market near my apartment yesterday.",
+      "explanation": "This gives a real detail, so the colleague has something to pick up. It is warmer than a one-word answer, but the turn still rests with the colleague to keep the exchange moving."
+    },
+    "best": {
+      "text": "It is going well. I found a small market near my apartment yesterday, which made the neighborhood feel more familiar. Have you lived here long?",
+      "explanation": "The answer shares one useful detail without becoming a long story. The related question invites the colleague back in, so both people have a natural next turn and the topic stays connected."
+    }
+  },
+  "exercise": {
+    "prompt": "At a cafeteria table, a colleague asks, “How are you finding the city?” Which reply keeps the turn balanced?",
+    "options": [
+      {
+        "text": "I have so much to tell you. The move was difficult, then the landlord changed the keys, then I spent all Saturday unpacking, and my old neighborhood was much better.",
+        "feedback": "This gives the colleague no easy place to join in. A useful detail helps; a long list can take over the whole turn."
+      },
+      {
+        "text": "Okay.",
+        "feedback": "This is brief, but it does not give the colleague a detail or a question to continue with."
+      },
+      {
+        "text": "Pretty well—I found a park near my apartment this weekend. Do you have a favorite place to walk around here?",
+        "feedback": "Yes. It answers with one concrete detail and returns a related, easy question, giving the colleague a clear way back into the conversation."
+      }
+    ],
+    "correct_option_index": 2
+  },
+  "practice": {
+    "type": "Short roleplay",
+    "scenario_setup": "It is your first week in a new city. At a cafeteria table, a colleague asks how you are finding the city. You have noticed one small thing so far: a nearby park, a useful shop, a bus route, or a street you are still learning.",
+    "user_task": "Reply with a brief answer and one useful detail. Then ask one related question that gives your colleague an easy next turn. Use words that sound like you."
+  },
+  "completion_check": {
+    "parts": [
+      {
+        "kind": "choice",
+        "question": "A colleague asks, “How are you settling into the city?” Which response has the best turn balance?",
+        "options": [
+          {
+            "text": "Good.",
+            "feedback": "This is a valid answer, but it leaves the colleague with no detail to respond to and no invitation back into the exchange."
+          },
+          {
+            "text": "I have been trying every restaurant near my apartment, and the move was exhausting, and I still need to buy furniture, and my old commute was much easier.",
+            "feedback": "This shares many details without making space for the colleague. Turn balance is not about saying everything at once."
+          },
+          {
+            "text": "I am getting settled. I took the bus to the waterfront this weekend and was glad I found the route. Do you have a place you like to go after work?",
+            "feedback": "Correct. The answer gives one concrete detail, then offers a related question. The colleague can answer briefly, add a recommendation, or take the topic in a nearby direction."
+          }
+        ],
+        "correct_option_index": 2
+      },
+      {
+        "kind": "choice",
+        "question": "Why does this reply keep both people active: “I am still learning the neighborhood, but I found the library yesterday. Have you used it much?”",
+        "options": [
+          {
+            "text": "It avoids saying anything personal at all.",
+            "feedback": "The reply does share a small personal detail: finding the library. The point is not to avoid personal information; it is to keep the amount useful and proportionate."
+          },
+          {
+            "text": "It gives a brief detail and asks a connected question that the other person can answer.",
+            "feedback": "Correct. The library detail makes the answer more than a one-word response, and the related question hands the conversation back without forcing a big disclosure."
+          },
+          {
+            "text": "It makes the other person responsible for planning the speaker’s week.",
+            "feedback": "The question asks about the colleague’s experience with the library; it does not ask them to solve a broad problem for the speaker."
+          }
+        ],
+        "correct_option_index": 1
+      },
+      {
+        "kind": "free_draft",
+        "prompt": "A colleague asks how you are finding a new city, campus, or neighborhood. Draft a two-part reply: one useful detail and one related question back. Then explain how your question gives the other person a next turn.",
+        "good_answer_demonstrates": "A concise answer with one relevant detail followed by a connected, low-pressure question, plus an explanation that the question shares conversational space instead of ending the exchange or taking it over.",
+        "grading": "deferred-v1"
+      }
+    ]
+  }
+}

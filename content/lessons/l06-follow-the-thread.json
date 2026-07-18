@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "id": "l06-follow-the-thread",
+  "title": "Follow the thread",
+  "unit": 2,
+  "sequence": 6,
+  "concept": "Ask one follow-up that grows from the other person’s last detail instead of switching to a prepared list of questions.",
+  "skill_objective": "User can form one relevant follow-up from a partner’s answer in a casual office or campus conversation.",
+  "dimensions": [
+    "curiosity",
+    "reciprocity"
+  ],
+  "concept_intro": {
+    "text": "You do not need a list of interesting questions to keep a conversation going. The last answer usually gives you a thread: a place, a choice, a small problem, or something the person enjoys. Pick one thread and ask about it. One connected follow-up feels like curiosity; a sudden string of unrelated questions can feel like an interview."
+  },
+  "example": {
+    "setting": "Walking back from lunch, Maya and a teammate are returning to their office. The teammate says they joined a local running group after moving to the city.",
+    "dialogue": [
+      {
+        "speaker": "Teammate",
+        "text": "After I moved, I joined a local running group. It made the first few weekends feel less empty."
+      },
+      {
+        "speaker": "Maya",
+        "text": "That sounds like a good way to meet people while doing something you already enjoy. How did you find that group?"
+      },
+      {
+        "speaker": "Teammate",
+        "text": "A neighbor told me about it. They meet by the river on Saturday mornings."
+      }
+    ]
+  },
+  "responses": {
+    "bad": {
+      "text": "What is your job title? Where did you live before? Do you have siblings?",
+      "explanation": "These questions may each be ordinary, but none grows from the running group. Asked together, they turn the walk into a checklist and skip the interest the teammate just offered."
+    },
+    "better": {
+      "text": "Running groups seem popular here.",
+      "explanation": "This stays on the topic and can be a friendly acknowledgement. It does not yet use the teammate’s detail to open a clear next step in the conversation."
+    },
+    "best": {
+      "text": "How did you find the running group after you moved?",
+      "explanation": "This follows the exact thread the teammate introduced: joining a group after moving. It invites them to share as much or as little as they want and can naturally lead to the group, the neighborhood, or their first weeks in the city."
+    }
+  },
+  "exercise": {
+    "prompt": "Your teammate says, “I joined a local running group after moving, and they meet by the river on Saturdays.” Which follow-up follows their thread?",
+    "options": [
+      {
+        "text": "What made the river meet-up a good fit for you?",
+        "feedback": "Yes. It grows directly from the running group and the Saturday river meet-up the teammate just mentioned."
+      },
+      {
+        "text": "How much do you earn in this role?",
+        "feedback": "This shifts to a private, unrelated topic. It does not use the detail the teammate offered."
+      },
+      {
+        "text": "What is your five-year plan?",
+        "feedback": "This is a broad interview-style question, far from the running-group detail that is already available."
+      }
+    ],
+    "correct_option_index": 0
+  },
+  "practice": {
+    "type": "Short roleplay",
+    "scenario_setup": "You are walking back from lunch with a new teammate. They say they joined a local running group after moving and mention one extra detail: a weekend meeting, a neighbor’s recommendation, or a route they enjoy.",
+    "user_task": "Choose one detail from their last turn and ask one follow-up that grows from it. Do not switch to a prepared personal question; let the detail guide your next move."
+  },
+  "completion_check": {
+    "parts": [
+      {
+        "kind": "choice",
+        "question": "A teammate says, “A neighbor invited me to a running group, and now I go most Saturdays.” Which question follows the branch they offered?",
+        "options": [
+          {
+            "text": "Do you prefer working from home or the office?",
+            "feedback": "This may be an ordinary work topic, but it leaves the neighbor invitation and Saturday running behind."
+          },
+          {
+            "text": "What was it like going along for the first time with your neighbor?",
+            "feedback": "Correct. It follows the specific branch about the neighbor’s invitation and lets the teammate describe the first visit, the group, or whatever part mattered to them."
+          },
+          {
+            "text": "How many friends do you have in the city now?",
+            "feedback": "This jumps from a running group to a personal measure of the teammate’s social life. It is broader and more pressuring than the detail they shared."
+          }
+        ],
+        "correct_option_index": 1
+      },
+      {
+        "kind": "choice",
+        "question": "The teammate answers, “The group meets by the river because the route is flat and easy for beginners.” Which next question best continues that branch?",
+        "options": [
+          {
+            "text": "What other sports have you tried since school?",
+            "feedback": "This remains loosely about exercise but skips the new detail about a beginner-friendly river route."
+          },
+          {
+            "text": "Do you think everyone in the city is friendly?",
+            "feedback": "This turns one group experience into a broad judgment about the city, rather than following the actual detail."
+          },
+          {
+            "text": "A flat route sounds welcoming for beginners. Were you already running before you joined, or did the group help you start?",
+            "feedback": "Correct. It acknowledges the beginner-friendly route and offers a connected choice of directions for the teammate to answer."
+          }
+        ],
+        "correct_option_index": 2
+      },
+      {
+        "kind": "free_draft",
+        "prompt": "A teammate says, “I joined a running group after moving because a neighbor told me about their Saturday river route.” Write one follow-up. Then name the exact detail your question follows and one unrelated interview-style question you deliberately did not ask.",
+        "good_answer_demonstrates": "One low-pressure follow-up tied to the running group, neighbor recommendation, Saturday timing, or river route, along with a clear distinction between that stated detail and an unrelated or overly broad personal question.",
+        "grading": "deferred-v1"
+      }
+    ]
+  }
+}

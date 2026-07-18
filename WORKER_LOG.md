@@ -83,3 +83,12 @@ Entry format (keep an entry under ~15 lines):
 - **Files touched:** content/lessons/l02-use-the-setting.json; content/lessons/l03-easy-first-question.json; backend/tests/test_content.py; backend/tests/test_api.py; WORKER_LOG.md
 - **Result / verification:** Both JSON files parsed with `python3 -m json.tool`; `backend/.venv/bin/python -m pytest backend/tests -q`: 10 passed, 1 warning in 0.37s; `git diff --check` passed.
 - **Open issues:** none
+
+## 2026-07-18 15:17 UTC — Author Unit 2 lessons L04 through L06
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Authored L04–L06 with turn-balance, evidence-spotting,
+  and branching-response checks; updated the content/API test expectations for six authored lessons.
+- **Files touched:** content/lessons/l04-answer-and-return.json; content/lessons/l05-show-you-heard.json; content/lessons/l06-follow-the-thread.json; backend/tests/test_content.py; backend/tests/test_api.py; WORKER_LOG.md
+- **Result / verification:** All three JSON files parsed with `python3 -m json.tool`; metadata exactly matched the manifest; `backend/.venv/bin/python -m pytest backend/tests -q`: 10 passed, 1 warning in 0.35s; `git diff --check` passed.
+- **Open issues:** none

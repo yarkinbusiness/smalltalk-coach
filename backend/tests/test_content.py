@@ -24,6 +24,9 @@ def test_real_manifest_is_consistent_and_authored_lessons_load() -> None:
         "l01-first-hello",
         "l02-use-the-setting",
         "l03-easy-first-question",
+        "l04-answer-and-return",
+        "l05-show-you-heard",
+        "l06-follow-the-thread",
     }
     assert {name: len(ids) for name, ids in curriculum.routing.items()} == {
         "warmth": 5,

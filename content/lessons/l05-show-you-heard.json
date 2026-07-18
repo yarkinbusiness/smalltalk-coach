@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "id": "l05-show-you-heard",
+  "title": "Show you heard them",
+  "unit": 2,
+  "sequence": 5,
+  "concept": "Acknowledge one specific detail before moving to the next question or topic.",
+  "skill_objective": "User can make a conversation partner feel heard by responding to what they actually said rather than pivoting immediately.",
+  "dimensions": [
+    "warmth",
+    "reciprocity"
+  ],
+  "concept_intro": {
+    "text": "Listening does not require a perfect response. Often, one small detail is enough: name what the person just said, react to it honestly, and then stay with that thread if you ask a question. A specific acknowledgement shows you were with them, while a fast pivot can make a conversation feel like two separate speeches."
+  },
+  "example": {
+    "setting": "At a campus welcome lunch, Maya sits with a classmate who has also recently arrived. The classmate mentions that they are still figuring out the bus routes.",
+    "dialogue": [
+      {
+        "speaker": "Classmate",
+        "text": "I am still figuring out the bus routes. I took the wrong one yesterday and ended up near the stadium."
+      },
+      {
+        "speaker": "Maya",
+        "text": "Near the stadium is quite a detour. I would have been checking the map every stop too. Which route were you trying to take?"
+      },
+      {
+        "speaker": "Classmate",
+        "text": "The number 12 to the library. I know the route now, at least."
+      }
+    ]
+  },
+  "responses": {
+    "bad": {
+      "text": "I need to find the library too. What classes are you taking?",
+      "explanation": "This jumps straight to the speaker’s own need and then to a new topic. It misses the classmate’s bus-route story, so the classmate has little sign that their detail landed."
+    },
+    "better": {
+      "text": "Bus routes can be confusing when you are new.",
+      "explanation": "This is kind and connected to what the classmate said. It is general, though, so it does not show that Maya noticed the specific detour or leave a clear path to continue the story."
+    },
+    "best": {
+      "text": "Ending up near the stadium is a longer trip than you planned. Which bus were you trying to catch?",
+      "explanation": "The reply picks up the stadium detour, a real detail from the classmate’s words. The follow-up stays on that detail, which makes the conversation feel attended to rather than redirected."
+    }
+  },
+  "exercise": {
+    "prompt": "At the welcome lunch, a classmate says, “I am still figuring out the bus routes. I got off near the stadium yesterday.” Which reply shows you heard a specific detail?",
+    "options": [
+      {
+        "text": "I have been busy unpacking. Did you bring your family with you?",
+        "feedback": "This changes to Maya’s situation and then asks a personal question. It does not acknowledge the bus-route detail."
+      },
+      {
+        "text": "Getting off near the stadium must have made the trip much longer. Which route were you aiming for?",
+        "feedback": "Yes. It names the stadium detour and asks a follow-up that grows from the classmate’s own story."
+      },
+      {
+        "text": "Transportation is difficult everywhere.",
+        "feedback": "This is broadly sympathetic, but it smooths over the specific experience instead of showing what you heard."
+      }
+    ],
+    "correct_option_index": 1
+  },
+  "practice": {
+    "type": "Choose-the-better-reply",
+    "scenario_setup": "At a campus welcome lunch, a classmate says they are still figuring out bus routes and mentions one detail: they missed a stop, took the wrong route, or found a useful route to campus.",
+    "user_task": "Choose the reply that names the detail they gave before asking anything new. Then say which words in the reply show you stayed with their story."
+  },
+  "completion_check": {
+    "parts": [
+      {
+        "kind": "choice",
+        "question": "A classmate says, “I finally found the bus that goes straight to the science building, but I missed it twice this week.” Which detail should an attentive reply acknowledge?",
+        "options": [
+          {
+            "text": "They are sitting at a welcome lunch.",
+            "feedback": "That is part of the setting, not the new information the classmate chose to share."
+          },
+          {
+            "text": "They found a direct bus but missed it twice.",
+            "feedback": "Correct. This is the specific experience in their last turn. Naming either part of it shows you are responding to what they actually said."
+          },
+          {
+            "text": "They probably dislike public transport.",
+            "feedback": "Missing a bus does not tell you how they feel about public transport. Evidence spotting means using stated details, not adding an assumption."
+          }
+        ],
+        "correct_option_index": 1
+      },
+      {
+        "kind": "choice",
+        "question": "Which reply follows that bus-route detail most naturally?",
+        "options": [
+          {
+            "text": "Finding the direct bus is useful, even if catching it has been tricky. What time does it usually come?",
+            "feedback": "Correct. It acknowledges both the useful route and the missed buses, then asks a question that remains on the same topic."
+          },
+          {
+            "text": "That reminds me, I am looking for a roommate. Do you know anyone?",
+            "feedback": "This abruptly changes topics and asks the classmate to solve a separate problem."
+          },
+          {
+            "text": "You should set more alarms. What is your major?",
+            "feedback": "This gives advice before acknowledging the experience, then pivots away. It can sound corrective rather than attentive."
+          }
+        ],
+        "correct_option_index": 0
+      },
+      {
+        "kind": "free_draft",
+        "prompt": "Read this detail from a new classmate: “I took the bus the wrong way and saw a part of the city I had not planned to visit.” Draft a response that points to the evidence you heard, then add one natural follow-up. Name the exact detail your response acknowledges.",
+        "good_answer_demonstrates": "A response that explicitly picks up the wrong-way bus trip or unexpected part of the city before asking a connected question, with a clear identification of the detail being acknowledged rather than a generic sympathy or abrupt pivot.",
+        "grading": "deferred-v1"
+      }
+    ]
+  }
+}
