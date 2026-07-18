@@ -16,11 +16,13 @@ cycles under the existing safety rules (never force-push, clean-tree gate,
    accepted 2026-07-18 (cycle 5 below). 10 tests green.
 3. ~~Author remaining Unit 1 content (`l02`, `l03`)~~ — done, accepted
    2026-07-18 (cycle 6 below). Unit 1 fully authored.
-4. Author remaining units, one per cycle: ~~Unit 2 (`l04`–`l06`)~~ done
-   (cycle 7); ~~Unit 3 (`l07`–`l09`)~~ done, accepted 2026-07-18 (cycle 8);
-   **(next)** Unit 4 (`l10`–`l12`) — completes the curriculum.
-5. Persistence/code hardening: close sqlite connections explicitly; move
-   PRACTICE_TYPES into the manifest (schema_version 2 or manifest field).
+4. ~~Author remaining units~~ — ALL DONE. Unit 2 (cycle 7), Unit 3
+   (cycle 8), Unit 4 (cycle 9). **Full 12-lesson curriculum authored and
+   served.**
+5. **(next)** Persistence/code hardening: close sqlite connections
+   explicitly; move PRACTICE_TYPES into the manifest (with a manifest
+   section added to CONTENT_MODEL_V1.md); reject practice-type mismatch in
+   a test.
 6. Coaching/diagnosis pipeline — **blocked: needs Anthropic API key**.
 7. iOS app — **blocked: needs Xcode** (this machine has CLT only).
 
@@ -137,6 +139,20 @@ blocked, log that and stop — don't invent busywork.
    4 workers → synthesized report) against real CMA.
 
 ## Cycle log
+
+- **2026-07-18 (cycle 9 — Unit 4 content: L10–L12; CURRICULUM COMPLETE):**
+  Worker: `gpt-5.6-terra`. Note: the first dispatch of this task was
+  externally stopped mid-run — tree verified clean (worker died in its
+  read phase, nothing written), re-dispatched identical spec, one working
+  round. Authored `l10-build-on-common-ground` (topic-thread ordering
+  check), `l11-end-warmly` (exit-quality: appreciation/reason/clean-end),
+  `l12-make-continuity-easy` (safety-reviewed: declining modeled as a fine
+  outcome, persistence marked wrong). Tests restructured: full l01→l12
+  walk asserting final `unlocked_next: null` + all-completed curriculum;
+  content_pending coverage moved to a tmp-fixture test. Brain
+  verification: suite run independently — 11 passed; all three lessons
+  read in full — ACCEPTED. **Next:** hardening cycle (backlog item 5),
+  which exhausts the unblocked backlog.
 
 - **2026-07-18 (cycle 8 — Unit 3 content: L07–L09):** Worker:
   `gpt-5.6-terra`, one round. Authored `l07-share-and-make-space`,

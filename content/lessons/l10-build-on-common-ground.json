@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "id": "l10-build-on-common-ground",
+  "title": "Build on common ground",
+  "unit": 4,
+  "sequence": 10,
+  "concept": "Deepen a conversation by staying with one genuinely shared topic long enough to explore it together.",
+  "skill_objective": "User can turn a discovered shared interest into one specific, mutual conversational thread.",
+  "dimensions": [
+    "curiosity",
+    "reciprocity"
+  ],
+  "concept_intro": {
+    "text": "When you find something you both care about, stay with it for another turn or two. Name one specific part of the shared topic, add your own small detail, and invite the other person's view. That creates a thread the two of you are building together; you do not need to jump to a new question just to keep talking."
+  },
+  "example": {
+    "setting": "At an office after-work gathering, Maya and her colleague Sam discover that they are both looking for inexpensive weekend activities in the new city.",
+    "dialogue": [
+      {
+        "speaker": "Sam",
+        "text": "I am still trying to find things to do here that do not cost much."
+      },
+      {
+        "speaker": "Maya",
+        "text": "Same. I heard the waterfront market is free to walk around on Saturdays, and I have been meaning to try it. Have you found any low-cost places you liked?"
+      },
+      {
+        "speaker": "Sam",
+        "text": "The public garden was good last weekend. I did not know the market was free."
+      },
+      {
+        "speaker": "Maya",
+        "text": "The garden sounds like a useful find too. Maybe I will put both on my weekend list."
+      }
+    ]
+  },
+  "responses": {
+    "bad": {
+      "text": "I like cheap things too. What is your job title?",
+      "explanation": "It abandons the shared discovery immediately for an unrelated question, so the conversation loses the thread both people had just opened."
+    },
+    "better": {
+      "text": "I am looking for inexpensive things too.",
+      "explanation": "It confirms common ground, but it does not add a specific detail or give Sam an easy place to continue the topic."
+    },
+    "best": {
+      "text": "Same. I heard the waterfront market is free to walk around on Saturdays. Have you found any low-cost places you liked?",
+      "explanation": "It stays with the shared topic, offers one concrete detail, and invites Sam to add their own experience. Either person can naturally build on the same thread."
+    }
+  },
+  "exercise": {
+    "prompt": "A colleague says, “I want to explore the city, but I am trying to spend carefully.” Which reply builds one mutual topic?",
+    "options": [
+      {
+        "text": "You should make a list of every place you want to see.",
+        "feedback": "This shifts into broad advice before learning what the colleague is interested in or sharing a mutual thread."
+      },
+      {
+        "text": "I have been looking for low-cost weekend plans too. I heard the museum is free on Thursday evenings—have you tried anything like that yet?",
+        "feedback": "Correct. It names the shared interest, contributes one specific possibility, and invites the colleague's experience without changing the subject."
+      },
+      {
+        "text": "Do you know anyone else at this gathering?",
+        "feedback": "This is a new topic, not a continuation of the inexpensive-weekend-activities thread."
+      }
+    ],
+    "correct_option_index": 1
+  },
+  "practice": {
+    "type": "Short roleplay",
+    "scenario_setup": "At an office after-work gathering, a colleague says they are also looking for inexpensive weekend activities in the new city. You have heard about one free or low-cost option, such as a market, public garden, museum evening, or walking trail.",
+    "user_task": "Write two turns that stay with the shared topic: add one specific detail of your own, then invite the colleague to share a related idea or experience. Do not switch to an unrelated question."
+  },
+  "completion_check": {
+    "parts": [
+      {
+        "kind": "choice",
+        "question": "These mixed turns are all from one after-work conversation. Which ordering creates a coherent shared-topic thread about inexpensive weekend activities?",
+        "options": [
+          {
+            "text": "C → A → D → B: “The public garden was good last weekend.” → “I heard the waterfront market is free on Saturdays.” → “What is your job title?” → “I am trying to find inexpensive things to do here.”",
+            "feedback": "This begins with a detail before the shared topic is established, then breaks the thread with an unrelated job-title question."
+          },
+          {
+            "text": "A → C → B → D: “I heard the waterfront market is free on Saturdays.” → “The public garden was good last weekend.” → “I am trying to find inexpensive things to do here.” → “What is your job title?”",
+            "feedback": "The reason for the topic arrives late, and the final turn jumps to an unrelated subject instead of building on the shared ideas."
+          },
+          {
+            "text": "B → A → C → D: “I am trying to find inexpensive things to do here.” → “I heard the waterfront market is free on Saturdays.” → “The public garden was good last weekend.” → “Both sound worth adding to a weekend list.”",
+            "feedback": "Correct. The shared need opens the topic, each person adds a related, specific idea, and the last turn connects the two ideas without changing the subject."
+          },
+          {
+            "text": "B → D → A → C: “I am trying to find inexpensive things to do here.” → “Both sound worth adding to a weekend list.” → “I heard the waterfront market is free on Saturdays.” → “The public garden was good last weekend.”",
+            "feedback": "The connecting summary comes before either activity has been mentioned, so it cannot yet connect the two contributions."
+          }
+        ],
+        "correct_option_index": 2
+      },
+      {
+        "kind": "free_draft",
+        "prompt": "Using the coherent ordering, explain in one or two sentences what connects the turns. Then add one possible next turn that stays with the inexpensive-weekend-activities topic and makes space for the other person to respond.",
+        "good_answer_demonstrates": "An explanation that the turns share the goal of finding inexpensive weekend activities and build by exchanging related specific ideas, plus a connected next turn that invites or leaves room for the other person's view rather than changing topics.",
+        "grading": "deferred-v1"
+      }
+    ]
+  }
+}

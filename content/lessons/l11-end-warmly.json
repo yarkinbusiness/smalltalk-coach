@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "id": "l11-end-warmly",
+  "title": "End warmly",
+  "unit": 4,
+  "sequence": 11,
+  "concept": "End a conversation with a clear, friendly close that respects time and avoids an abrupt disappearance.",
+  "skill_objective": "User can leave a casual office or campus conversation with a warm close and a context-appropriate reason to go.",
+  "dimensions": [
+    "warmth",
+    "flow"
+  ],
+  "concept_intro": {
+    "text": "A good close does three small things: it signals that you valued the exchange, gives a simple true reason for leaving when one is useful, and ends clearly. You do not need a long apology or a promise to continue. A warm sentence lets both people move on without guessing whether the conversation has ended."
+  },
+  "example": {
+    "setting": "In the office coffee corner, Maya has been chatting with her colleague Priya about local lunch spots. Maya needs to join a scheduled onboarding meeting.",
+    "dialogue": [
+      {
+        "speaker": "Maya",
+        "text": "That sandwich place sounds like a good find. Thanks for telling me about it."
+      },
+      {
+        "speaker": "Maya",
+        "text": "I need to join my onboarding meeting now, but it was nice talking with you. See you around."
+      },
+      {
+        "speaker": "Priya",
+        "text": "Of course—good luck with it. See you later."
+      }
+    ]
+  },
+  "responses": {
+    "bad": {
+      "text": "I have to go.",
+      "explanation": "It is clear, but it drops the conversation without acknowledging the person or the exchange."
+    },
+    "better": {
+      "text": "Sorry, I have a meeting. I really should go now, but maybe we can talk later, unless you are busy, and sorry again.",
+      "explanation": "It gives a reason, but the repeated apology and uncertainty make a simple exit sound heavier than it needs to be."
+    },
+    "best": {
+      "text": "Thanks for the lunch tip. I need to join my onboarding meeting now, but it was nice talking with you. See you around.",
+      "explanation": "It signals appreciation, gives a brief context-appropriate reason, and ends cleanly. Priya can return the close without being asked to make a plan."
+    }
+  },
+  "exercise": {
+    "prompt": "You are chatting in the coffee corner and your scheduled onboarding meeting is about to begin. Which exit is warm and clear?",
+    "options": [
+      {
+        "text": "I am leaving.",
+        "feedback": "This announces the exit but does not acknowledge the conversation or offer a friendly close."
+      },
+      {
+        "text": "I am so sorry, I should have left earlier, I do not want to be rude, maybe I can stay for another minute...",
+        "feedback": "A long apology can make the departure feel awkward and delays the clean ending you need."
+      },
+      {
+        "text": "Thanks for telling me about that lunch spot. I need to join my onboarding meeting now, but it was nice talking with you. See you around.",
+        "feedback": "Correct. It appreciates the exchange, gives a simple reason, and closes clearly without overexplaining."
+      }
+    ],
+    "correct_option_index": 2
+  },
+  "practice": {
+    "type": "Draft-then-compare",
+    "scenario_setup": "At the office coffee corner, a colleague has just recommended a nearby lunch spot. Your scheduled onboarding meeting starts now.",
+    "user_task": "Draft a warm exit with appreciation, one brief reason, and a clean ending. Then compare it with an abrupt version and an overexplained version; keep the final version simple and in your own voice."
+  },
+  "completion_check": {
+    "parts": [
+      {
+        "kind": "choice",
+        "question": "Revise this abrupt close: “I have to go.” Which version signals appreciation, a reason, and a clean ending?",
+        "options": [
+          {
+            "text": "I have to go, but you should tell me every detail about the lunch places before I leave.",
+            "feedback": "This adds a demand that keeps the conversation going instead of giving it a clean, respectful close."
+          },
+          {
+            "text": "Thanks for the recommendation. I need to join my onboarding meeting now, so I will see you around.",
+            "feedback": "Correct. It appreciates the colleague's contribution, names the real reason to leave, and makes the ending unambiguous."
+          },
+          {
+            "text": "Sorry, sorry, I should not have started talking when I had a meeting, and I feel terrible about leaving.",
+            "feedback": "This overexplains and turns an ordinary schedule change into something the colleague must reassure you about."
+          }
+        ],
+        "correct_option_index": 1
+      },
+      {
+        "kind": "choice",
+        "question": "Why is “Thanks for the recommendation. I need to join my onboarding meeting now, so I will see you around” a strong close?",
+        "options": [
+          {
+            "text": "It shows appreciation, gives a brief reason, and lets the conversation end without requiring either person to make another plan.",
+            "feedback": "Correct. Those three elements make the exit friendly, proportionate, and easy to receive."
+          },
+          {
+            "text": "It guarantees that the colleague will want to continue the conversation later.",
+            "feedback": "A warm close does not predict or require future contact; it simply ends the current exchange well."
+          },
+          {
+            "text": "It makes the colleague responsible for persuading you to stay.",
+            "feedback": "A clear close does not ask the other person to manage your schedule or keep the interaction going."
+          }
+        ],
+        "correct_option_index": 0
+      },
+      {
+        "kind": "free_draft",
+        "prompt": "Revise this exit from a coffee-corner chat: “Okay, bye.” Include one genuine sign of appreciation, the scheduled meeting as a brief reason, and a clean final line. Do not add a promise or invitation you do not mean.",
+        "good_answer_demonstrates": "A short, warm close that acknowledges something from the exchange, names the onboarding meeting as a simple reason to leave, and clearly ends the conversation without overexplaining or making an unwanted commitment.",
+        "grading": "deferred-v1"
+      }
+    ]
+  }
+}

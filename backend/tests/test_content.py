@@ -30,6 +30,9 @@ def test_real_manifest_is_consistent_and_authored_lessons_load() -> None:
         "l07-share-and-make-space",
         "l08-handle-the-pause",
         "l09-read-the-room",
+        "l10-build-on-common-ground",
+        "l11-end-warmly",
+        "l12-make-continuity-easy",
     }
     assert {name: len(ids) for name, ids in curriculum.routing.items()} == {
         "warmth": 5,

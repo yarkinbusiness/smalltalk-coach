@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "id": "l12-make-continuity-easy",
+  "title": "Make continuity easy",
+  "unit": 4,
+  "sequence": 12,
+  "concept": "When mutual interest is present, suggest one small, low-pressure way to continue contact around the shared context.",
+  "skill_objective": "User can make a specific, optional continuity move without pressuring a new acquaintance for commitment.",
+  "dimensions": [
+    "reciprocity",
+    "flow"
+  ],
+  "concept_intro": {
+    "text": "If you have found a real shared topic, one small next step can make future contact easier. Keep it specific to what you discussed, make the option easy to decline, and leave the answer alone. “No worries” is a complete response to uncertainty or a no; you do not need to persuade someone, repeat the invitation, or turn a new acquaintance into a commitment."
+  },
+  "example": {
+    "setting": "After a study-group introduction, Maya and her classmate Jordan discover they are both taking the same difficult introductory course and are working through the first problem set.",
+    "dialogue": [
+      {
+        "speaker": "Maya",
+        "text": "I am in Intro to Statistics too, and the first problem set has taken me a while."
+      },
+      {
+        "speaker": "Jordan",
+        "text": "Same—I am still stuck on the probability questions."
+      },
+      {
+        "speaker": "Maya",
+        "text": "I am planning to review those questions in the library after Tuesday's class. If it would be useful, you are welcome to compare notes for a few minutes. No pressure if you already have a plan."
+      },
+      {
+        "speaker": "Jordan",
+        "text": "I might already be meeting someone, but thanks for asking."
+      },
+      {
+        "speaker": "Maya",
+        "text": "No worries at all. Good luck with the problem set."
+      }
+    ]
+  },
+  "responses": {
+    "bad": {
+      "text": "Give me your number so we can study together every week.",
+      "explanation": "It asks for a large commitment and personal contact before the classmate has chosen whether they want any follow-up."
+    },
+    "better": {
+      "text": "We should study sometime.",
+      "explanation": "It is friendly, but it is vague: there is no shared task, time, or easy way for the classmate to decide what they are being asked about."
+    },
+    "best": {
+      "text": "I am reviewing the probability questions in the library after Tuesday's class. If it would be useful, you are welcome to compare notes for a few minutes—no pressure if you already have a plan.",
+      "explanation": "It is grounded in the course and the specific problem set, offers a small optional step, and makes declining completely fine. A classmate can say yes, no, or nothing further without being pursued."
+    }
+  },
+  "exercise": {
+    "prompt": "You and a classmate are both finding the first Intro to Statistics problem set difficult. Which follow-up is clear, optional, and grounded in that conversation?",
+    "options": [
+      {
+        "text": "I am going to compare the probability questions in the library after Tuesday's class. If you would find that useful, you are welcome to join for ten minutes; no worries if not.",
+        "feedback": "Correct. It names the shared course task, offers a small and concrete option, and explicitly leaves room for a no or another plan."
+      },
+      {
+        "text": "You need to come study with me after class so we can get through this course.",
+        "feedback": "This presents a new acquaintance with a demand and a large commitment, not an optional follow-up."
+      },
+      {
+        "text": "Let us hang out sometime. Send me your contact details now.",
+        "feedback": "This is vague and asks for personal contact without grounding the invitation in the course topic you were discussing."
+      }
+    ],
+    "correct_option_index": 0
+  },
+  "practice": {
+    "type": "Short roleplay",
+    "scenario_setup": "After a study-group introduction, you and a classmate discover that you are both taking the same difficult introductory course. You have each mentioned one part of the current assignment that is challenging.",
+    "user_task": "Offer one small, specific next step tied to the course, such as comparing one problem after class or sharing a campus study-session time. Make it optional. Then write the one-sentence response you would give if the classmate says they already have a plan or is not sure."
+  },
+  "completion_check": {
+    "parts": [
+      {
+        "kind": "choice",
+        "question": "Which follow-up has the right specificity and pressure level after two classmates discuss struggling with the same probability questions?",
+        "options": [
+          {
+            "text": "We should definitely become study partners for the whole term. What is your number?",
+            "feedback": "This assumes a long-term commitment and requests personal contact before the classmate has chosen a small next step."
+          },
+          {
+            "text": "If you are free, perhaps we could maybe do something related to class someday.",
+            "feedback": "This is optional, but it is too vague for the classmate to know what the proposed next step is."
+          },
+          {
+            "text": "I am reviewing question 4 in the library after Tuesday's class. If you want to compare approaches for ten minutes, you are welcome to join; no worries if you have another plan.",
+            "feedback": "Correct. It is tied to the shared course problem, gives a small and clear option, and makes declining or choosing another plan entirely acceptable."
+          }
+        ],
+        "correct_option_index": 2
+      },
+      {
+        "kind": "choice",
+        "question": "The classmate replies, “I might already be meeting someone, but thanks.” What is the best response?",
+        "options": [
+          {
+            "text": "Are you sure? It will only take ten minutes, and I really need a study partner.",
+            "feedback": "This treats uncertainty as something to overcome and adds pressure after the classmate has not committed."
+          },
+          {
+            "text": "No worries at all. Good luck with the problem set.",
+            "feedback": "Correct. It accepts the non-committal answer as complete, keeps the tone warm, and does not pursue the invitation."
+          },
+          {
+            "text": "Then message me later when you change your mind.",
+            "feedback": "This asks the classmate to revisit an invitation they have not accepted and makes the follow-up feel less optional."
+          }
+        ],
+        "correct_option_index": 1
+      },
+      {
+        "kind": "free_draft",
+        "prompt": "Revise this follow-up: “Give me your number and we can study every week.” Make it specific to the introductory course and one current assignment, genuinely optional, and low-pressure. Then write a warm response to “I already have a plan” or “I am not sure yet.”",
+        "good_answer_demonstrates": "One small, concrete course-linked option with clear room to decline, plus a response such as “No worries” that accepts a no or non-committal answer without repeating, escalating, or pursuing the invitation.",
+        "grading": "deferred-v1"
+      }
+    ]
+  }
+}

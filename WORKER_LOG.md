@@ -101,3 +101,13 @@ Entry format (keep an entry under ~15 lines):
 - **Files touched:** content/lessons/l07-share-and-make-space.json; content/lessons/l08-handle-the-pause.json; content/lessons/l09-read-the-room.json; backend/tests/test_content.py; backend/tests/test_api.py; WORKER_LOG.md
 - **Result / verification:** All three JSON files parsed with `python3 -m json.tool`; the validating loader accepted them; `backend/.venv/bin/python -m pytest backend/tests -q`: 10 passed, 1 warning in 0.39s; `git diff --check` passed.
 - **Open issues:** L09 uses the loader-enforced manifest title `Read the room`; the planning document’s L09 title line says `Notice interest and boundaries`.
+
+## 2026-07-18 15:30 UTC — Author Unit 4 lessons L10 through L12 and complete curriculum tests
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Authored L10–L12 with topic-thread, exit-quality, and
+  specificity-and-pressure checks; L12 explicitly accepts declining or uncertainty without pursuit.
+  Restructured API coverage for the completed 12-lesson path and a synthetic content-pending case.
+- **Files touched:** content/lessons/l10-build-on-common-ground.json; content/lessons/l11-end-warmly.json; content/lessons/l12-make-continuity-easy.json; backend/tests/test_content.py; backend/tests/test_api.py; WORKER_LOG.md
+- **Result / verification:** All three JSON files parsed with `python3 -m json.tool`; the validating loader accepted 12 lessons; `backend/.venv/bin/python -m pytest backend/tests -q`: 11 passed, 1 warning in 0.44s; `git diff --check` passed.
+- **Open issues:** none
