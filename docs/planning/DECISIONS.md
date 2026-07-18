@@ -74,6 +74,33 @@ Use this file to preserve important product decisions and prevent the same quest
 - **Consequence:** App-repo `DECISIONS.md` carries the executing entry ("Full Restart: Phase 0 Implementation Removed"); README rewritten to the planning-first state; ARCHITECTURE.md and PROGRESS.md annotated so nothing implies the old implementation is present. The build scope gate (no app code until validation) is unchanged.
 - **Revisit trigger:** Validation passes and the rebuild would genuinely reuse Phase 0 components — restore selectively from `phase0-archive`.
 
+### 2026-07-18 — Validation Interviews Deferred; Build Gate Waived (Founder)
+
+- **Status:** Confirmed (founder decision)
+- **Decision:** The wedge validation interviews (`VALIDATION_PLAN.md`) and
+  their decision thresholds (≥8/15 at-least-weekly pain, ≥5/15 concrete
+  willingness-to-pay signal) are consciously skipped as a precondition for
+  build work. `VALIDATION_PLAN.md` is retained as reference material
+  (deferred, not deleted). The roadmap proceeds directly to v1 lesson-path
+  definition. App code remains gated on the v1 lesson path being defined
+  **and** an explicit founder go-ahead — this waiver alone does not start
+  app coding.
+- **Why:** Founder instruction 2026-07-18: skip the interview kit and the
+  interview gate, proceed on the roadmap.
+- **Evidence:** Founder instruction only. No new user evidence; the segment
+  lock ("2026-07-17 — V1 Target Segment: Relocation Wedge") remains an
+  Experiment supported by web research, now without a scheduled interview
+  test.
+- **Consequence:** Every interview-dependent unknown (primary payer within
+  the wedge, peak-pain relocation moment, pricing, lesson-length tolerance)
+  must be carried as an explicitly labeled assumption with a revisit
+  trigger in v1 planning docs, starting with `LESSON_PATH_V1.md`. The Open
+  Decisions item "the first 5–10 lessons in the beginner path" is being
+  resolved by design judgment, not interview data.
+- **Revisit trigger:** Founder reinstates interviews; or early real-user
+  signals (waitlist behavior, store reviews, usage, refunds) contradict the
+  wedge, payer, or pricing assumptions.
+
 ## Decision Template
 
 ### YYYY-MM-DD — Short Decision Name

@@ -102,6 +102,28 @@ Read by the brain and by every Codex worker at cycle start (see
 - **Revisit trigger:** None — the exception is spent. Any future
   force-push requires a new explicit founder authorization and entry here.
 
+### 2026-07-18 — Build Scope Gate Narrowed (Interview Thresholds Waived)
+
+- **Status:** Confirmed (founder decision)
+- **Decision:** The loop's scope gate changes from "no app code until
+  `docs/planning/VALIDATION_PLAN.md` thresholds are met AND the v1 lesson
+  path is defined" to "**no app code until the v1 lesson path is defined
+  and the founder explicitly approves build start**." Product-side record:
+  `docs/planning/DECISIONS.md` → "2026-07-18 — Validation Interviews
+  Deferred; Build Gate Waived (Founder)". Documentation-only roadmap work
+  (starting with `docs/planning/LESSON_PATH_V1.md`) proceeds now under the
+  normal loop protocol.
+- **Why:** Founder waived the interview gate on 2026-07-18; the engineering
+  gate text must track the real rule or future cycles will refuse valid
+  work.
+- **Consequence:** `docs/planning/ORCHESTRATION.md` (Scope section) and
+  `.claude/skills/brain-worker-loop/SKILL.md` (activation guard #3) need
+  their gate text synced to this entry — assigned to a worker task in the
+  same cycle that writes `LESSON_PATH_V1.md`.
+- **Revisit trigger:** Founder reinstates the interview gate; or the lesson
+  path is accepted and the founder gives build go-ahead (the gate then
+  lifts entirely and this entry becomes historical).
+
 ### 2026-07-18 — Planning Docs Migrated Into This Repo
 
 - **Status:** Confirmed (founder-approved migration, pre-archival)

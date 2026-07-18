@@ -1,5 +1,17 @@
 # Progress & backlog
 
+**2026-07-18 (latest): LOOP ACTIVATED — interview gate waived (founder
+decision).** The validation-interview gate is consciously skipped (records:
+`docs/planning/DECISIONS.md` → "2026-07-18 — Validation Interviews Deferred;
+Build Gate Waived (Founder)" and root `DECISIONS.md` → "2026-07-18 — Build
+Scope Gate Narrowed"). The brain/worker loop is now active for
+**documentation-only** roadmap work: first a small round-trip verification
+task (SKILL.md stale-path fix), then the v1 lesson-path definition
+(`docs/planning/LESSON_PATH_V1.md`). App code remains gated on the lesson
+path being accepted **plus an explicit founder go-ahead**. Brain: Claude
+Fable 5 (interactive session, founder present); worker: `gpt-5.6-terra` via
+`worker.sh`. Run baseline for auto-push: `9485fa7`.
+
 **2026-07-18: FULL RESTART EXECUTED (founder-approved).** The Phase 0
 implementation (`backend/` 38 files, `ios/` 27 files) has been removed
 from `master`; the complete pre-cleanup tree is archived at tag
