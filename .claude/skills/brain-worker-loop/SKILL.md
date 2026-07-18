@@ -74,7 +74,7 @@ truth, and no loop state may live only in a mirror.
 
    ```bash
    .claude/skills/brain-worker-loop/worker.sh \
-     -C "/Users/yarkinyavuz/Desktop/untitled folder/smalltalk-coach" \
+     -C "/Users/yarkinyavuz/Desktop/smalltalk-coach" \
      -o /path/to/report.txt \
      - < /path/to/spec.md
    ```
@@ -97,7 +97,7 @@ truth, and no loop state may live only in a mirror.
 
    ```bash
    .claude/skills/brain-worker-loop/auto_push.sh -b "$BASELINE" \
-     -C "/Users/yarkinyavuz/Desktop/untitled folder/smalltalk-coach"
+     -C "/Users/yarkinyavuz/Desktop/smalltalk-coach"
    ```
 
    Auto-push policy (verbatim, decision: repo `DECISIONS.md` "2026-07-18 —

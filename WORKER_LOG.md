@@ -30,3 +30,13 @@ Entry format (keep an entry under ~15 lines):
 - **Result / verification:** Reviewed the README diff against ARCHITECTURE.md;
   the architecture pointer and placeholder-name paragraph are preserved.
 - **Open issues:** none
+
+## 2026-07-18 14:34 UTC — Fix stale brain-worker loop repository paths
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Replaced the two stale repository paths in the loop
+  protocol examples with the current repository path.
+- **Files touched:** .claude/skills/brain-worker-loop/SKILL.md; WORKER_LOG.md
+- **Result / verification:** `git diff --check` passed; the tracked stale-path
+  scan returned no matches; the SKILL.md diff contains only the two path substitutions.
+- **Open issues:** none
