@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
+from contextlib import closing
 from pathlib import Path
 
 
@@ -28,15 +29,17 @@ class ProgressStore:
         return connection
 
     def completed_lesson_ids(self, user_id: str) -> set[str]:
-        with self._connect() as connection:
-            rows = connection.execute(
-                "SELECT lesson_id FROM lesson_completions WHERE user_id = ?", (user_id,)
-            ).fetchall()
+        with closing(self._connect()) as connection:
+            with connection:
+                rows = connection.execute(
+                    "SELECT lesson_id FROM lesson_completions WHERE user_id = ?", (user_id,)
+                ).fetchall()
         return {row[0] for row in rows}
 
     def record_completion(self, user_id: str, lesson_id: str) -> None:
-        with self._connect() as connection:
-            connection.execute(
-                "INSERT OR IGNORE INTO lesson_completions (user_id, lesson_id) VALUES (?, ?)",
-                (user_id, lesson_id),
-            )
+        with closing(self._connect()) as connection:
+            with connection:
+                connection.execute(
+                    "INSERT OR IGNORE INTO lesson_completions (user_id, lesson_id) VALUES (?, ?)",
+                    (user_id, lesson_id),
+                )

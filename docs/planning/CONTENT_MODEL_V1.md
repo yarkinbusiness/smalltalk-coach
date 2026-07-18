@@ -227,6 +227,23 @@ The backend will enforce these rules when loading lesson files:
    `free_draft`, when present, has its prompt,
    `good_answer_demonstrates`, and exactly `"grading": "deferred-v1"`.
 
+## Path manifest
+
+`content/lesson_path.json` is the machine-readable locked path that the
+backend loads before authored lesson files. It is a JSON object with:
+
+- `schema_version`: supported manifest version (`1`).
+- `lessons`: exactly twelve ordered lesson objects. Each has `id`, `title`,
+  `unit`, `sequence`, `concept`, `skill_objective`, `dimensions`, and
+  `practice_type`. `practice_type` is a non-empty string and must equal the
+  authored lesson file's `practice.type`.
+- `routing`: an object keyed by the four dimensions (`warmth`, `curiosity`,
+  `reciprocity`, and `flow`), where every value is a non-empty lesson-id list.
+
+The manifest is the source of truth for locked lesson metadata, lesson order,
+routing membership, and practice type; each authored lesson file must agree
+with it.
+
 ## 5. Deliberately out of scope
 
 This schema marks free-draft grading as `deferred-v1`; it does not define

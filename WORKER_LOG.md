@@ -111,3 +111,17 @@ Entry format (keep an entry under ~15 lines):
 - **Files touched:** content/lessons/l10-build-on-common-ground.json; content/lessons/l11-end-warmly.json; content/lessons/l12-make-continuity-easy.json; backend/tests/test_content.py; backend/tests/test_api.py; WORKER_LOG.md
 - **Result / verification:** All three JSON files parsed with `python3 -m json.tool`; the validating loader accepted 12 lessons; `backend/.venv/bin/python -m pytest backend/tests -q`: 11 passed, 1 warning in 0.44s; `git diff --check` passed.
 - **Open issues:** none
+
+## 2026-07-18 15:33 UTC — Harden sqlite closes and manifest practice types
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Wrapped every per-call sqlite connection in explicit closing
+  contexts while preserving transactions; moved all twelve practice types into
+  the manifest and validated authored lesson practice types against it.
+- **Files touched:** backend/app/store.py; backend/app/content.py;
+  content/lesson_path.json; docs/planning/CONTENT_MODEL_V1.md;
+  backend/tests/test_content.py; WORKER_LOG.md
+- **Result / verification:** `backend/.venv/bin/python -m pytest backend/tests -q`:
+  12 passed, 1 warning in 0.43s; a direct manifest-to-lesson check matched all
+  12 practice types; `git diff --check` passed.
+- **Open issues:** none

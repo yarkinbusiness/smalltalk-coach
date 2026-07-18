@@ -26,20 +26,6 @@ CONTENT_BLOCKS = (
     "practice",
     "completion_check",
 )
-PRACTICE_TYPES = {
-    "l01-first-hello": "Short roleplay",
-    "l02-use-the-setting": "Choose-the-better-reply",
-    "l03-easy-first-question": "Draft-then-compare",
-    "l04-answer-and-return": "Short roleplay",
-    "l05-show-you-heard": "Choose-the-better-reply",
-    "l06-follow-the-thread": "Short roleplay",
-    "l07-share-and-make-space": "Draft-then-compare",
-    "l08-handle-the-pause": "Choose-the-next-move",
-    "l09-read-the-room": "Cue-sort exercise",
-    "l10-build-on-common-ground": "Short roleplay",
-    "l11-end-warmly": "Draft-then-compare",
-    "l12-make-continuity-easy": "Short roleplay",
-}
 
 
 class ContentValidationError(ValueError):
@@ -108,7 +94,7 @@ def _validate_manifest(manifest: Any) -> tuple[tuple[dict[str, Any], ...], dict[
     units: list[int] = []
     for index, raw_lesson in enumerate(raw_lessons):
         lesson = _require_object(raw_lesson, f"lesson manifest lessons[{index}]")
-        for field in ("id", "title", "concept", "skill_objective"):
+        for field in ("id", "title", "concept", "skill_objective", "practice_type"):
             _require_string(lesson.get(field), f"lesson manifest lessons[{index}].{field}")
         for field, maximum in (("unit", 4), ("sequence", 12)):
             value = lesson.get(field)
@@ -222,8 +208,10 @@ def _validate_lesson(lesson: Any, path: Path, metadata: dict[str, Any], routing:
     practice = _require_object(data["practice"], f"lesson file {path.name}.practice")
     for field in ("type", "scenario_setup", "user_task"):
         _require_string(practice.get(field), f"lesson file {path.name}.practice.{field}")
-    if practice["type"] != PRACTICE_TYPES[data["id"]]:
-        raise ContentValidationError(f"lesson file {path.name}.practice.type does not match the locked path")
+    if practice["type"] != metadata["practice_type"]:
+        raise ContentValidationError(
+            f"lesson file {path.name}.practice.type does not match manifest practice_type"
+        )
 
     completion_check = _require_object(data["completion_check"], f"lesson file {path.name}.completion_check")
     parts = completion_check.get("parts")

@@ -69,6 +69,10 @@ def _write_fixture(tmp_path: Path, mutate: Mutation) -> tuple[Path, Path]:
             "must be an in-range integer",
         ),
         (lambda lesson: lesson.__setitem__("dimensions", ["warmth"]), "contradict manifest routing"),
+        (
+            lambda lesson: lesson["practice"].__setitem__("type", "Draft-then-compare"),
+            "does not match manifest practice_type",
+        ),
     ],
 )
 def test_invalid_lesson_content_is_rejected(

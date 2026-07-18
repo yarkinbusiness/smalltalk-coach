@@ -19,10 +19,11 @@ cycles under the existing safety rules (never force-push, clean-tree gate,
 4. ~~Author remaining units~~ — ALL DONE. Unit 2 (cycle 7), Unit 3
    (cycle 8), Unit 4 (cycle 9). **Full 12-lesson curriculum authored and
    served.**
-5. **(next)** Persistence/code hardening: close sqlite connections
-   explicitly; move PRACTICE_TYPES into the manifest (with a manifest
-   section added to CONTENT_MODEL_V1.md); reject practice-type mismatch in
-   a test.
+5. ~~Persistence/code hardening~~ — done, accepted 2026-07-18 (cycle 10).
+   **Unblocked backlog exhausted; loop paused.** Next work requires either
+   founder externals (items 6–7) or a new product/design decision (e.g.
+   coaching-pipeline design pass, lesson content revision pass, free-draft
+   grading design).
 6. Coaching/diagnosis pipeline — **blocked: needs Anthropic API key**.
 7. iOS app — **blocked: needs Xcode** (this machine has CLT only).
 
@@ -139,6 +140,19 @@ blocked, log that and stop — don't invent busywork.
    4 workers → synthesized report) against real CMA.
 
 ## Cycle log
+
+- **2026-07-18 (cycle 10 — backend hardening; unblocked backlog complete):**
+  Worker: `gpt-5.6-terra`, one round. sqlite connections now explicitly
+  closed (`contextlib.closing` around each per-call connection, transaction
+  `with` preserved inside); `PRACTICE_TYPES` map removed from code — the
+  manifest carries `practice_type` ×12 (verified identical to
+  LESSON_PATH_V1) and the loader enforces lesson↔manifest equality, with a
+  new mismatch-rejection test; CONTENT_MODEL_V1.md gains a "Path manifest"
+  section so the manifest shape is documented. Brain verification: suite
+  run independently — **12 passed**; all diffs read in full — ACCEPTED.
+  **Loop state: paused with unblocked backlog exhausted.** Remaining items
+  are founder-gated (Anthropic key for coaching pipeline; Xcode for iOS)
+  or need a new design pass (coaching pipeline, free-draft grading).
 
 - **2026-07-18 (cycle 9 — Unit 4 content: L10–L12; CURRICULUM COMPLETE):**
   Worker: `gpt-5.6-terra`. Note: the first dispatch of this task was

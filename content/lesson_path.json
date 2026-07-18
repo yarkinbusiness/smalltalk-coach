@@ -8,7 +8,8 @@
       "sequence": 1,
       "concept": "Open with a simple greeting plus a small, shared-context cue instead of searching for an impressive line.",
       "skill_objective": "User can start a brief conversation with a new colleague or classmate using an observable cue from the moment.",
-      "dimensions": ["warmth", "flow"]
+      "dimensions": ["warmth", "flow"],
+      "practice_type": "Short roleplay"
     },
     {
       "id": "l02-use-the-setting",
@@ -17,7 +18,8 @@
       "sequence": 2,
       "concept": "Turn a neutral detail in the environment into a low-pressure conversation opening.",
       "skill_objective": "User can spot a relevant, non-invasive conversation opener in a shared office or campus setting.",
-      "dimensions": ["warmth", "flow"]
+      "dimensions": ["warmth", "flow"],
+      "practice_type": "Choose-the-better-reply"
     },
     {
       "id": "l03-easy-first-question",
@@ -26,7 +28,8 @@
       "sequence": 3,
       "concept": "Use one open, answerable question that gives the other person room to choose what to share.",
       "skill_objective": "User can turn a context cue into one natural first question without interrogating the other person.",
-      "dimensions": ["curiosity", "flow"]
+      "dimensions": ["curiosity", "flow"],
+      "practice_type": "Draft-then-compare"
     },
     {
       "id": "l04-answer-and-return",
@@ -35,7 +38,8 @@
       "sequence": 4,
       "concept": "Give a brief answer with one useful detail, then return a related question so the exchange has two active participants.",
       "skill_objective": "User can respond to a casual question without either stopping at one word or taking over the conversation.",
-      "dimensions": ["reciprocity", "curiosity"]
+      "dimensions": ["reciprocity", "curiosity"],
+      "practice_type": "Short roleplay"
     },
     {
       "id": "l05-show-you-heard",
@@ -44,7 +48,8 @@
       "sequence": 5,
       "concept": "Acknowledge one specific detail before moving to the next question or topic.",
       "skill_objective": "User can make a conversation partner feel heard by responding to what they actually said rather than pivoting immediately.",
-      "dimensions": ["warmth", "reciprocity"]
+      "dimensions": ["warmth", "reciprocity"],
+      "practice_type": "Choose-the-better-reply"
     },
     {
       "id": "l06-follow-the-thread",
@@ -53,7 +58,8 @@
       "sequence": 6,
       "concept": "Ask one follow-up that grows from the other person’s last detail instead of switching to a prepared list of questions.",
       "skill_objective": "User can form one relevant follow-up from a partner’s answer in a casual office or campus conversation.",
-      "dimensions": ["curiosity", "reciprocity"]
+      "dimensions": ["curiosity", "reciprocity"],
+      "practice_type": "Short roleplay"
     },
     {
       "id": "l07-share-and-make-space",
@@ -62,7 +68,8 @@
       "sequence": 7,
       "concept": "Offer a small, relevant personal detail and leave room for the other person to respond or take the topic elsewhere.",
       "skill_objective": "User can contribute to common ground without turning a conversation into a monologue.",
-      "dimensions": ["reciprocity", "curiosity"]
+      "dimensions": ["reciprocity", "curiosity"],
+      "practice_type": "Draft-then-compare"
     },
     {
       "id": "l08-handle-the-pause",
@@ -71,7 +78,8 @@
       "sequence": 8,
       "concept": "Treat a short pause as a normal moment to notice, extend, or close—not proof that the interaction has failed.",
       "skill_objective": "User can choose a low-pressure next move after a brief pause rather than rushing into unrelated talk.",
-      "dimensions": ["flow", "warmth"]
+      "dimensions": ["flow", "warmth"],
+      "practice_type": "Choose-the-next-move"
     },
     {
       "id": "l09-read-the-room",
@@ -80,7 +88,8 @@
       "sequence": 9,
       "concept": "Use observable signs of engagement or disengagement to decide whether to continue, lighten the interaction, or give the person space.",
       "skill_objective": "User can name a visible cue and choose a respectful next step without claiming to know another person’s intent.",
-      "dimensions": ["curiosity", "flow"]
+      "dimensions": ["curiosity", "flow"],
+      "practice_type": "Cue-sort exercise"
     },
     {
       "id": "l10-build-on-common-ground",
@@ -89,7 +98,8 @@
       "sequence": 10,
       "concept": "Deepen a conversation by staying with one genuinely shared topic long enough to explore it together.",
       "skill_objective": "User can turn a discovered shared interest into one specific, mutual conversational thread.",
-      "dimensions": ["curiosity", "reciprocity"]
+      "dimensions": ["curiosity", "reciprocity"],
+      "practice_type": "Short roleplay"
     },
     {
       "id": "l11-end-warmly",
@@ -98,7 +108,8 @@
       "sequence": 11,
       "concept": "End a conversation with a clear, friendly close that respects time and avoids an abrupt disappearance.",
       "skill_objective": "User can leave a casual office or campus conversation with a warm close and a context-appropriate reason to go.",
-      "dimensions": ["warmth", "flow"]
+      "dimensions": ["warmth", "flow"],
+      "practice_type": "Draft-then-compare"
     },
     {
       "id": "l12-make-continuity-easy",
@@ -107,7 +118,8 @@
       "sequence": 12,
       "concept": "When mutual interest is present, suggest one small, low-pressure way to continue contact around the shared context.",
       "skill_objective": "User can make a specific, optional continuity move without pressuring a new acquaintance for commitment.",
-      "dimensions": ["reciprocity", "flow"]
+      "dimensions": ["reciprocity", "flow"],
+      "practice_type": "Short roleplay"
     }
   ],
   "routing": {
