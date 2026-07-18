@@ -153,6 +153,29 @@ Read by the brain and by every Codex worker at cycle start (see
   authored lessons (pause serving work and fix the schema), or the founder
   redirects the build order.
 
+### 2026-07-18 — Coaching Diagnosis Model Pinned: claude-sonnet-4-6
+
+- **Status:** Confirmed (brain decision under recorded cost-tiering policy)
+- **Decision:** The coaching pipeline's text-diagnosis call (COACHING_PIPELINE_V1
+  stage 2) is implemented with model id `claude-sonnet-4-6` via the plain
+  Messages API with structured JSON output (`output_config.format`,
+  json_schema). No thinking parameter (bounded judgment task). The Python
+  SDK (`anthropic==0.117.0`, pinned in backend/requirements.txt) reads
+  `ANTHROPIC_API_KEY` from the process environment via
+  `anthropic.Anthropic()` — never from code or config files.
+- **Why:** Verified against the current claude-api reference (not memory):
+  Sonnet 4.6 is the current mid-tier ($3/$15 per MTok), supports structured
+  outputs, and matches ARCHITECTURE.md's recorded model-tiering decision
+  (frontier reserved for synthesis-class work; diagnosis is a bounded,
+  schema-constrained judgment call). This is the project's documented
+  cost-tiering choice, not a silent downgrade. Vision extraction (later
+  cycle) keeps Haiku 4.5 (`claude-haiku-4-5`, confirmed vision-capable) as
+  the candidate pending the real-screenshot eval required by
+  COACHING_PIPELINE_V1 §6.
+- **Revisit trigger:** Diagnosis quality on real transcripts proves
+  insufficient (then step up a tier and re-baseline cost per diagnosis), or
+  model catalog changes retire/supersede the id.
+
 ### 2026-07-18 — Planning Docs Migrated Into This Repo
 
 - **Status:** Confirmed (founder-approved migration, pre-archival)
