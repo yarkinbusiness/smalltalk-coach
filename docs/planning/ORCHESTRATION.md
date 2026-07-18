@@ -37,4 +37,4 @@ A static CLAUDE.md-instructions-only setup is not the mechanism for this project
 ## Scope
 
 - This planning folder stays documentation-only.
-- No app code is written until `VALIDATION_PLAN.md` thresholds are met and the v1 lesson path is defined.
+- No app code until the v1 lesson path is defined and the founder explicitly approves build start. See root `DECISIONS.md` → "2026-07-18 — Build Scope Gate Narrowed (Interview Thresholds Waived)" and `docs/planning/DECISIONS.md` → "2026-07-18 — Validation Interviews Deferred; Build Gate Waived (Founder)".

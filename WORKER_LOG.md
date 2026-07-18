@@ -40,3 +40,15 @@ Entry format (keep an entry under ~15 lines):
 - **Result / verification:** `git diff --check` passed; the tracked stale-path
   scan returned no matches; the SKILL.md diff contains only the two path substitutions.
 - **Open issues:** none
+
+## 2026-07-18 14:37 UTC — Define v1 lesson path and sync build gate
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Added the locked 12-lesson newcomer beginner path with
+  routing, assumptions, non-goals, and deferrals; synced the two stale scope gates.
+- **Files touched:** docs/planning/LESSON_PATH_V1.md; docs/planning/ORCHESTRATION.md;
+  .claude/skills/brain-worker-loop/SKILL.md; WORKER_LOG.md
+- **Result / verification:** `git diff --check` passed; structural checks found
+  12 lessons and 12 ids, completion checks, and dimension mappings; each lesson id
+  appears in the routing table.
+- **Open issues:** none

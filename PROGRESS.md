@@ -114,6 +114,32 @@ blocked, log that and stop — don't invent busywork.
 
 ## Cycle log
 
+- **2026-07-18 (cycle 3 — v1 lesson path defined):** Task: write
+  `docs/planning/LESSON_PATH_V1.md` (the locked v1 beginner path) + sync
+  the stale scope-gate text in ORCHESTRATION.md and SKILL.md to the
+  2026-07-18 waiver decisions. Worker: `gpt-5.6-terra`, one round, no
+  iteration needed. Brain review: all 6 acceptance criteria verified
+  against the diff, including full routing-table/lesson-mapping
+  cross-consistency (12 lessons, 4 units, every dimension routed) and
+  assumption labeling (7 assumptions, each with a revisit trigger) —
+  ACCEPTED. Known nit for a future content pass: three lesson section
+  headings differ from their canonical `title:` fields (L02/L04/L09).
+  Resolves the open product decision "the first 5–10 lessons in the
+  beginner path". **Next:** the scope gate's remaining condition is an
+  explicit founder go-ahead for build start; until then, candidate
+  docs-only work includes a v1 build-sequencing plan and the lesson
+  content-authoring approach.
+
+- **2026-07-18 (cycle 2 — loop round-trip verification, founder-requested):**
+  Small real task to prove the loop end to end before the main cycle: fix
+  the two stale `untitled folder` repo paths in
+  `.claude/skills/brain-worker-loop/SKILL.md`. Worker: `gpt-5.6-terra`,
+  one round. Brain verified the diff touched only the two path strings,
+  `git grep "untitled folder"` returned nothing, and the WORKER_LOG.md
+  entry was a true, correctly formatted append — ACCEPTED, committed,
+  auto-pushed (`35a3b89`). Round trip confirmed: spec → worker.sh →
+  worker edit → log append → brain review → accept → push.
+
 - **2026-07-18 (brain/worker loop v2 — first cycle, end-to-end test):**
   First real cycle of the Fable-5-brain / Codex-GPT-5.6-worker harness,
   run on founder request as a full-loop test. Task: fix README.md intro

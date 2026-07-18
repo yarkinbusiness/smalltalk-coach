@@ -28,9 +28,12 @@ Spec: `docs/planning/ORCHESTRATION.md`. Model rules locked in
    `crontab -l`. If any active loop exists, defer to it and stop.
 2. Read `PROGRESS.md` at the repo root and defer to its current state; a prior
    automated loop has committed to `master` before.
-3. Scope gate: **no app code until `docs/planning/VALIDATION_PLAN.md`
-   thresholds are met and the v1 lesson path is defined.** Until then this
-   skill may only be used for non-app work the user explicitly requests.
+3. Scope gate: **No app code until the v1 lesson path is defined and the
+   founder explicitly approves build start.** See root `DECISIONS.md` →
+   "2026-07-18 — Build Scope Gate Narrowed (Interview Thresholds Waived)"
+   and `docs/planning/DECISIONS.md` → "2026-07-18 — Validation Interviews
+   Deferred; Build Gate Waived (Founder)". Until then this skill may only be
+   used for non-app work the user explicitly requests.
 4. First action of any new loop: update `PROGRESS.md` (what the loop is doing,
    under which model rules) — not as an afterthought.
 5. Automated runs require a clean working tree (`git status --porcelain`
