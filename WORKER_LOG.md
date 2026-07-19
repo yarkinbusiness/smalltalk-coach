@@ -234,3 +234,16 @@ Entry format (keep an entry under ~15 lines):
 - **Files touched:** backend/app/vision.py; backend/app/jobs.py; backend/app/coaching.py; backend/tests/test_coaching.py; WORKER_LOG.md
 - **Result / verification:** `backend/.venv/bin/python -m pytest backend/tests -q`: 41 passed, 1 skipped, 1 warning in 1.72s; `git diff --check` passed; forbidden-model scan of backend/app and backend/tests returned no matches.
 - **Open issues:** none
+
+## 2026-07-19 12:50 UTC — Build iOS screenshot coaching upload and polling flow
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Added PhotosPicker screenshot composition, side selection, size-aware JPEG encoding,
+  typed 202/job polling models, and consent-gated upload/poll state handling with friendly image failures.
+  Added fake-client XCTest coverage for decoding, gating, polling outcomes, timeout/retry, safety, and encoding threshold.
+- **Files touched:** ios/SmallTalkCoach/APIClient.swift; ios/SmallTalkCoach/CoachingView.swift;
+  ios/SmallTalkCoach/CoachingViewModel.swift; ios/SmallTalkCoach/Models.swift;
+  ios/SmallTalkCoach/ScreenshotImageEncoder.swift; ios/SmallTalkCoachTests/SmallTalkCoachTests.swift; WORKER_LOG.md
+- **Result / verification:** `xcodegen generate`, generic-simulator `xcodebuild build`, and `build-for-testing` passed;
+  `git diff --check` passed. `xcodebuild test` was attempted but CoreSimulatorService has no concrete simulator device.
+- **Open issues:** XCTest execution needs an available CoreSimulatorService; tests compile and await reviewer simulator run.

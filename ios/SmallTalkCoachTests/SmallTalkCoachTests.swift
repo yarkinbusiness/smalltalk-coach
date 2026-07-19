@@ -180,6 +180,57 @@ final class SmallTalkCoachTests: XCTestCase {
             CoachingErrorState.from(APIClientError.server(statusCode: 502, detail: "ai_unavailable")),
             .aiUnavailable
         )
+        XCTAssertEqual(CoachingErrorState.fromDetail("bad_image"), .badImage)
+        XCTAssertEqual(CoachingErrorState.fromDetail("image_too_large"), .imageTooLarge)
+        XCTAssertEqual(CoachingErrorState.fromDetail("unsupported_image_type"), .unsupportedImageType)
+    }
+
+    func testDecodesScreenshotJobAndEveryPollStateFixture() throws {
+        let decoder = JSONDecoder()
+        let job = try decoder.decode(CoachingDiagnosisJob.self, from: Data("""
+        { "job_id": "cj_123", "status": "processing", "poll_url": "/coaching/diagnoses/jobs/cj_123" }
+        """.utf8))
+        XCTAssertEqual(job, CoachingDiagnosisJob(jobID: "cj_123", status: "processing", pollURL: "/coaching/diagnoses/jobs/cj_123"))
+
+        XCTAssertEqual(
+            try decoder.decode(CoachingDiagnosisJobResponse.self, from: Data("{ \"status\": \"processing\" }".utf8)),
+            .processing
+        )
+        XCTAssertEqual(
+            try decoder.decode(CoachingDiagnosisJobResponse.self, from: Data("{ \"status\": \"failed\", \"detail\": \"bad_image\" }".utf8)),
+            .failed(CoachingDiagnosisJobFailure(status: "failed", detail: "bad_image"))
+        )
+        XCTAssertEqual(
+            try decoder.decode(CoachingDiagnosisJobResponse.self, from: Data("{ \"status\": \"safety_guidance\", \"category\": \"crisis\", \"guidance\": \"Get support.\" }".utf8)),
+            .safetyGuidance(CoachingSafetyGuidance(status: "safety_guidance", category: "crisis", guidance: "Get support."))
+        )
+
+        let completed = try decoder.decode(CoachingDiagnosisJobResponse.self, from: Data(completedScreenshotPollFixture.utf8))
+        guard case .report(let report) = completed else { return XCTFail("Expected completed screenshot report") }
+        XCTAssertEqual(report.id, "cr_screenshot")
+        XCTAssertEqual(report.transcript.sourceKind, "screenshot")
+    }
+
+    func testScreenshotCompressionThresholdDecision() {
+        XCTAssertFalse(ScreenshotImageEncoder.needsJPEGRecompression(rawByteCount: 8 * 1024 * 1024))
+        XCTAssertTrue(ScreenshotImageEncoder.needsJPEGRecompression(rawByteCount: 8 * 1024 * 1024 + 1))
+    }
+
+    func testScreenshotRequestEncodesBackendShape() throws {
+        let request = CoachingScreenshotDiagnosisRequest(
+            userID: "maya",
+            consentToProcess: true,
+            source: CoachingScreenshotSource(mediaType: "image/png", imageBase64: "cG5n", userMessageSide: .left)
+        )
+        let payload = try XCTUnwrap(JSONSerialization.jsonObject(with: JSONEncoder().encode(request)) as? [String: Any])
+        let source = try XCTUnwrap(payload["source"] as? [String: Any])
+
+        XCTAssertEqual(payload["user_id"] as? String, "maya")
+        XCTAssertEqual(payload["consent_to_process"] as? Bool, true)
+        XCTAssertEqual(source["kind"] as? String, "screenshot")
+        XCTAssertEqual(source["media_type"] as? String, "image/png")
+        XCTAssertEqual(source["image_base64"] as? String, "cG5n")
+        XCTAssertEqual(source["user_message_side"] as? String, "left")
     }
 
     @MainActor
@@ -194,6 +245,84 @@ final class SmallTalkCoachTests: XCTestCase {
         viewModel.beginNewComposition()
         XCTAssertFalse(viewModel.consentGiven)
         XCTAssertFalse(viewModel.canSubmit)
+    }
+
+    @MainActor
+    func testScreenshotSubmitRequiresImageAndConsent() async {
+        let client = StubCoachingAPI()
+        let viewModel = CoachingViewModel(client: client, pollIntervalNanoseconds: 0)
+        viewModel.compositionMode = .screenshot
+
+        XCTAssertFalse(viewModel.canSubmit)
+        await viewModel.submit()
+        XCTAssertEqual(client.screenshotRequestCount, 0)
+        XCTAssertTrue(viewModel.consentNeedsAttention)
+        viewModel.setScreenshotForTesting(ScreenshotUploadPayload(data: Data([0x01]), mediaType: "image/png"))
+        XCTAssertFalse(viewModel.canSubmit)
+        viewModel.consentGiven = true
+        XCTAssertTrue(viewModel.canSubmit)
+        viewModel.beginNewComposition()
+        XCTAssertFalse(viewModel.consentGiven)
+        XCTAssertFalse(viewModel.canSubmit)
+    }
+
+    @MainActor
+    func testScreenshotSubmissionPollsProcessingThenShowsReport() async {
+        let client = StubCoachingAPI(
+            screenshotResult: .success(CoachingDiagnosisJob(jobID: "cj_123", status: "processing", pollURL: "/coaching/diagnoses/jobs/cj_123")),
+            pollResults: [.success(.processing), .success(.report(StubCoachingAPI.sampleReport))]
+        )
+        let viewModel = screenshotViewModel(client: client)
+
+        await viewModel.submit()
+
+        XCTAssertEqual(client.screenshotRequestCount, 1)
+        XCTAssertEqual(client.polledJobIDs, ["cj_123", "cj_123"])
+        XCTAssertEqual(viewModel.submissionState, .report(StubCoachingAPI.sampleReport))
+    }
+
+    @MainActor
+    func testScreenshotPollFailureMapsFriendlyTaxonomy() async {
+        let client = StubCoachingAPI(
+            screenshotResult: .success(CoachingDiagnosisJob(jobID: "cj_123", status: "processing", pollURL: "/coaching/diagnoses/jobs/cj_123")),
+            pollResults: [.success(.failed(CoachingDiagnosisJobFailure(status: "failed", detail: "unreadable_transcript")))]
+        )
+        let viewModel = screenshotViewModel(client: client)
+
+        await viewModel.submit()
+
+        XCTAssertEqual(viewModel.submissionState, .composing)
+        XCTAssertEqual(viewModel.error, .unreadableTranscript)
+    }
+
+    @MainActor
+    func testScreenshotPollingTimesOutAndCanRetryPolling() async {
+        let client = StubCoachingAPI(
+            screenshotResult: .success(CoachingDiagnosisJob(jobID: "cj_123", status: "processing", pollURL: "/coaching/diagnoses/jobs/cj_123")),
+            pollResults: [.success(.processing), .success(.processing), .success(.report(StubCoachingAPI.sampleReport))]
+        )
+        let viewModel = screenshotViewModel(client: client, maximumPollAttempts: 2)
+
+        await viewModel.submit()
+        XCTAssertEqual(viewModel.error, .pollingTimedOut)
+
+        await viewModel.retryPolling()
+        XCTAssertEqual(viewModel.submissionState, .report(StubCoachingAPI.sampleReport))
+        XCTAssertEqual(client.screenshotRequestCount, 1)
+    }
+
+    @MainActor
+    func testScreenshotSafetyPollShowsExistingSafetyGuidance() async {
+        let guidance = CoachingSafetyGuidance(status: "safety_guidance", category: "abuse", guidance: "Seek local support.")
+        let client = StubCoachingAPI(
+            screenshotResult: .success(CoachingDiagnosisJob(jobID: "cj_123", status: "processing", pollURL: "/coaching/diagnoses/jobs/cj_123")),
+            pollResults: [.success(.safetyGuidance(guidance))]
+        )
+        let viewModel = screenshotViewModel(client: client)
+
+        await viewModel.submit()
+
+        XCTAssertEqual(viewModel.submissionState, .safetyGuidance(guidance))
     }
 
     @MainActor
@@ -331,6 +460,15 @@ final class SmallTalkCoachTests: XCTestCase {
             ])
         )
     }
+
+    @MainActor
+    private func screenshotViewModel(client: StubCoachingAPI, maximumPollAttempts: Int = 45) -> CoachingViewModel {
+        let viewModel = CoachingViewModel(client: client, pollIntervalNanoseconds: 0, maximumPollAttempts: maximumPollAttempts)
+        viewModel.compositionMode = .screenshot
+        viewModel.setScreenshotForTesting(ScreenshotUploadPayload(data: Data([0x01]), mediaType: "image/png"))
+        viewModel.consentGiven = true
+        return viewModel
+    }
 }
 
 private final class StubLessonAPI: LessonAPI {
@@ -374,19 +512,36 @@ private enum StubError: LocalizedError {
 
 private final class StubCoachingAPI: CoachingAPI {
     var diagnosisResult: Result<CoachingDiagnosisResponse, Error>
+    var screenshotResult: Result<CoachingDiagnosisJob, Error>
+    var pollResults: [Result<CoachingDiagnosisJobResponse, Error>]
     var summariesResult: Result<[CoachingReportSummary], Error>
     var deletedIDs: [String] = []
+    var screenshotRequestCount = 0
+    var polledJobIDs: [String] = []
 
     init(
         diagnosisResult: Result<CoachingDiagnosisResponse, Error> = .failure(StubError.unused),
+        screenshotResult: Result<CoachingDiagnosisJob, Error> = .failure(StubError.unused),
+        pollResults: [Result<CoachingDiagnosisJobResponse, Error>] = [],
         summariesResult: Result<[CoachingReportSummary], Error> = .success([])
     ) {
         self.diagnosisResult = diagnosisResult
+        self.screenshotResult = screenshotResult
+        self.pollResults = pollResults
         self.summariesResult = summariesResult
     }
 
     func health() async throws -> HealthResponse { HealthResponse(status: "ok", lessonsLoaded: 12, coachingEnabled: true) }
     func diagnose(text: String, consentToProcess: Bool) async throws -> CoachingDiagnosisResponse { try diagnosisResult.get() }
+    func diagnoseScreenshot(imageBase64: String, mediaType: String, userMessageSide: CoachingUserMessageSide, consentToProcess: Bool) async throws -> CoachingDiagnosisJob {
+        screenshotRequestCount += 1
+        return try screenshotResult.get()
+    }
+    func coachingDiagnosisJob(id: String) async throws -> CoachingDiagnosisJobResponse {
+        polledJobIDs.append(id)
+        guard !pollResults.isEmpty else { throw StubError.unused }
+        return try pollResults.removeFirst().get()
+    }
     func coachingReports() async throws -> [CoachingReportSummary] { try summariesResult.get() }
     func coachingReport(id: String) async throws -> CoachingReport { Self.sampleReport }
     func deleteCoachingReport(id: String) async throws { deletedIDs.append(id) }
@@ -406,3 +561,26 @@ private final class StubCoachingAPI: CoachingAPI {
             practiceAction: "Practice one follow-up."
         )
 }
+
+private let completedScreenshotPollFixture = """
+{
+  "id": "cr_screenshot", "status": "completed",
+  "transcript": { "schema_version": 1, "source_kind": "screenshot", "user_speaker_id": "user", "turns": [] },
+  "diagnosis": {
+    "schema_version": 1,
+    "dimensions": {
+      "warmth": { "score": 3, "observations": [] },
+      "curiosity": { "score": 3, "observations": [] },
+      "reciprocity": { "score": 2, "observations": [] },
+      "flow": { "score": 4, "observations": [] }
+    },
+    "strengths": [], "improvements": [], "small_practice_action": "Ask one follow-up.",
+    "safety": { "status": "clear", "category": null }
+  },
+  "recommendation": { "weakest_dimension": "reciprocity", "selection_reason": "lowest_score", "lesson": {
+    "id": "l04-answer-and-return", "title": "Answer, then return", "concept": "Keep both people active.",
+    "skill_objective": "Respond with room to continue.", "recommendation_kind": "new"
+  } },
+  "practice_action": "Ask one follow-up."
+}
+"""

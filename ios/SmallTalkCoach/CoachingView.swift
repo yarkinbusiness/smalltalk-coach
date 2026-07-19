@@ -1,4 +1,5 @@
 import SwiftUI
+import PhotosUI
 
 @MainActor
 struct CoachingView: View {
@@ -40,7 +41,7 @@ struct CoachingView: View {
 
     @ViewBuilder private var content: some View {
         switch viewModel.submissionState {
-        case .composing, .submitting:
+        case .composing, .uploading, .analyzing, .submitting:
             CoachingComposeView(viewModel: viewModel)
         case .report(let report):
             VStack(spacing: 0) {
@@ -66,19 +67,52 @@ struct CoachingView: View {
 
 private struct CoachingComposeView: View {
     @ObservedObject var viewModel: CoachingViewModel
+    @State private var selectedPhoto: PhotosPickerItem?
 
     var body: some View {
         Form {
             Section("Conversation") {
-                TextEditor(text: $viewModel.text)
-                    .frame(minHeight: 180)
-                    .accessibilityLabel("Conversation to analyze")
-                    .overlay(alignment: .topLeading) {
-                        if viewModel.text.isEmpty {
-                            Text("Paste a real conversation — one message per line, e.g. Me: … / Them: …")
-                                .foregroundStyle(.tertiary).padding(.top, 8).padding(.leading, 5).allowsHitTesting(false)
+                Picker("Source", selection: $viewModel.compositionMode) {
+                    ForEach(CoachingCompositionMode.allCases) { mode in
+                        Text(mode.label).tag(mode)
+                    }
+                }
+                .pickerStyle(.segmented)
+
+                switch viewModel.compositionMode {
+                case .text:
+                    TextEditor(text: $viewModel.text)
+                        .frame(minHeight: 180)
+                        .accessibilityLabel("Conversation to analyze")
+                        .overlay(alignment: .topLeading) {
+                            if viewModel.text.isEmpty {
+                                Text("Paste a real conversation — one message per line, e.g. Me: … / Them: …")
+                                    .foregroundStyle(.tertiary).padding(.top, 8).padding(.leading, 5).allowsHitTesting(false)
+                            }
+                        }
+                case .screenshot:
+                    PhotosPicker(selection: $selectedPhoto, matching: .images) {
+                        Label("Choose screenshot", systemImage: "photo")
+                    }
+                    .onChange(of: selectedPhoto) { _, item in
+                        Task { await viewModel.loadScreenshot(from: item) }
+                    }
+
+                    if let preview = viewModel.screenshotPreview {
+                        Image(uiImage: preview)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(maxHeight: 160)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .accessibilityLabel("Selected screenshot preview")
+                    }
+
+                    Picker("Which side are your messages on?", selection: $viewModel.userMessageSide) {
+                        ForEach(CoachingUserMessageSide.allCases) { side in
+                            Text(side.label).tag(side)
                         }
                     }
+                }
             }
             Section("Before you send") {
                 VStack(alignment: .leading, spacing: 10) {
@@ -96,7 +130,9 @@ private struct CoachingComposeView: View {
                 Section {
                     VStack(alignment: .leading, spacing: 10) {
                         Text(error.message).foregroundStyle(error == .coachingRefused ? Color.secondary : Color.red)
-                        if error == .aiUnavailable {
+                        if error == .pollingTimedOut {
+                            Button("Retry polling") { Task { await viewModel.retryPolling() } }.buttonStyle(.bordered)
+                        } else if error == .aiUnavailable {
                             Button("Try Again") { Task { await viewModel.retry() } }.buttonStyle(.bordered)
                         }
                     }
@@ -106,7 +142,10 @@ private struct CoachingComposeView: View {
                 Button { Task { await viewModel.submit() } } label: {
                     HStack {
                         Spacer()
-                        if isSubmitting { ProgressView().padding(.trailing, 6); Text("Analyzing…") } else { Text("Analyze conversation") }
+                        if isSubmitting {
+                            ProgressView().padding(.trailing, 6)
+                            Text(submissionLabel)
+                        } else { Text("Analyze conversation") }
                         Spacer()
                     }
                 }
@@ -116,8 +155,18 @@ private struct CoachingComposeView: View {
     }
 
     private var isSubmitting: Bool {
-        if case .submitting = viewModel.submissionState { return true }
-        return false
+        switch viewModel.submissionState {
+        case .uploading, .analyzing, .submitting: return true
+        default: return false
+        }
+    }
+
+    private var submissionLabel: String {
+        switch viewModel.submissionState {
+        case .uploading: return "Uploading screenshot…"
+        case .analyzing: return "Analyzing screenshot…"
+        default: return "Analyzing…"
+        }
     }
 }
 

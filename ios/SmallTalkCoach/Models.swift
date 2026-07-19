@@ -33,6 +33,92 @@ struct CoachingTextSource: Codable, Equatable {
     }
 }
 
+enum CoachingUserMessageSide: String, Codable, CaseIterable, Equatable, Identifiable {
+    case right
+    case left
+    case unknown
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .right: return "Right"
+        case .left: return "Left"
+        case .unknown: return "Not sure"
+        }
+    }
+}
+
+struct CoachingScreenshotSource: Codable, Equatable {
+    let kind = "screenshot"
+    let mediaType: String
+    let imageBase64: String
+    let userMessageSide: CoachingUserMessageSide
+
+    enum CodingKeys: String, CodingKey {
+        case kind
+        case mediaType = "media_type"
+        case imageBase64 = "image_base64"
+        case userMessageSide = "user_message_side"
+    }
+}
+
+struct CoachingScreenshotDiagnosisRequest: Codable, Equatable {
+    let userID: String
+    let consentToProcess: Bool
+    let source: CoachingScreenshotSource
+
+    enum CodingKeys: String, CodingKey {
+        case source
+        case userID = "user_id"
+        case consentToProcess = "consent_to_process"
+    }
+}
+
+struct CoachingDiagnosisJob: Codable, Equatable {
+    let jobID: String
+    let status: String
+    let pollURL: String
+
+    enum CodingKeys: String, CodingKey {
+        case status
+        case jobID = "job_id"
+        case pollURL = "poll_url"
+    }
+}
+
+struct CoachingDiagnosisJobFailure: Codable, Equatable {
+    let status: String
+    let detail: String
+}
+
+enum CoachingDiagnosisJobResponse: Decodable, Equatable {
+    case processing
+    case report(CoachingReport)
+    case failed(CoachingDiagnosisJobFailure)
+    case safetyGuidance(CoachingSafetyGuidance)
+
+    private enum CodingKeys: String, CodingKey { case status }
+    private enum Status: String, Decodable {
+        case processing, completed, failed
+        case safetyGuidance = "safety_guidance"
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        switch try container.decode(Status.self, forKey: .status) {
+        case .processing:
+            self = .processing
+        case .completed:
+            self = .report(try CoachingReport(from: decoder))
+        case .failed:
+            self = .failed(try CoachingDiagnosisJobFailure(from: decoder))
+        case .safetyGuidance:
+            self = .safetyGuidance(try CoachingSafetyGuidance(from: decoder))
+        }
+    }
+}
+
 struct CoachingTranscript: Codable, Equatable {
     let schemaVersion: Int
     let sourceKind: String

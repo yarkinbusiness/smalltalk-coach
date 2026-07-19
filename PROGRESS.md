@@ -154,6 +154,22 @@ blocked, log that and stop — don't invent busywork.
 
 ## Cycle log
 
+- **2026-07-19 (cycle 19 — iOS screenshot upload; coaching feature
+  COMPLETE):** Worker: `gpt-5.6-terra`, one round, honest partial
+  (sandbox blocks simulator; brain ran the tests). Shipped screenshot
+  mode in the Coaching composer: PhotosPicker + preview, message-side
+  picker (right/left/unknown), size-aware JPEG recompression behind a
+  testable encoder, typed 202/poll models, 2s polling with 90s timeout
+  and retry, taxonomy-mapped friendly failures, consent gating shared
+  across both modes (defaults off, resets per composition). Brain
+  verification: **24 XCTests passed on iPhone 16 / iOS 18.2** (own run);
+  consent/poll logic source-reviewed; mandatory simulator launch clean,
+  screenshot-verified — ACCEPTED. The full VISION.md closed loop (real
+  conversation → screenshot → diagnosis → lesson → practice) is now
+  implemented end to end under the Haiku-only lock. **Remaining
+  founder-gated:** vision quality eval on real consented screenshots;
+  test-key rotation before production.
+
 - **2026-07-19 (cycle 18 — screenshot backend path):** Worker:
   `gpt-5.6-terra`, one round. Shipped `vision.py` (Haiku-only structured
   extraction via imported COACHING_MODEL, §4-faithful prompt rules,

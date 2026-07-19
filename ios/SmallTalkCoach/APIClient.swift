@@ -9,6 +9,8 @@ protocol LessonAPI {
 protocol CoachingAPI {
     func health() async throws -> HealthResponse
     func diagnose(text: String, consentToProcess: Bool) async throws -> CoachingDiagnosisResponse
+    func diagnoseScreenshot(imageBase64: String, mediaType: String, userMessageSide: CoachingUserMessageSide, consentToProcess: Bool) async throws -> CoachingDiagnosisJob
+    func coachingDiagnosisJob(id: String) async throws -> CoachingDiagnosisJobResponse
     func coachingReports() async throws -> [CoachingReportSummary]
     func coachingReport(id: String) async throws -> CoachingReport
     func deleteCoachingReport(id: String) async throws
@@ -138,6 +140,30 @@ struct APIClient: LessonAPI, CoachingAPI {
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
         urlRequest.httpBody = try encoder.encode(request)
         return try await send(urlRequest)
+    }
+
+    func diagnoseScreenshot(imageBase64: String, mediaType: String, userMessageSide: CoachingUserMessageSide, consentToProcess: Bool) async throws -> CoachingDiagnosisJob {
+        let request = CoachingScreenshotDiagnosisRequest(
+            userID: userIdentityStore.userID(),
+            consentToProcess: consentToProcess,
+            source: CoachingScreenshotSource(
+                mediaType: mediaType,
+                imageBase64: imageBase64,
+                userMessageSide: userMessageSide
+            )
+        )
+        var urlRequest = URLRequest(url: try url(path: "coaching/diagnoses"))
+        urlRequest.httpMethod = "POST"
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        urlRequest.httpBody = try encoder.encode(request)
+        return try await send(urlRequest)
+    }
+
+    func coachingDiagnosisJob(id: String) async throws -> CoachingDiagnosisJobResponse {
+        try await send(
+            path: "coaching/diagnoses/jobs/\(id)",
+            queryItems: [URLQueryItem(name: "user_id", value: userIdentityStore.userID())]
+        )
     }
 
     func coachingReports() async throws -> [CoachingReportSummary] {
