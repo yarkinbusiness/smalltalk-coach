@@ -154,6 +154,23 @@ blocked, log that and stop — don't invent busywork.
 
 ## Cycle log
 
+- **2026-07-19 (cycle 20 — Haiku-tolerance fix; first live 201):** The
+  founder-requested live run exposed a production bug no mocked test hit:
+  real Haiku payloads 502'd because (a) absence-observations carry empty
+  quotes arrays and (b) the model over-returns improvements (3–4).
+  Diagnosed by capturing a live payload via scratchpad harness. Worker
+  fix: validation tolerates empty quotes (present quotes still
+  exact-substring — hallucination guard intact), improvements coerced to
+  top-2 by priority and renumbered, strengths truncated to 3, prompt
+  tightened; COACHING_PIPELINE_V1 §2.2 amended citing the Haiku lock.
+  Brain verification: **45 passed** (own run); live re-test → **201
+  Created**: curiosity diagnosed weakest → routed to
+  `l03-easy-first-question`, 2 improvements, report persisted; mandatory
+  simulator launch clean against the key-loaded backend
+  (`coaching_enabled: true`) — ACCEPTED. Lesson: mocked fixtures encode
+  the contract's ideal; the cheapest model needs boundary tolerance —
+  live verification is where that gap shows.
+
 - **2026-07-19 (cycle 19 — iOS screenshot upload; coaching feature
   COMPLETE):** Worker: `gpt-5.6-terra`, one round, honest partial
   (sandbox blocks simulator; brain ran the tests). Shipped screenshot

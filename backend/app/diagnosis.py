@@ -101,6 +101,8 @@ class AnthropicDiagnosisAdapter:
             system=(
                 "You are a small-talk coach. Return only the requested diagnosis JSON. "
                 "Use only transcript evidence, do not select lessons or produce a ready-to-send reply. "
+                "Return at most two improvements. Quotes must be verbatim substrings of transcript turns; "
+                "use an empty quotes array for claims about missing behavior and never invent quotes. "
                 "Escalate crisis, self-harm, or abuse instead of coaching."
             ),
         )
@@ -133,7 +135,7 @@ def _validate_evidence(value: object, turns: list[dict[str, Any]], *, needs_kind
     indexes, quotes = item["turn_indices"], item["quotes"]
     if not isinstance(indexes, list) or not indexes or any(not _is_int(index) or not 0 <= index < len(turns) for index in indexes):
         raise ValueError("invalid turn indices")
-    if not isinstance(quotes, list) or not quotes or any(not isinstance(quote, str) or not quote for quote in quotes):
+    if not isinstance(quotes, list) or any(not isinstance(quote, str) or not quote for quote in quotes):
         raise ValueError("invalid quotes")
     referenced_text = [turns[index]["text"] for index in indexes]
     if any(not any(quote in text for text in referenced_text) for quote in quotes):
@@ -170,12 +172,12 @@ def validate_diagnosis(payload: object, transcript: dict[str, Any], forbidden_te
         for observation in item["observations"]:
             _validate_evidence(observation, turns, needs_kind=True)
     strengths = diagnosis["strengths"]
-    if not isinstance(strengths, list) or len(strengths) > 3:
+    if not isinstance(strengths, list) or len(strengths) > 5:
         raise ValueError("invalid strengths")
     for strength in strengths:
         _validate_evidence(strength, turns, needs_kind=False)
     improvements = diagnosis["improvements"]
-    if not isinstance(improvements, list) or not 1 <= len(improvements) <= 2:
+    if not isinstance(improvements, list) or not 1 <= len(improvements) <= 4:
         raise ValueError("invalid improvements")
     priorities: set[int] = set()
     for improvement in improvements:
@@ -196,7 +198,16 @@ def validate_diagnosis(payload: object, transcript: dict[str, Any], forbidden_te
         raise ValueError("invalid safety category")
     if _contains_forbidden_term(diagnosis, forbidden_terms):
         raise ValueError("contains forbidden lesson reference")
-    return diagnosis
+    kept_improvements = sorted(improvements, key=lambda item: item["priority"])[:2]
+    coerced_improvements = [
+        {**improvement, "priority": priority}
+        for priority, improvement in enumerate(kept_improvements, start=1)
+    ]
+    return {
+        **diagnosis,
+        "strengths": strengths[:3],
+        "improvements": coerced_improvements,
+    }
 
 
 def _payload_from_response(response: Any) -> object:

@@ -247,3 +247,11 @@ Entry format (keep an entry under ~15 lines):
 - **Result / verification:** `xcodegen generate`, generic-simulator `xcodebuild build`, and `build-for-testing` passed;
   `git diff --check` passed. `xcodebuild test` was attempted but CoreSimulatorService has no concrete simulator device.
 - **Open issues:** XCTest execution needs an available CoreSimulatorService; tests compile and await reviewer simulator run.
+
+## 2026-07-19 16:14 UTC — Make diagnosis validation Haiku-tolerant
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Allowed empty evidence quotes while preserving exact-substring checks; coerced over-returned improvements and strengths before reports are stored or served; tightened the diagnosis prompt and documented the Haiku-driven tolerance.
+- **Files touched:** backend/app/diagnosis.py; backend/tests/test_coaching.py; docs/planning/COACHING_PIPELINE_V1.md; WORKER_LOG.md
+- **Result / verification:** `backend/.venv/bin/python -m pytest backend/tests -q`: 45 passed, 1 skipped, 1 warning in 2.07s; `git diff --check` passed; forbidden-model scan of backend/app and backend/tests returned no matches.
+- **Open issues:** none

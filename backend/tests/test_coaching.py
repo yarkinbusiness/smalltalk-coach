@@ -152,8 +152,8 @@ def test_text_normalization_labeled_name_and_unlabeled() -> None:
     lambda item: item["dimensions"]["warmth"].__setitem__("score", 6),
     lambda item: item["strengths"][0].__setitem__("quotes", ["not in the transcript"]),
     lambda item: item["strengths"][0].__setitem__("turn_indices", [9]),
-    lambda item: item.__setitem__("improvements", [copy.deepcopy(item["improvements"][0]) for _ in range(3)]),
     lambda item: item.__setitem__("improvements", [item["improvements"][0], {**copy.deepcopy(item["improvements"][0]), "dimension": "warmth"}]),
+    lambda item: item.__setitem__("improvements", []),
     lambda item: item.update({"small_practice_action": "Review l04-answer-and-return next."}),
 ])
 def test_invalid_diagnosis_retries_once_then_returns_502(tmp_path: Path, mutate) -> None:
@@ -172,6 +172,52 @@ def test_valid_diagnosis_passes_validation() -> None:
     fake = FakeAdapter(_valid_diagnosis())
     assert diagnose(fake, _transcript(), {"l04-answer-and-return"})["dimensions"]["reciprocity"]["score"] == 2
     assert fake.calls == 1
+
+
+def test_empty_quotes_for_missing_behavior_are_accepted() -> None:
+    payload = _valid_diagnosis()
+    payload["improvements"][0].update({
+        "kind": "observation",
+        "text": "You do not ask a follow-up question.",
+        "quotes": [],
+    })
+    validated = diagnosis.validate_diagnosis(payload, _transcript(), set())
+    assert validated["improvements"][0]["quotes"] == []
+
+
+@pytest.mark.parametrize("count", [3, 4])
+def test_over_returned_improvements_are_coerced_and_persisted(tmp_path: Path, count: int) -> None:
+    payload = _valid_diagnosis()
+    improvements = []
+    for priority in (3, 1, 2, 4)[:count]:
+        improvement = copy.deepcopy(payload["improvements"][0])
+        improvement["priority"] = priority
+        improvement["text"] = f"Improvement {priority}."
+        improvements.append(improvement)
+    payload["improvements"] = improvements
+    with _client(tmp_path, FakeAdapter(payload)) as client:
+        created = _request(client)
+        assert created.status_code == 201
+        report = created.json()
+        assert [item["text"] for item in report["diagnosis"]["improvements"]] == ["Improvement 1.", "Improvement 2."]
+        assert [item["priority"] for item in report["diagnosis"]["improvements"]] == [1, 2]
+        stored = client.get(f"/coaching/reports/{report['id']}", params={"user_id": "maya"})
+        assert stored.json()["diagnosis"]["improvements"] == report["diagnosis"]["improvements"]
+
+
+def test_four_strengths_are_truncated_to_three_and_persisted(tmp_path: Path) -> None:
+    payload = _valid_diagnosis()
+    payload["strengths"] = [
+        {**copy.deepcopy(payload["strengths"][0]), "text": f"Strength {index}."}
+        for index in range(1, 5)
+    ]
+    with _client(tmp_path, FakeAdapter(payload)) as client:
+        created = _request(client)
+        assert created.status_code == 201
+        report = created.json()
+        assert [item["text"] for item in report["diagnosis"]["strengths"]] == ["Strength 1.", "Strength 2.", "Strength 3."]
+        stored = client.get(f"/coaching/reports/{report['id']}", params={"user_id": "maya"})
+        assert stored.json()["diagnosis"]["strengths"] == report["diagnosis"]["strengths"]
 
 
 def test_routing_lowest_ties_earliest_and_review() -> None:

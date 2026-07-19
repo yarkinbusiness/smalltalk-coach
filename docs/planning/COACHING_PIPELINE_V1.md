@@ -101,14 +101,18 @@ Schema rules:
 
 - `dimensions` is exactly `warmth`, `curiosity`, `reciprocity`, and `flow`;
   each integer `score` is 1 (strongest need) through 5 (strongest evidence).
-- Each user-visible observation, strength, and improvement has exact
-  transcript `quotes` and valid `turn_indices`. An empty observations list is
-  allowed only when no supportable claim exists.
+- Each user-visible observation, strength, and improvement has valid
+  `turn_indices`. Present transcript `quotes` are verbatim substrings of their
+  referenced turns; an empty `quotes` array is permitted for claims about
+  missing behavior.
 - `kind` is `observation`, `inference`, or `suggestion`. Inference language is
   conditional; scores never claim another person's private intent.
 - Return zero to three strengths and one or two uniquely prioritized
-  improvements. The practice action is one safe transferable action, not a
-  message to send.
+  improvements. Under root `DECISIONS.md` “2026-07-19 — Coaching Models Locked
+  to Haiku 4.5 Only,” the backend tolerates model over-returns: it keeps the
+  top two improvements by priority (then renumbers them) and the first three
+  strengths. The practice action is one safe transferable action, not a message
+  to send.
 - Do not return lesson ids, lesson titles, routes, completion state, or a
   direct-answer field. `safety.status` is `clear` or `escalate`; escalation
   categories are `crisis`, `self_harm`, `abuse`, or `other`.
