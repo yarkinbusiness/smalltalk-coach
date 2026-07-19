@@ -133,6 +133,18 @@ final class SmallTalkCoachTests: XCTestCase {
           ] },
           "diagnosis": {
             "schema_version": 1,
+            "mode": "with_user_reply",
+            "incoming_interpretation": {
+              "tone": "Warm and curious.",
+              "intent": "They are inviting an update.",
+              "response_goals": "Share a detail and keep the exchange open."
+            },
+            "response_coaching": {
+              "guidance": "Answer with one concrete detail, then ask a related question.",
+              "example_responses": ["It has been a good start. How about you?"]
+            },
+            "transferable_takeaway": "A detail plus a related question keeps a check-in moving.",
+            "focus_dimension": "reciprocity",
             "dimensions": {
               "warmth": { "score": 3, "observations": [] },
               "curiosity": { "score": 3, "observations": [] },
@@ -154,9 +166,61 @@ final class SmallTalkCoachTests: XCTestCase {
         let response = try JSONDecoder().decode(CoachingDiagnosisResponse.self, from: Data(fixture.utf8))
 
         guard case .report(let report) = response else { return XCTFail("Expected completed report") }
-        XCTAssertEqual(report.diagnosis.dimensions["reciprocity"]?.score, 2)
+        XCTAssertEqual(report.diagnosis.mode, .withUserReply)
+        XCTAssertEqual(report.diagnosis.dimensions?["reciprocity"]?.score, 2)
+        XCTAssertEqual(report.diagnosis.incomingInterpretation.tone, "Warm and curious.")
+        XCTAssertEqual(report.diagnosis.responseCoaching.exampleResponses, ["It has been a good start. How about you?"])
+        XCTAssertTrue(CoachingReportDisplayModel(report: report).shouldShowScores)
         XCTAssertEqual(report.diagnosis.strengths.first?.quotes, ["I just moved here."])
         XCTAssertEqual(report.recommendation.lesson.recommendationKind, "new")
+    }
+
+    func testDecodesStimulusOnlyCoachingReportAndHidesReplyScores() throws {
+        let fixture = """
+        {
+          "id": "cr_stimulus", "status": "completed",
+          "transcript": { "schema_version": 1, "source_kind": "text", "user_speaker_id": null, "turns": [
+            { "index": 0, "speaker_id": "other", "speaker": "other", "text": "How are you settling in?", "source": "pasted" }
+          ] },
+          "diagnosis": {
+            "schema_version": 1, "mode": "stimulus_only",
+            "incoming_interpretation": {
+              "tone": "Warm and interested.", "intent": "They are inviting an update.",
+              "response_goals": "Offer one detail and leave room to continue."
+            },
+            "response_coaching": {
+              "guidance": "Answer directly, then add a light return question.",
+              "example_responses": ["Pretty well so far — I found a favorite café already. How about you?"]
+            },
+            "transferable_takeaway": "A brief update plus a return question keeps a check-in easy.",
+            "focus_dimension": "curiosity", "dimensions": null,
+            "strengths": [], "improvements": [],
+            "small_practice_action": "Practice one easy return question.",
+            "safety": { "status": "clear", "category": null }
+          },
+          "recommendation": { "weakest_dimension": "curiosity", "selection_reason": "focus_dimension", "lesson": {
+            "id": "l03-easy-first-question", "title": "Easy first question", "concept": "Keep it light.", "skill_objective": "Ask simple questions.", "recommendation_kind": "new"
+          } },
+          "practice_action": "Practice one easy return question."
+        }
+        """
+
+        let report = try JSONDecoder().decode(CoachingReport.self, from: Data(fixture.utf8))
+        let display = CoachingReportDisplayModel(report: report)
+
+        XCTAssertEqual(report.diagnosis.mode, .stimulusOnly)
+        XCTAssertNil(report.diagnosis.dimensions)
+        XCTAssertTrue(report.diagnosis.improvements.isEmpty)
+        XCTAssertFalse(display.shouldShowScores)
+        XCTAssertFalse(display.shouldShowStrengths)
+        XCTAssertFalse(display.shouldShowImprovements)
+
+        let malformedFixture = fixture.replacingOccurrences(
+            of: "\"dimensions\": null",
+            with: "\"dimensions\": { \"warmth\": { \"score\": 3, \"observations\": [] } }"
+        )
+        let malformedReport = try JSONDecoder().decode(CoachingReport.self, from: Data(malformedFixture.utf8))
+        XCTAssertFalse(CoachingReportDisplayModel(report: malformedReport).shouldShowScores)
     }
 
     func testDecodesSafetyGuidanceFixture() throws {
@@ -551,6 +615,17 @@ private final class StubCoachingAPI: CoachingAPI {
             transcript: CoachingTranscript(schemaVersion: 1, sourceKind: "text", userSpeakerID: "user", turns: []),
             diagnosis: CoachingDiagnosis(
                 schemaVersion: 1,
+                mode: .withUserReply,
+                incomingInterpretation: CoachingIncomingInterpretation(
+                    tone: "Warm and interested.", intent: "They are inviting an update.",
+                    responseGoals: "Share one detail and keep the exchange open."
+                ),
+                responseCoaching: CoachingResponseCoaching(
+                    guidance: "Answer with one concrete detail, then ask a related question.",
+                    exampleResponses: ["It has been a good start. How about you?"]
+                ),
+                transferableTakeaway: "A detail plus a related question keeps a check-in moving.",
+                focusDimension: "reciprocity",
                 dimensions: ["warmth": CoachingDimension(score: 3, observations: []), "curiosity": CoachingDimension(score: 3, observations: []), "reciprocity": CoachingDimension(score: 2, observations: []), "flow": CoachingDimension(score: 3, observations: [])],
                 strengths: [], improvements: [], smallPracticeAction: "Practice one follow-up.", safety: CoachingSafety(status: "clear", category: nil)
             ),
@@ -568,6 +643,17 @@ private let completedScreenshotPollFixture = """
   "transcript": { "schema_version": 1, "source_kind": "screenshot", "user_speaker_id": "user", "turns": [] },
   "diagnosis": {
     "schema_version": 1,
+    "mode": "with_user_reply",
+    "incoming_interpretation": {
+      "tone": "Warm and curious.", "intent": "They are inviting an update.",
+      "response_goals": "Share one detail and keep the exchange open."
+    },
+    "response_coaching": {
+      "guidance": "Answer with one concrete detail, then ask a related question.",
+      "example_responses": ["It has been a good start. How about you?"]
+    },
+    "transferable_takeaway": "A detail plus a related question keeps a check-in moving.",
+    "focus_dimension": "reciprocity",
     "dimensions": {
       "warmth": { "score": 3, "observations": [] },
       "curiosity": { "score": 3, "observations": [] },

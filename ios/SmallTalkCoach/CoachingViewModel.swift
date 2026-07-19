@@ -91,6 +91,22 @@ enum CoachingCompositionMode: String, CaseIterable, Identifiable {
     var label: String { self == .text ? "Paste text" : "Screenshot" }
 }
 
+struct CoachingReportDisplayModel: Equatable {
+    let report: CoachingReport
+
+    var shouldShowScores: Bool {
+        report.diagnosis.mode == .withUserReply && report.diagnosis.dimensions != nil
+    }
+
+    var shouldShowStrengths: Bool {
+        !report.diagnosis.strengths.isEmpty
+    }
+
+    var shouldShowImprovements: Bool {
+        !report.diagnosis.improvements.isEmpty
+    }
+}
+
 @MainActor
 final class CoachingViewModel: ObservableObject {
     @Published var text = ""

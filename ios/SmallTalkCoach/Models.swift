@@ -150,16 +150,51 @@ struct CoachingTurn: Codable, Equatable, Identifiable {
 
 struct CoachingDiagnosis: Codable, Equatable {
     let schemaVersion: Int
-    let dimensions: [String: CoachingDimension]
+    let mode: CoachingDiagnosisMode
+    let incomingInterpretation: CoachingIncomingInterpretation
+    let responseCoaching: CoachingResponseCoaching
+    let transferableTakeaway: String
+    let focusDimension: String
+    let dimensions: [String: CoachingDimension]?
     let strengths: [CoachingEvidence]
     let improvements: [CoachingImprovement]
     let smallPracticeAction: String
     let safety: CoachingSafety
 
     enum CodingKeys: String, CodingKey {
-        case dimensions, strengths, improvements, safety
+        case mode, dimensions, strengths, improvements, safety
         case schemaVersion = "schema_version"
+        case incomingInterpretation = "incoming_interpretation"
+        case responseCoaching = "response_coaching"
+        case transferableTakeaway = "transferable_takeaway"
+        case focusDimension = "focus_dimension"
         case smallPracticeAction = "small_practice_action"
+    }
+}
+
+enum CoachingDiagnosisMode: String, Codable, Equatable {
+    case stimulusOnly = "stimulus_only"
+    case withUserReply = "with_user_reply"
+}
+
+struct CoachingIncomingInterpretation: Codable, Equatable {
+    let tone: String
+    let intent: String
+    let responseGoals: String
+
+    enum CodingKeys: String, CodingKey {
+        case tone, intent
+        case responseGoals = "response_goals"
+    }
+}
+
+struct CoachingResponseCoaching: Codable, Equatable {
+    let guidance: String
+    let exampleResponses: [String]
+
+    enum CodingKeys: String, CodingKey {
+        case guidance
+        case exampleResponses = "example_responses"
     }
 }
 

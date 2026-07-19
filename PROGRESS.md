@@ -154,6 +154,21 @@ blocked, log that and stop — don't invent busywork.
 
 ## Cycle log
 
+- **2026-07-19 (cycle 22 — iOS response-coaching UI; role-fix complete):**
+  Worker: `gpt-5.6-terra`, one round, honest partial (sandbox blocks
+  simulator; brain ran tests). Schema-v2 models (nullable dimensions),
+  report cards in product order: "What they're really saying"
+  (interpretation) → optional "Your reply, scored" (hidden entirely in
+  stimulus_only mode, double-gated) → strengths/improvements when
+  non-empty → "How to respond" with 1–2 adaptable example replies →
+  emphasized Takeaway card → recommendation + practice action; composer
+  hint teaches the stimulus default + `Me:` convention. Brain
+  verification: **25 XCTests passed on iPhone 16 / iOS 18.2** (own run);
+  mandatory simulator launch clean against the live key-loaded backend
+  (one re-run after the simulator had been shut down externally) —
+  ACCEPTED. The founder's role-confusion fix is now live end to end:
+  backend contract, live-API verified in both modes, and rendered in-app.
+
 - **2026-07-19 (cycle 21 — response-oriented coaching, 2 rounds):**
   Implements the founder's "teach the user to fish" correction (product
   decision recorded). Round 1: stimulus default for unlabeled text

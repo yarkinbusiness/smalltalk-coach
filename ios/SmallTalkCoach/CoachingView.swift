@@ -86,7 +86,7 @@ private struct CoachingComposeView: View {
                         .accessibilityLabel("Conversation to analyze")
                         .overlay(alignment: .topLeading) {
                             if viewModel.text.isEmpty {
-                                Text("Paste a real conversation — one message per line, e.g. Me: … / Them: …")
+                                Text("Paste what THEY said for help replying. Add Me: lines to score your reply.")
                                     .foregroundStyle(.tertiary).padding(.top, 8).padding(.leading, 5).allowsHitTesting(false)
                             }
                         }
@@ -190,29 +190,72 @@ struct CoachingReportView: View {
     private let dimensions = ["warmth", "curiosity", "reciprocity", "flow"]
 
     var body: some View {
+        let display = CoachingReportDisplayModel(report: report)
+
         List {
             Section("Your coaching report") {
-                Text("A practical read of this conversation, grounded in the words you shared.")
+                Text("Practical help for your next reply, grounded in the words you shared.")
                     .font(.subheadline).foregroundStyle(.secondary)
             }
-            Section("Dimensions") {
-                ForEach(dimensions, id: \.self) { name in
-                    if let dimension = report.diagnosis.dimensions[name] { DimensionScoreRow(name: name, score: dimension.score) }
+
+            Section {
+                ReportCard(accent: .blue) {
+                    Label("What they're really saying", systemImage: "message")
+                        .font(.headline)
+                    ReportInterpretationRow(label: "Tone", text: report.diagnosis.incomingInterpretation.tone)
+                    ReportInterpretationRow(label: "Intent", text: report.diagnosis.incomingInterpretation.intent)
+                    ReportInterpretationRow(label: "Your response", text: report.diagnosis.incomingInterpretation.responseGoals)
                 }
             }
-            if !report.diagnosis.strengths.isEmpty {
+
+            if display.shouldShowScores, let scoredDimensions = report.diagnosis.dimensions {
+                Section("Your reply, scored") {
+                    ForEach(dimensions, id: \.self) { name in
+                        if let dimension = scoredDimensions[name] { DimensionScoreRow(name: name, score: dimension.score) }
+                    }
+                }
+            }
+
+            if display.shouldShowStrengths {
                 Section("What’s working") {
                     ForEach(report.diagnosis.strengths) { strength in EvidenceRow(text: strength.text, quotes: strength.quotes) }
                 }
             }
-            Section("Try next") {
-                ForEach(report.diagnosis.improvements) { improvement in
-                    VStack(alignment: .leading, spacing: 7) {
-                        Text(improvement.dimension.capitalized).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
-                        EvidenceRow(text: improvement.text, quotes: improvement.quotes)
+
+            if display.shouldShowImprovements {
+                Section("Try next") {
+                    ForEach(report.diagnosis.improvements) { improvement in
+                        VStack(alignment: .leading, spacing: 7) {
+                            Text(improvement.dimension.capitalized).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+                            EvidenceRow(text: improvement.text, quotes: improvement.quotes)
+                        }
                     }
                 }
             }
+
+            Section {
+                ReportCard(accent: .teal) {
+                    Label("How to respond", systemImage: "arrowshape.turn.up.right")
+                        .font(.headline)
+                    Text(report.diagnosis.responseCoaching.guidance)
+                    Text("Examples to adapt — not scripts")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                    ForEach(report.diagnosis.responseCoaching.exampleResponses, id: \.self) { response in
+                        ExampleResponseSuggestion(text: response)
+                    }
+                }
+            }
+
+            Section {
+                ReportCard(accent: .orange, emphasized: true) {
+                    Label("Takeaway", systemImage: "lightbulb.fill")
+                        .font(.headline)
+                    Text(report.diagnosis.transferableTakeaway)
+                        .font(.body.weight(.medium))
+                }
+            }
+
             Section("Practice action") { Text(report.practiceAction) }
             Section("Recommended lesson") {
                 NavigationLink { LessonDetailView(lessonID: report.recommendation.lesson.id) } label: {
@@ -229,6 +272,56 @@ struct CoachingReportView: View {
                 }
             }
         }
+    }
+}
+
+private struct ReportInterpretationRow: View {
+    let label: String
+    let text: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(label).font(.caption.weight(.semibold)).foregroundStyle(.secondary)
+            Text(text)
+        }
+    }
+}
+
+private struct ExampleResponseSuggestion: View {
+    let text: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: "quote.opening")
+                .font(.caption.weight(.bold))
+                .foregroundStyle(.teal)
+            Text(text).italic()
+        }
+        .padding(12)
+        .background(.teal.opacity(0.10), in: RoundedRectangle(cornerRadius: 14))
+        .accessibilityLabel("Example response to adapt: \(text)")
+    }
+}
+
+private struct ReportCard<Content: View>: View {
+    let accent: Color
+    let emphasized: Bool
+    @ViewBuilder let content: Content
+
+    init(accent: Color, emphasized: Bool = false, @ViewBuilder content: () -> Content) {
+        self.accent = accent
+        self.emphasized = emphasized
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10, content: { content })
+            .padding(14)
+            .background(accent.opacity(emphasized ? 0.16 : 0.09), in: RoundedRectangle(cornerRadius: 16))
+            .overlay {
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(accent.opacity(emphasized ? 0.55 : 0.28), lineWidth: emphasized ? 1.5 : 1)
+            }
     }
 }
 

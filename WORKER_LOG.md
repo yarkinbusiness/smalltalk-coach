@@ -271,3 +271,12 @@ Entry format (keep an entry under ~15 lines):
 - **Files touched:** backend/app/diagnosis.py; WORKER_LOG.md
 - **Result / verification:** Schema compatibility audit passed (no unsupported array constraints or type unions); `backend/.venv/bin/python -m pytest backend/tests -q`: 50 passed, 1 skipped, 1 warning in 1.73s; forbidden-model scan returned no matches; `git diff --check` passed.
 - **Open issues:** none
+
+## 2026-07-19 16:57 UTC — Render response-oriented iOS coaching reports
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Added schema-v2 diagnosis models and response-oriented report cards, including interpretation, optional reply scores, adaptable examples, and a highlighted takeaway. Updated the composer hint and added both-mode decoding/display-visibility coverage.
+- **Files touched:** ios/SmallTalkCoach/Models.swift; ios/SmallTalkCoach/CoachingView.swift;
+  ios/SmallTalkCoach/CoachingViewModel.swift; ios/SmallTalkCoachTests/SmallTalkCoachTests.swift; WORKER_LOG.md
+- **Result / verification:** `xcodegen generate --spec ios/project.yml --project ios`, generic-simulator `xcodebuild build`, and `build-for-testing` passed (with derived data under `/private/tmp`). `xcodebuild test` was attempted, but CoreSimulatorService has no usable simulator device in this sandbox; tests were compiled but not executed. `git diff --check` passed.
+- **Open issues:** Reviewer should run the XCTest suite on an available simulator.
