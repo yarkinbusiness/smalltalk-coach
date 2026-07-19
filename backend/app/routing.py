@@ -17,9 +17,14 @@ class RoutingError(ValueError):
 def route_diagnosis(
     diagnosis: dict[str, Any], curriculum: Curriculum, completed_lesson_ids: set[str]
 ) -> dict[str, Any]:
-    """Choose the lowest score, fixed-order tie-breaker, then earliest route."""
+    """Choose the lowest score or model-selected focus, then the earliest route."""
     dimensions = diagnosis["dimensions"]
-    weakest_dimension = min(DIMENSION_ORDER, key=lambda name: dimensions[name]["score"])
+    if dimensions is None:
+        weakest_dimension = diagnosis["focus_dimension"]
+        selection_reason = "focus_dimension"
+    else:
+        weakest_dimension = min(DIMENSION_ORDER, key=lambda name: dimensions[name]["score"])
+        selection_reason = "lowest_score"
     routing_row = curriculum.routing.get(weakest_dimension)
     if not routing_row:
         raise RoutingError("missing routing row")
@@ -29,7 +34,7 @@ def route_diagnosis(
         raise RoutingError("missing routed lesson")
     return {
         "weakest_dimension": weakest_dimension,
-        "selection_reason": "lowest_score",
+        "selection_reason": selection_reason,
         "lesson": {
             "id": lesson["id"],
             "title": lesson["title"],

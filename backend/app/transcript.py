@@ -1,4 +1,4 @@
-"""Normalize pasted coaching text into the version-one transcript shape."""
+"""Normalize pasted coaching text; by default it is the other party's message."""
 
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ def _speaker_id(label: str) -> str:
 
 
 def normalize_text(text: object) -> dict[str, Any]:
-    """Return normalized pasted text without attempting to infer attribution."""
+    """Return normalized pasted text; an unlabeled blob is incoming stimulus."""
     if not isinstance(text, str):
         raise UnreadableTranscriptError("text is not usable")
     trimmed = text.strip()
@@ -45,8 +45,8 @@ def normalize_text(text: object) -> dict[str, Any]:
             "turns": [
                 {
                     "index": 0,
-                    "speaker_id": "unknown",
-                    "speaker": "unknown",
+                    "speaker_id": "other",
+                    "speaker": "other",
                     "text": trimmed,
                     "source": "pasted",
                 }

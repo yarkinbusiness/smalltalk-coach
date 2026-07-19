@@ -72,7 +72,9 @@ class AnthropicVisionAdapter:
             "descriptions only; never reconstruct unreadable text. Use ONLY the caller-declared "
             f"user_message_side ({user_message_side!r}) to map bubbles to user or other; never "
             "use avatars, names, gender, or assumptions. Ignore app chrome, notifications, ads, "
-            "and profile imagery. Return JSON only; do not coach, summarize, or recommend."
+            "and profile imagery. When only one side is visible or no side is declared, attribute "
+            "messages to 'other' rather than guessing the user's side. Return JSON only; do not "
+            "coach, summarize, or recommend."
         )
         return self._client_for_request().messages.create(
             model=COACHING_MODEL,
@@ -140,7 +142,7 @@ def validate_extraction(payload: object, user_message_side: object) -> dict[str,
         normalized_turns.append({**turn, "speaker_id": turn["speaker_id"].strip(), "text": turn["text"].strip()})
     if user_message_side == "unknown":
         if payload.get("user_speaker_id") is not None or any(
-            turn["speaker"] == "user" or turn["speaker_id"] != turn["speaker"]
+            turn["speaker"] != "other" or turn["speaker_id"] != "other"
             for turn in normalized_turns
         ):
             raise UnreadableTranscriptError("guessed attribution")

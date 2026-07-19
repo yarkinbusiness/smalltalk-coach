@@ -81,17 +81,33 @@ Submit the validated transcript to one mid-tier Claude Messages API call.
 model id. Validate returned JSON before storage or routing; malformed output is
 an upstream failure, never a partial report.
 
+Per the product decision **“2026-07-19 — Coaching Is Response-Oriented (Teach
+the User to Fish)”**, the contract has two modes: `stimulus_only` when no
+user-attributed turn exists, and `with_user_reply` when one does.
+
 ```json
 {
   "schema_version": 1,
+  "mode": "with_user_reply",
+  "incoming_interpretation": {
+    "tone": "Warm and interested",
+    "intent": "The other person is inviting the user to share their experience",
+    "response_goals": "Answer with one concrete detail and create an easy next thread"
+  },
+  "response_coaching": {
+    "guidance": "Acknowledge the question, give one specific detail, then invite a related exchange.",
+    "example_responses": ["It has been a fun adjustment so far — I found a great coffee shop nearby. Have you lived here long?"]
+  },
+  "transferable_takeaway": "Concrete details plus one related question keep early conversations easy to continue.",
+  "focus_dimension": "reciprocity",
   "dimensions": {
-    "warmth": { "score": 3, "observations": [{ "kind": "observation", "text": "The reply acknowledges the move before asking a question.", "turn_indices": [0, 1], "quotes": ["I just moved here last week.", "How are you finding it?"] }] },
+    "warmth": { "score": 3, "observations": [{ "kind": "observation", "text": "The user gives a concrete opening detail.", "turn_indices": [0], "quotes": ["I just moved here last week."] }] },
     "curiosity": { "score": 3, "observations": [] },
     "reciprocity": { "score": 2, "observations": [] },
     "flow": { "score": 3, "observations": [] }
   },
   "strengths": [{ "text": "You gave a concrete detail that gives the other person something to respond to.", "turn_indices": [0], "quotes": ["I just moved here last week."] }],
-  "improvements": [{ "dimension": "reciprocity", "priority": 1, "kind": "suggestion", "text": "After answering, add one related question to return space to them.", "turn_indices": [0, 1], "quotes": ["How are you finding it?"] }],
+  "improvements": [{ "dimension": "reciprocity", "priority": 1, "kind": "suggestion", "text": "After answering, add one related question to return space to them.", "turn_indices": [0], "quotes": ["I just moved here last week."] }],
   "small_practice_action": "In your next short chat, answer with one detail and ask one related follow-up.",
   "safety": { "status": "clear", "category": null }
 }
@@ -99,20 +115,30 @@ an upstream failure, never a partial report.
 
 Schema rules:
 
-- `dimensions` is exactly `warmth`, `curiosity`, `reciprocity`, and `flow`;
-  each integer `score` is 1 (strongest need) through 5 (strongest evidence).
-- Each user-visible observation, strength, and improvement has valid
-  `turn_indices`. Present transcript `quotes` are verbatim substrings of their
-  referenced turns; an empty `quotes` array is permitted for claims about
-  missing behavior.
+- Every payload has non-empty `incoming_interpretation` (`tone`, `intent`, and
+  `response_goals`), `response_coaching` (`guidance` plus one or two short
+  `example_responses`), `transferable_takeaway`, and a four-dimension
+  `focus_dimension`.
+- In `stimulus_only`, `dimensions` is `null`, `focus_dimension` is a free
+  coaching focus, and `improvements` may be empty. The output interprets the
+  most recent other-party message and teaches how to build the reply; it never
+  scores the stimulus.
+- In `with_user_reply`, `dimensions` is exactly `warmth`, `curiosity`,
+  `reciprocity`, and `flow`; each integer `score` is 1 (strongest need) through
+  5 (strongest evidence). `focus_dimension` must be the weakest score, using
+  the fixed `warmth`, `curiosity`, `reciprocity`, `flow` tie-breaker.
+- In `with_user_reply`, every dimension observation, strength, and improvement
+  can cite only user-attributed turn indices. Present transcript `quotes` are
+  verbatim substrings of their referenced turns; an empty `quotes` array is
+  permitted for claims about missing behavior.
 - `kind` is `observation`, `inference`, or `suggestion`. Inference language is
   conditional; scores never claim another person's private intent.
 - Return zero to three strengths and one or two uniquely prioritized
-  improvements. Under root `DECISIONS.md` “2026-07-19 — Coaching Models Locked
-  to Haiku 4.5 Only,” the backend tolerates model over-returns: it keeps the
-  top two improvements by priority (then renumbers them) and the first three
-  strengths. The practice action is one safe transferable action, not a message
-  to send.
+  improvements when scoring a user reply. Under root `DECISIONS.md`
+  “2026-07-19 — Coaching Models Locked to Haiku 4.5 Only,” the backend
+  tolerates model over-returns: it keeps the top two improvements by priority
+  (then renumbers them) and the first three strengths. The practice action is
+  one safe transferable action, not a message to send.
 - Do not return lesson ids, lesson titles, routes, completion state, or a
   direct-answer field. `safety.status` is `clear` or `escalate`; escalation
   categories are `crisis`, `self_harm`, `abuse`, or `other`.
@@ -121,8 +147,11 @@ Schema rules:
 The backend, never the model, reads the user's completed lesson ids and the
 loaded manifest `routing` map.
 
-1. Choose the lowest validated dimension score.
-2. Break a score tie with this fixed order: `warmth`, `curiosity`,
+1. For `with_user_reply`, choose the lowest validated dimension score. For
+   `stimulus_only`, use the validated model-provided `focus_dimension` and
+   label the selection reason `focus_dimension`, per **“2026-07-19 — Coaching
+   Is Response-Oriented (Teach the User to Fish)”**.
+2. In the scored path, break a score tie with this fixed order: `warmth`, `curiosity`,
    `reciprocity`, `flow`. The result is stable across retries and independent
    of model prose ordering.
 3. Choose the first uncompleted id in `routing[weakest_dimension]`. The

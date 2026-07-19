@@ -65,7 +65,7 @@ def _report_response(row: dict[str, Any], request: Request) -> dict[str, Any]:
         "diagnosis": diagnosis,
         "recommendation": {
             "weakest_dimension": row["weakest_dimension"],
-            "selection_reason": "lowest_score",
+            "selection_reason": "focus_dimension" if diagnosis["dimensions"] is None else "lowest_score",
             "lesson": {
                 "id": lesson["id"], "title": lesson["title"], "concept": lesson["concept"],
                 "skill_objective": lesson["skill_objective"],

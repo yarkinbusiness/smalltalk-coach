@@ -255,3 +255,19 @@ Entry format (keep an entry under ~15 lines):
 - **Files touched:** backend/app/diagnosis.py; backend/tests/test_coaching.py; docs/planning/COACHING_PIPELINE_V1.md; WORKER_LOG.md
 - **Result / verification:** `backend/.venv/bin/python -m pytest backend/tests -q`: 45 passed, 1 skipped, 1 warning in 2.07s; `git diff --check` passed; forbidden-model scan of backend/app and backend/tests returned no matches.
 - **Open issues:** none
+
+## 2026-07-19 16:45 UTC — Bind coaching to user responses
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Added stimulus-only and user-reply diagnosis modes, role-bound validation and prompting, response coaching/examples/takeaway fields, focus-dimension routing, and other-party defaults for unlabeled text and unknown-side screenshots.
+- **Files touched:** backend/app/transcript.py; backend/app/diagnosis.py; backend/app/routing.py; backend/app/coaching.py; backend/app/vision.py; backend/tests/test_coaching.py; docs/planning/COACHING_PIPELINE_V1.md; WORKER_LOG.md
+- **Result / verification:** `backend/.venv/bin/python -m pytest backend/tests -q`: 50 passed, 1 skipped, 1 warning in 2.32s; `backend/.venv/bin/python -m compileall -q backend/app` passed; `git diff --check` passed; forbidden-model scan of backend/app and backend/tests returned no matches.
+- **Open issues:** Live smoke intentionally not run; reviewer performs live verification.
+
+## 2026-07-19 16:49 UTC — Make diagnosis schema API-compatible
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Removed array cardinality keywords from the diagnosis schema and replaced the nullable dimensions type union with an `anyOf` object-or-null schema; existing app-side validation retains the 1–2 example-response rule.
+- **Files touched:** backend/app/diagnosis.py; WORKER_LOG.md
+- **Result / verification:** Schema compatibility audit passed (no unsupported array constraints or type unions); `backend/.venv/bin/python -m pytest backend/tests -q`: 50 passed, 1 skipped, 1 warning in 1.73s; forbidden-model scan returned no matches; `git diff --check` passed.
+- **Open issues:** none

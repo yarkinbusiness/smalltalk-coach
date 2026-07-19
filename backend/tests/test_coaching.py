@@ -65,9 +65,20 @@ def _transcript() -> dict[str, object]:
 
 def _valid_diagnosis() -> dict[str, object]:
     quote_a = "I just moved here last week."
-    quote_b = "How are you finding it?"
     return {
         "schema_version": 1,
+        "mode": "with_user_reply",
+        "incoming_interpretation": {
+            "tone": "Warm and interested.",
+            "intent": "The other person is inviting the user to share their experience.",
+            "response_goals": "Share one detail and make an easy next thread.",
+        },
+        "response_coaching": {
+            "guidance": "Answer with one detail, then invite a related exchange.",
+            "example_responses": ["It has been a fun adjustment so far. Have you lived here long?"],
+        },
+        "transferable_takeaway": "One concrete detail plus a related question keeps an exchange moving.",
+        "focus_dimension": "reciprocity",
         "dimensions": {
             "warmth": {"score": 3, "observations": []},
             "curiosity": {"score": 3, "observations": []},
@@ -78,9 +89,35 @@ def _valid_diagnosis() -> dict[str, object]:
         "improvements": [{
             "dimension": "reciprocity", "priority": 1, "kind": "suggestion",
             "text": "After answering, make room for a related question.",
-            "turn_indices": [0, 1], "quotes": [quote_a, quote_b],
+            "turn_indices": [0], "quotes": [quote_a],
         }],
         "small_practice_action": "In your next short chat, share one detail and ask one related follow-up.",
+        "safety": {"status": "clear", "category": None},
+    }
+
+
+def _valid_stimulus_diagnosis() -> dict[str, object]:
+    return {
+        "schema_version": 1,
+        "mode": "stimulus_only",
+        "incoming_interpretation": {
+            "tone": "Warm and curious.",
+            "intent": "The other person is inviting an update.",
+            "response_goals": "Offer one specific detail and keep the conversation open.",
+        },
+        "response_coaching": {
+            "guidance": "Answer directly, add one concrete detail, and return a light question.",
+            "example_responses": [
+                "I am settling in well — I have already found a favorite café. How about you?",
+                "Pretty well so far; I am still exploring the neighborhood. What do you like most about it?",
+            ],
+        },
+        "transferable_takeaway": "A brief update plus a related question makes an incoming check-in easy to continue.",
+        "focus_dimension": "curiosity",
+        "dimensions": None,
+        "strengths": [],
+        "improvements": [],
+        "small_practice_action": "Practice adding one easy return question after a short update.",
         "safety": {"status": "clear", "category": None},
     }
 
@@ -111,7 +148,7 @@ def _valid_extraction(*, side: str = "right") -> dict[str, object]:
         return {
             "schema_version": 1, "source_kind": "screenshot", "user_speaker_id": None,
             "turns": [
-                {"index": 0, "speaker_id": "unknown", "speaker": "unknown", "text": "I just moved here last week.", "source": "vision"},
+                {"index": 0, "speaker_id": "other", "speaker": "other", "text": "I just moved here last week.", "source": "vision"},
                 {"index": 1, "speaker_id": "other", "speaker": "other", "text": "How are you finding it?", "source": "vision"},
             ],
         }
@@ -142,7 +179,7 @@ def test_text_normalization_labeled_name_and_unlabeled() -> None:
     assert [turn["speaker"] for turn in named["turns"]] == ["unknown", "unknown"]
     blob = normalize_text("A conversation without supplied speaker labels.")
     assert blob["user_speaker_id"] is None
-    assert blob["turns"] == [{"index": 0, "speaker_id": "unknown", "speaker": "unknown", "text": "A conversation without supplied speaker labels.", "source": "pasted"}]
+    assert blob["turns"] == [{"index": 0, "speaker_id": "other", "speaker": "other", "text": "A conversation without supplied speaker labels.", "source": "pasted"}]
     with pytest.raises(UnreadableTranscriptError):
         normalize_text(" \n \t ")
 
@@ -172,6 +209,53 @@ def test_valid_diagnosis_passes_validation() -> None:
     fake = FakeAdapter(_valid_diagnosis())
     assert diagnose(fake, _transcript(), {"l04-answer-and-return"})["dimensions"]["reciprocity"]["score"] == 2
     assert fake.calls == 1
+
+
+def test_stimulus_only_question_routes_persists_and_serves_response_coaching(tmp_path: Path) -> None:
+    text = "How are you settling in so far?"
+    with _client(tmp_path, FakeAdapter(_valid_stimulus_diagnosis())) as client:
+        created = _request(client, text=text)
+        assert created.status_code == 201
+        report = created.json()
+        assert report["transcript"]["turns"][0]["speaker"] == "other"
+        assert report["diagnosis"]["mode"] == "stimulus_only"
+        assert report["diagnosis"]["dimensions"] is None
+        assert report["diagnosis"]["response_coaching"]["example_responses"] == _valid_stimulus_diagnosis()["response_coaching"]["example_responses"]
+        assert report["diagnosis"]["transferable_takeaway"]
+        assert report["recommendation"]["weakest_dimension"] == "curiosity"
+        assert report["recommendation"]["selection_reason"] == "focus_dimension"
+        stored = client.get(f"/coaching/reports/{report['id']}", params={"user_id": "maya"})
+        assert stored.json()["diagnosis"]["incoming_interpretation"] == report["diagnosis"]["incoming_interpretation"]
+
+
+def test_stimulus_only_rejects_dimension_scores() -> None:
+    scored_stimulus = _valid_diagnosis()
+    scored_stimulus["mode"] = "with_user_reply"
+    with pytest.raises(ValueError, match="mode does not match transcript"):
+        diagnosis.validate_diagnosis(scored_stimulus, normalize_text("How are you settling in so far?"), set())
+
+
+def test_with_user_reply_rejects_other_evidence_and_wrong_focus_dimension() -> None:
+    other_evidence = _valid_diagnosis()
+    other_evidence["dimensions"]["warmth"]["observations"] = [{
+        "kind": "observation", "text": "The user was asked a question.",
+        "turn_indices": [1], "quotes": ["How are you finding it?"],
+    }]
+    with pytest.raises(ValueError, match="user turns"):
+        diagnosis.validate_diagnosis(other_evidence, _transcript(), set())
+
+    wrong_focus = _valid_diagnosis()
+    wrong_focus["focus_dimension"] = "warmth"
+    with pytest.raises(ValueError, match="focus dimension"):
+        diagnosis.validate_diagnosis(wrong_focus, _transcript(), set())
+
+
+def test_stimulus_only_allows_empty_improvements_but_with_user_reply_does_not() -> None:
+    assert diagnosis.validate_diagnosis(_valid_stimulus_diagnosis(), normalize_text("How are you settling in so far?"), set())["improvements"] == []
+    with_user_reply = _valid_diagnosis()
+    with_user_reply["improvements"] = []
+    with pytest.raises(ValueError, match="invalid improvements"):
+        diagnosis.validate_diagnosis(with_user_reply, _transcript(), set())
 
 
 def test_empty_quotes_for_missing_behavior_are_accepted() -> None:
@@ -240,6 +324,14 @@ def test_routing_lowest_ties_earliest_and_review() -> None:
     broken = type("Broken", (), {"routing": {}, "lessons_by_id": curriculum.lessons_by_id})()
     with pytest.raises(RoutingError):
         route_diagnosis(diagnosis, broken, set())
+
+
+def test_routing_uses_focus_dimension_when_scores_are_absent() -> None:
+    curriculum = load_curriculum(MANIFEST_PATH, LESSONS_DIR)
+    result = route_diagnosis(_valid_stimulus_diagnosis(), curriculum, set())
+    assert result["weakest_dimension"] == "curiosity"
+    assert result["selection_reason"] == "focus_dimension"
+    assert result["lesson"]["id"] == "l03-easy-first-question"
 
 
 def test_endpoint_happy_path_persists_and_reports_are_owned(tmp_path: Path) -> None:
@@ -384,10 +476,12 @@ def test_screenshot_provider_failure_and_refusal_are_safe_job_results(tmp_path: 
 
 
 def test_screenshot_attribution_unknown_side_and_polling_ownership(tmp_path: Path) -> None:
-    with _client(tmp_path, FakeAdapter(_valid_diagnosis()), FakeVisionAdapter(_valid_extraction(side="unknown"))) as client:
+    with _client(tmp_path, FakeAdapter(_valid_stimulus_diagnosis()), FakeVisionAdapter(_valid_extraction(side="unknown"))) as client:
         created = _screenshot_request(client, side=None).json()
         report = client.get(created["poll_url"], params={"user_id": "maya"}).json()
         assert report["transcript"]["user_speaker_id"] is None
+        assert all(turn["speaker"] == "other" for turn in report["transcript"]["turns"])
+        assert report["recommendation"]["selection_reason"] == "focus_dimension"
         assert client.get(created["poll_url"], params={"user_id": "other"}).status_code == 404
         assert client.get("/coaching/diagnoses/jobs/cj_missing", params={"user_id": "maya"}).status_code == 404
 

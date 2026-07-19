@@ -154,6 +154,27 @@ blocked, log that and stop — don't invent busywork.
 
 ## Cycle log
 
+- **2026-07-19 (cycle 21 — response-oriented coaching, 2 rounds):**
+  Implements the founder's "teach the user to fish" correction (product
+  decision recorded). Round 1: stimulus default for unlabeled text
+  (speaker "other"), schema v2 (mode, incoming_interpretation,
+  response_coaching + 1–2 examples, transferable_takeaway,
+  focus_dimension, nullable dimensions), mode derived from transcript
+  attribution — never trusted from the model, evidence turn-indices
+  restricted to user turns, role-bound prompt, focus-dimension routing
+  fallback, doc amended. Round 2 (reviewer rejection): live API 400 —
+  `maxItems` unsupported on arrays; removed, cardinality enforced
+  app-side; dimensions nullability moved to anyOf form. Brain
+  verification: 50 tests (own run) + BOTH modes verified live —
+  stimulus-only: bare incoming question → no scores, interpretation,
+  2 example replies, takeaway, focus routing to l04; with_user_reply:
+  scores bind to the user's turn only with verbatim quotes → reciprocity
+  → l04 — ACCEPTED. Known operational note: scored-mode validation
+  occasionally fails both attempts on Haiku (one 502 observed between
+  successes); backlog: code-only validation-failure reason logging +
+  consider third attempt. **Next:** cycle 22 — iOS rendering of the new
+  report fields.
+
 - **2026-07-19 (cycle 20 — Haiku-tolerance fix; first live 201):** The
   founder-requested live run exposed a production bug no mocked test hit:
   real Haiku payloads 502'd because (a) absence-observations carry empty
