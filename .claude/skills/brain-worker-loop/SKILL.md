@@ -94,7 +94,14 @@ truth, and no loop state may live only in a mirror.
    test` on this machine always exits 0 without running tests — verify Swift
    via `swiftc` compile-and-run of a standalone harness, or `swiftc -parse`
    plus explicit "not build-verified" wording.
-4. **Accept or iterate.** Accept → record the result in `PROGRESS.md` (cycle
+4. **Mandatory simulator verification.** Before the cycle is complete, run a
+   full build and launch in the iPhone 16 simulator with the backend running,
+   and screenshot-verify the result. Per repo `DECISIONS.md`, "2026-07-19 —
+   Mandatory Simulator Launch Verification Ends Every Cycle," the brain fixes
+   build or launch errors found here directly under the founder's scoped
+   exception to the brain-never-implements rule, then re-runs the launch until
+   clean.
+5. **Accept or iterate.** Accept → record the result in `PROGRESS.md` (cycle
    log entry: date, what shipped, test status, next item), commit, then
    auto-push:
 
@@ -115,7 +122,7 @@ truth, and no loop state may live only in a mirror.
    do not retry). Tests: `tests/test_auto_push.sh`. Then move on.
    Reject → write specific, itemized feedback (exact files/lines/problems),
    append it to the spec, and re-run the worker with the combined spec.
-5. **Cap: 3 worker rounds per task.** If not converged, do NOT implement it
+6. **Cap: 3 worker rounds per task.** If not converged, do NOT implement it
    yourself — halt, leave the tree in the last reviewed state, and escalate to
    the user with the round-by-round history. The brain never implements; a
    non-converging task means the spec or the task split needs the founder.

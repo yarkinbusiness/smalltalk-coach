@@ -154,6 +154,22 @@ blocked, log that and stop — don't invent busywork.
 
 ## Cycle log
 
+- **2026-07-19 (cycle 17 — Haiku-only lock + protocol amendment):** Two
+  founder decisions recorded and implemented: (1) ALL backend Anthropic
+  calls locked to `claude-haiku-4-5` (strict budget rule; supersedes the
+  sonnet pinning) — `COACHING_MODEL` constant, forbidden-name grep clean,
+  and a mechanical enforcement test that scans backend/app for
+  sonnet/opus/fable/mythos substrings; (2) every cycle now ends with a
+  mandatory iPhone 16 simulator build+launch verification (SKILL.md loop
+  protocol updated; brain fixes launch errors directly under a scoped
+  founder exception). Worker: `gpt-5.6-terra`, one round. Brain
+  verification: 28 tests passed (own run) + full simulator verification
+  executed and screenshot-verified (app launches cleanly, curriculum
+  renders) — ACCEPTED. Founder confirmed the API key is in `~/.env`; the
+  brain's sandbox cannot read it (by design), so the live smoke run is
+  handed to the founder as a `!` command. **Next:** live smoke result,
+  then screenshot path (vision also Haiku-4.5 per the lock).
+
 - **2026-07-19 (cycle 16 — first live simulator run; two runtime bugs
   fixed):** Founder-requested run session: backend via uvicorn + app in
   the iPhone 16 simulator. First launch rendered a blank letterboxed Home

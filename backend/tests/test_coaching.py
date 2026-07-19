@@ -9,6 +9,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from backend.app.content import load_curriculum
+from backend.app import diagnosis
 from backend.app.diagnosis import diagnose
 from backend.app.main import create_app
 from backend.app.routing import DIMENSION_ORDER, RoutingError, route_diagnosis
@@ -18,6 +19,15 @@ from backend.app.transcript import UnreadableTranscriptError, normalize_text
 REPO_ROOT = Path(__file__).resolve().parents[2]
 MANIFEST_PATH = REPO_ROOT / "content" / "lesson_path.json"
 LESSONS_DIR = REPO_ROOT / "content" / "lessons"
+
+
+def test_coaching_model_is_haiku_and_app_source_has_no_forbidden_model_names() -> None:
+    forbidden_names = ("son" + "net", "o" + "pus", "fa" + "ble", "my" + "thos")
+    app_dir = REPO_ROOT / "backend" / "app"
+    for source_file in app_dir.rglob("*.py"):
+        source = source_file.read_text(encoding="utf-8").casefold()
+        assert not any(name in source for name in forbidden_names), source_file
+    assert diagnosis.COACHING_MODEL == "claude-haiku-4-5"
 
 
 class FakeAdapter:

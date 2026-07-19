@@ -10,6 +10,8 @@ import anthropic
 
 
 LOGGER = logging.getLogger(__name__)
+# Founder decision: "2026-07-19 — Coaching Models Locked to Haiku 4.5 Only (Founder Cost Constraint)".
+COACHING_MODEL = "claude-haiku-4-5"
 DIMENSIONS = ("warmth", "curiosity", "reciprocity", "flow")
 _KINDS = frozenset({"observation", "inference", "suggestion"})
 _SAFETY_CATEGORIES = frozenset({"crisis", "self_harm", "abuse", "other"})
@@ -92,7 +94,7 @@ class AnthropicDiagnosisAdapter:
 
     def request(self, transcript: dict[str, Any]) -> Any:
         return self._client_for_request().messages.create(
-            model="claude-sonnet-4-6",
+            model=COACHING_MODEL,
             max_tokens=8192,
             output_config={"format": {"type": "json_schema", "schema": DIAGNOSIS_SCHEMA}},
             messages=[{"role": "user", "content": json.dumps({"transcript": transcript}, ensure_ascii=False)}],

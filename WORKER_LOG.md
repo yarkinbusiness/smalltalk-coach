@@ -218,3 +218,11 @@ Entry format (keep an entry under ~15 lines):
 - **Files touched:** ios/SmallTalkCoach/HomeView.swift; WORKER_LOG.md
 - **Result / verification:** Generic iOS Simulator `xcodebuild build` passed (`BUILD SUCCEEDED`); `git diff --check` passed. Attempted the iPhone 16/iOS 18.2 XCTest run, but CoreSimulatorService/simdiskimaged is unavailable in this sandbox, so tests could not execute.
 - **Open issues:** Simulator test execution requires a working CoreSimulatorService.
+
+## 2026-07-19 12:12 UTC — Enforce Haiku-only coaching model and simulator verification protocol
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Added the Haiku-only coaching model constant and source-scan regression test; inserted the mandatory iPhone 16 build, launch, screenshot, and scoped brain-fix rule in the loop protocol.
+- **Files touched:** backend/app/diagnosis.py; backend/tests/test_coaching.py; .claude/skills/brain-worker-loop/SKILL.md; WORKER_LOG.md
+- **Result / verification:** `backend/.venv/bin/python -m pytest backend/tests -q`: 28 passed, 1 skipped, 1 warning in 1.42s; required forbidden-model grep over backend/app and backend/tests returned no matches; `git diff --check` passed.
+- **Open issues:** none
