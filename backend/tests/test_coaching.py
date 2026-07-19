@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import base64
 from pathlib import Path
 
 import anthropic
@@ -10,6 +11,8 @@ from fastapi.testclient import TestClient
 
 from backend.app.content import load_curriculum
 from backend.app import diagnosis
+from backend.app import vision
+from backend.app.coaching import _run_screenshot_job
 from backend.app.diagnosis import diagnose
 from backend.app.main import create_app
 from backend.app.routing import DIMENSION_ORDER, RoutingError, route_diagnosis
@@ -43,6 +46,19 @@ class FakeAdapter:
         return response
 
 
+class FakeVisionAdapter:
+    def __init__(self, *responses: object) -> None:
+        self.responses = list(responses)
+        self.calls = 0
+
+    def request(self, *, media_type: str, image_base64: str, user_message_side: str) -> object:
+        self.calls += 1
+        response = self.responses.pop(0)
+        if isinstance(response, Exception):
+            raise response
+        return response
+
+
 def _transcript() -> dict[str, object]:
     return normalize_text("Me: I just moved here last week.\nThem: How are you finding it?")
 
@@ -69,17 +85,50 @@ def _valid_diagnosis() -> dict[str, object]:
     }
 
 
-def _client(tmp_path: Path, adapter: FakeAdapter) -> TestClient:
-    return TestClient(create_app(
+def _client(tmp_path: Path, adapter: FakeAdapter, vision_adapter: FakeVisionAdapter | None = None) -> TestClient:
+    app = create_app(
         manifest_path=MANIFEST_PATH, lessons_dir=LESSONS_DIR,
         database_path=tmp_path / "progress.db", diagnosis_adapter=adapter,
-    ))
+    )
+    if vision_adapter is not None:
+        app.state.vision_adapter = vision_adapter
+    return TestClient(app)
 
 
 def _request(client: TestClient, *, user_id: str = "maya", text: str = "Me: I just moved here last week.\nThem: How are you finding it?"):
     return client.post("/coaching/diagnoses", json={
         "user_id": user_id, "consent_to_process": True, "source": {"kind": "text", "text": text},
     })
+
+
+_TINY_PNG = base64.b64encode(
+    b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15\xc4\x89\x00\x00\x00\x0dIDATx\x9cc\xf8\xcf\xc0\xf0\x1f\x00\x05\x00\x01\xff\x89\x99=\x1d\x00\x00\x00\x00IEND\xaeB`\x82"
+).decode()
+
+
+def _valid_extraction(*, side: str = "right") -> dict[str, object]:
+    if side == "unknown":
+        return {
+            "schema_version": 1, "source_kind": "screenshot", "user_speaker_id": None,
+            "turns": [
+                {"index": 0, "speaker_id": "unknown", "speaker": "unknown", "text": "I just moved here last week.", "source": "vision"},
+                {"index": 1, "speaker_id": "other", "speaker": "other", "text": "How are you finding it?", "source": "vision"},
+            ],
+        }
+    return {
+        "schema_version": 1, "source_kind": "screenshot", "user_speaker_id": "user",
+        "turns": [
+            {"index": 0, "speaker_id": "user", "speaker": "user", "text": "I just moved here last week.", "source": "vision"},
+            {"index": 1, "speaker_id": "other", "speaker": "other", "text": "How are you finding it?", "source": "vision"},
+        ],
+    }
+
+
+def _screenshot_request(client: TestClient, *, user_id: str = "maya", image_base64: str = _TINY_PNG, media_type: str = "image/png", side: str | None = "right"):
+    source: dict[str, object] = {"kind": "screenshot", "media_type": media_type, "image_base64": image_base64}
+    if side is not None:
+        source["user_message_side"] = side
+    return client.post("/coaching/diagnoses", json={"user_id": user_id, "consent_to_process": True, "source": source})
 
 
 def test_text_normalization_labeled_name_and_unlabeled() -> None:
@@ -202,11 +251,114 @@ def test_endpoint_input_errors_and_no_persistence(tmp_path: Path) -> None:
     with _client(tmp_path, FakeAdapter(_valid_diagnosis())) as client:
         assert client.post("/coaching/diagnoses", json={"user_id": "maya", "consent_to_process": False, "source": {"kind": "text", "text": "hello"}}).json()["detail"] == "consent_required"
         screenshot = client.post("/coaching/diagnoses", json={"user_id": "maya", "consent_to_process": True, "source": {"kind": "screenshot"}})
-        assert screenshot.status_code == 501 and screenshot.json()["detail"] == "screenshot_not_implemented"
+        assert screenshot.status_code == 400 and screenshot.json()["detail"] == "invalid_request"
         invalid = client.post("/coaching/diagnoses", json={"user_id": "maya", "consent_to_process": True, "source": {"kind": "audio"}})
         assert invalid.status_code == 400 and invalid.json()["detail"] == "invalid_request"
         assert _request(client, text="  \n").json()["detail"] == "unreadable_transcript"
         assert client.get("/coaching/reports", params={"user_id": "maya"}).json() == []
+
+
+@pytest.mark.parametrize("media_type,image_base64,status,detail", [
+    ("image/gif", _TINY_PNG, 415, "unsupported_image_type"),
+    ("image/png", base64.b64encode(b"\x89PNG" + b"x" * (10 * 1024 * 1024 + 1)).decode(), 413, "image_too_large"),
+    ("image/png", "not-valid-base64", 422, "bad_image"),
+    ("image/png", base64.b64encode(b"not a png").decode(), 422, "bad_image"),
+])
+def test_screenshot_image_validation_runs_before_vision(
+    tmp_path: Path, media_type: str, image_base64: str, status: int, detail: str,
+) -> None:
+    fake_vision = FakeVisionAdapter(_valid_extraction())
+    with _client(tmp_path, FakeAdapter(_valid_diagnosis()), fake_vision) as client:
+        response = _screenshot_request(client, media_type=media_type, image_base64=image_base64)
+        assert response.status_code == status
+        assert response.json()["detail"] == detail
+    assert fake_vision.calls == 0
+
+
+def test_screenshot_job_completes_with_persisted_report_and_no_image_record(tmp_path: Path) -> None:
+    fake_vision = FakeVisionAdapter(_valid_extraction())
+    with _client(tmp_path, FakeAdapter(_valid_diagnosis()), fake_vision) as client:
+        # Create a job directly to observe its processing state before its worker runs.
+        app = client.app
+        job = app.state.coaching_jobs.create("maya")
+        assert app.state.coaching_jobs.get(job["id"], "maya") == job
+        assert "image" not in app.state.coaching_jobs._jobs[job["id"]]
+        _run_screenshot_job(app, job["id"], "maya", "image/png", _TINY_PNG, "right")
+        completed = client.get(f"/coaching/diagnoses/jobs/{job['id']}", params={"user_id": "maya"})
+        assert completed.status_code == 200
+        report = completed.json()
+        assert report["status"] == "completed"
+        assert report["transcript"]["source_kind"] == "screenshot"
+        assert report["transcript"]["turns"][0]["text"] == "I just moved here last week."
+        assert report["diagnosis"]["small_practice_action"] == _valid_diagnosis()["small_practice_action"]
+        assert "image" not in app.state.coaching_jobs._jobs[job["id"]]
+
+
+def test_screenshot_post_returns_202_poll_url_and_background_result(tmp_path: Path) -> None:
+    fake_vision = FakeVisionAdapter(_valid_extraction())
+    with _client(tmp_path, FakeAdapter(_valid_diagnosis()), fake_vision) as client:
+        created = _screenshot_request(client)
+        assert created.status_code == 202
+        payload = created.json()
+        assert payload["job_id"].startswith("cj_")
+        assert payload["poll_url"] == f"/coaching/diagnoses/jobs/{payload['job_id']}"
+        completed = client.get(payload["poll_url"], params={"user_id": "maya"})
+        assert completed.json()["status"] == "completed"
+
+
+@pytest.mark.parametrize("mutate", [
+    lambda item: item["turns"][1].__setitem__("index", 2),
+    lambda item: item["turns"][0].__setitem__("speaker", "invalid"),
+    lambda item: item.__setitem__("turns", []),
+])
+def test_invalid_screenshot_extraction_fails_unreadable(tmp_path: Path, mutate) -> None:
+    extraction = _valid_extraction()
+    mutate(extraction)
+    with _client(tmp_path, FakeAdapter(_valid_diagnosis()), FakeVisionAdapter(extraction)) as client:
+        job = client.app.state.coaching_jobs.create("maya")
+        _run_screenshot_job(client.app, job["id"], "maya", "image/png", _TINY_PNG, "right")
+        assert client.get(f"/coaching/diagnoses/jobs/{job['id']}", params={"user_id": "maya"}).json() == {
+            "status": "failed", "detail": "unreadable_transcript",
+        }
+
+
+def test_screenshot_provider_failure_and_refusal_are_safe_job_results(tmp_path: Path) -> None:
+    request = httpx.Request("POST", "https://example.test")
+    cases = [
+        (FakeVisionAdapter(anthropic.APIConnectionError(request=request)), "ai_unavailable"),
+        (FakeVisionAdapter({"stop_reason": "refusal", "content": []}), "coaching_refused"),
+    ]
+    for index, (fake_vision, expected) in enumerate(cases):
+        with _client(tmp_path / str(index), FakeAdapter(_valid_diagnosis()), fake_vision) as client:
+            job = client.app.state.coaching_jobs.create("maya")
+            _run_screenshot_job(client.app, job["id"], "maya", "image/png", _TINY_PNG, "right")
+            assert client.get(f"/coaching/diagnoses/jobs/{job['id']}", params={"user_id": "maya"}).json() == {
+                "status": "failed", "detail": expected,
+            }
+
+
+def test_screenshot_attribution_unknown_side_and_polling_ownership(tmp_path: Path) -> None:
+    with _client(tmp_path, FakeAdapter(_valid_diagnosis()), FakeVisionAdapter(_valid_extraction(side="unknown"))) as client:
+        created = _screenshot_request(client, side=None).json()
+        report = client.get(created["poll_url"], params={"user_id": "maya"}).json()
+        assert report["transcript"]["user_speaker_id"] is None
+        assert client.get(created["poll_url"], params={"user_id": "other"}).status_code == 404
+        assert client.get("/coaching/diagnoses/jobs/cj_missing", params={"user_id": "maya"}).status_code == 404
+
+
+def test_screenshot_escalation_returns_guidance_without_report(tmp_path: Path) -> None:
+    escalated = {**_valid_diagnosis(), "safety": {"status": "escalate", "category": "crisis"}}
+    with _client(tmp_path, FakeAdapter(escalated), FakeVisionAdapter(_valid_extraction())) as client:
+        job = client.app.state.coaching_jobs.create("maya")
+        _run_screenshot_job(client.app, job["id"], "maya", "image/png", _TINY_PNG, "right")
+        result = client.get(f"/coaching/diagnoses/jobs/{job['id']}", params={"user_id": "maya"}).json()
+        assert result["status"] == "safety_guidance"
+        assert result["category"] == "crisis"
+        assert client.get("/coaching/reports", params={"user_id": "maya"}).json() == []
+
+
+def test_vision_uses_locked_coaching_model() -> None:
+    assert vision.COACHING_MODEL == diagnosis.COACHING_MODEL
 
 
 def test_refusal_provider_failure_and_escalation_do_not_persist(tmp_path: Path) -> None:

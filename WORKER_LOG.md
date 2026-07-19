@@ -226,3 +226,11 @@ Entry format (keep an entry under ~15 lines):
 - **Files touched:** backend/app/diagnosis.py; backend/tests/test_coaching.py; .claude/skills/brain-worker-loop/SKILL.md; WORKER_LOG.md
 - **Result / verification:** `backend/.venv/bin/python -m pytest backend/tests -q`: 28 passed, 1 skipped, 1 warning in 1.42s; required forbidden-model grep over backend/app and backend/tests returned no matches; `git diff --check` passed.
 - **Open issues:** none
+
+## 2026-07-19 12:39 UTC — Implement asynchronous screenshot coaching pipeline
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Added Haiku-only structured vision extraction, strict image/transcript validation, and an in-memory, ownership-scoped screenshot job/polling flow that reuses diagnosis, routing, and report storage. Added mocked coverage for validation, jobs, attribution, failures, escalation, and model locking.
+- **Files touched:** backend/app/vision.py; backend/app/jobs.py; backend/app/coaching.py; backend/tests/test_coaching.py; WORKER_LOG.md
+- **Result / verification:** `backend/.venv/bin/python -m pytest backend/tests -q`: 41 passed, 1 skipped, 1 warning in 1.72s; `git diff --check` passed; forbidden-model scan of backend/app and backend/tests returned no matches.
+- **Open issues:** none

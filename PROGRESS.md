@@ -154,6 +154,21 @@ blocked, log that and stop — don't invent busywork.
 
 ## Cycle log
 
+- **2026-07-19 (cycle 18 — screenshot backend path):** Worker:
+  `gpt-5.6-terra`, one round. Shipped `vision.py` (Haiku-only structured
+  extraction via imported COACHING_MODEL, §4-faithful prompt rules,
+  app-side extraction validation incl. no-guessing attribution),
+  `jobs.py` (in-memory thread-safe job store — metadata and report
+  references only, raw image bytes never on records, restart fails
+  jobs by design), async 202+poll endpoints reusing the shared
+  diagnose→route→persist pipeline, full image taxonomy (415/413/422
+  with magic-number checks and `del` in finally). Brain verification:
+  **41 passed, 1 skipped** (own run); image-validation ordering, job
+  outcome paths, and model-lock scan reviewed line-level; mandatory
+  simulator verification executed — clean launch, screenshot-verified —
+  ACCEPTED. **Next:** iOS screenshot-upload UI (cycle 19), then the
+  founder-gated vision quality eval on real consented screenshots.
+
 - **2026-07-19 (milestone — live smoke PASSED):** Founder added a working
   test key to `~/.env` (after cleaning stale entries; one earlier key was
   invalid at the API — 401 handled exactly as designed, code-only
