@@ -154,6 +154,18 @@ blocked, log that and stop — don't invent busywork.
 
 ## Cycle log
 
+- **2026-07-19 (milestone — live smoke PASSED):** Founder added a working
+  test key to `~/.env` (after cleaning stale entries; one earlier key was
+  invalid at the API — 401 handled exactly as designed, code-only
+  logging). `SMALLTALK_LIVE_SMOKE=1` run: **1 passed in 14.8s** — first
+  real `claude-haiku-4-5` diagnosis through the adapter, structured
+  output accepted by the live API (minLength watch-item CLEARED; SDK
+  strips unsupported constraints as documented), response passed full
+  app-side validation. Coaching text path is verified live end to end.
+  Key-handling note: test keys transited the chat at founder's explicit
+  acceptance; rotation recommended before production keys — production
+  keys go in via the read -s flow only.
+
 - **2026-07-19 (cycle 17 — Haiku-only lock + protocol amendment):** Two
   founder decisions recorded and implemented: (1) ALL backend Anthropic
   calls locked to `claude-haiku-4-5` (strict budget rule; supersedes the
