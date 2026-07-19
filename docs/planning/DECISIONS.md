@@ -124,6 +124,39 @@ Use this file to preserve important product decisions and prevent the same quest
 - **Revisit trigger:** Founder redirects; or early build reveals the lesson
   path/content model needs restructuring before more code lands.
 
+### 2026-07-19 — Coaching Is Response-Oriented (Teach the User to Fish)
+
+- **Status:** Confirmed (founder decision)
+- **Decision:** The coaching pipeline treats submitted text as the OTHER
+  party's message (the stimulus) unless the user explicitly marks turns
+  as their own (`Me:` labels in text; declared side in screenshots). Two
+  modes: **stimulus_only** (no user turns) — no dimension scores at all;
+  output = interpretation of the incoming message (tone, intent, what a
+  good response must accomplish) + coaching on constructing the reply
+  (structure/tone/include/avoid) + 1–2 short example responses + a
+  transferable takeaway; **with_user_reply** (user turns present) —
+  dimension scores apply ONLY to the user's turns, never the other
+  party's words, plus the same interpretation/coaching/takeaway
+  orientation (coaching the next reply when the conversation ends on the
+  other party's turn). Every coaching output ends with a generalizable
+  takeaway. Lesson routing uses the weakest scored dimension when scores
+  exist, else a model-named `focus_dimension` validated against the four
+  dimensions. This applies globally to any incoming message type, not
+  one scenario.
+- **Why:** Founder correction 2026-07-19: the pipeline scored incoming
+  messages as if the user had said them — backwards. Product purpose is
+  capability transfer for responding well in real situations
+  (PRODUCT_BRIEF §6 Flow C, now made the pipeline's core orientation).
+- **Consequence:** Diagnosis contract/schema v2 (COACHING_PIPELINE_V1
+  §2.2 amended), transcript stimulus-default for unlabeled text,
+  rewritten diagnosis prompt with explicit role binding, routing
+  fallback, iOS report rendering for the new fields. Example responses
+  are founder-mandated teaching artifacts — kept short and paired with
+  the takeaway, consistent with §6's "examples when useful" boundary.
+- **Revisit trigger:** User feedback shows demand for scoring their side
+  of full conversations differently, or the takeaway/examples encourage
+  copy-paste dependency (then rebalance with the Learning Boundary).
+
 ## Decision Template
 
 ### YYYY-MM-DD — Short Decision Name
