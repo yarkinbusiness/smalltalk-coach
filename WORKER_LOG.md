@@ -292,3 +292,11 @@ Entry format (keep an entry under ~15 lines):
   39 passed, 1 warning in 1.64s; `backend/.venv/bin/python -m pytest backend/tests -q`:
   51 passed, 1 skipped, 1 warning in 1.36s; forbidden-model scan was clean; `git diff --check` passed.
 - **Open issues:** none
+
+## 2026-07-19 18:30 UTC — Fix screenshot unreadable-transcript copy and submission-mode coverage
+- **Model:** gpt-5.6-terra
+- **Status:** partial
+- **What was done:** Added a screenshot-specific unreadable-conversation error mapped for screenshot upload and poll failures; kept text mapping unchanged. Added founder-scenario tests for screenshot-only polling failure, short-text 422, and screenshot mode with non-empty text.
+- **Files touched:** ios/SmallTalkCoach/CoachingViewModel.swift; ios/SmallTalkCoachTests/SmallTalkCoachTests.swift; WORKER_LOG.md
+- **Result / verification:** `xcodegen generate --spec ios/project.yml --project ios`, generic-simulator `xcodebuild build`, and `xcodebuild build-for-testing` passed; `git diff --check` passed. `xcodebuild test` was attempted but CoreSimulatorService returned connection refused/no simulator runtimes, so XCTest did not execute.
+- **Open issues:** Run the compiled XCTest suite on a host with a working iPhone 16 / iOS 18.2 simulator service.

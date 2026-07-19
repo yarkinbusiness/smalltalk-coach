@@ -23,6 +23,7 @@ enum CoachingSubmissionState: Equatable {
 enum CoachingErrorState: Equatable {
     case consentRequired
     case unreadableTranscript
+    case screenshotUnreadable
     case coachingRefused
     case aiUnavailable
     case invalidRequest
@@ -40,6 +41,13 @@ enum CoachingErrorState: Equatable {
         return fromDetail(detail)
     }
 
+    static func fromScreenshot(_ error: Error) -> CoachingErrorState {
+        guard let detail = (error as? APIClientError)?.backendDetail else {
+            return .generic(error.localizedDescription)
+        }
+        return fromScreenshotDetail(detail)
+    }
+
     static func fromDetail(_ detail: String) -> CoachingErrorState {
         switch detail {
         case "consent_required": return .consentRequired
@@ -55,12 +63,18 @@ enum CoachingErrorState: Equatable {
         }
     }
 
+    static func fromScreenshotDetail(_ detail: String) -> CoachingErrorState {
+        detail == "unreadable_transcript" ? .screenshotUnreadable : fromDetail(detail)
+    }
+
     var message: String {
         switch self {
         case .consentRequired:
             return "Please confirm that you understand and consent before submitting."
         case .unreadableTranscript:
             return "Please add more of the conversation, with one message per line if you can."
+        case .screenshotUnreadable:
+            return "We couldn't find a readable conversation in that screenshot. Try a clear, close-up screenshot of the chat itself."
         case .coachingRefused:
             return "We can’t provide coaching for this conversation. We can help with a different everyday interaction."
         case .aiUnavailable:
@@ -232,7 +246,7 @@ final class CoachingViewModel: ObservableObject {
             await poll(jobID: job.jobID)
         } catch {
             submissionState = .composing
-            self.error = CoachingErrorState.from(error)
+            self.error = CoachingErrorState.fromScreenshot(error)
             consentNeedsAttention = self.error == .consentRequired
         }
     }
@@ -265,7 +279,7 @@ final class CoachingViewModel: ObservableObject {
                 case .failed(let failure):
                     screenshotJobID = nil
                     submissionState = .composing
-                    error = CoachingErrorState.fromDetail(failure.detail)
+                    error = CoachingErrorState.fromScreenshotDetail(failure.detail)
                     return
                 case .safetyGuidance(let guidance):
                     screenshotJobID = nil
@@ -276,7 +290,7 @@ final class CoachingViewModel: ObservableObject {
                 return
             } catch {
                 submissionState = .composing
-                self.error = CoachingErrorState.from(error)
+                self.error = CoachingErrorState.fromScreenshot(error)
                 return
             }
         }

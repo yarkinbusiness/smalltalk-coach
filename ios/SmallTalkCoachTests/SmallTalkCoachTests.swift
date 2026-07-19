@@ -241,12 +241,70 @@ final class SmallTalkCoachTests: XCTestCase {
             .unreadableTranscript
         )
         XCTAssertEqual(
+            CoachingErrorState.fromScreenshot(APIClientError.server(statusCode: 422, detail: "unreadable_transcript")),
+            .screenshotUnreadable
+        )
+        XCTAssertEqual(
             CoachingErrorState.from(APIClientError.server(statusCode: 502, detail: "ai_unavailable")),
             .aiUnavailable
         )
         XCTAssertEqual(CoachingErrorState.fromDetail("bad_image"), .badImage)
         XCTAssertEqual(CoachingErrorState.fromDetail("image_too_large"), .imageTooLarge)
         XCTAssertEqual(CoachingErrorState.fromDetail("unsupported_image_type"), .unsupportedImageType)
+    }
+
+    @MainActor
+    func testScreenshotOnlySubmissionPollFailureShowsScreenshotSpecificUnreadableMessage() async {
+        let client = StubCoachingAPI(
+            screenshotResult: .success(CoachingDiagnosisJob(jobID: "cj_123", status: "processing", pollURL: "/coaching/diagnoses/jobs/cj_123")),
+            pollResults: [.success(.failed(CoachingDiagnosisJobFailure(status: "failed", detail: "unreadable_transcript")))]
+        )
+        let viewModel = screenshotViewModel(client: client)
+
+        XCTAssertTrue(viewModel.text.isEmpty)
+        XCTAssertTrue(viewModel.canSubmit)
+
+        await viewModel.submit()
+
+        XCTAssertEqual(client.screenshotRequestCount, 1)
+        XCTAssertEqual(client.polledJobIDs, ["cj_123"])
+        XCTAssertEqual(viewModel.error, .screenshotUnreadable)
+        XCTAssertEqual(
+            viewModel.error?.message,
+            "We couldn't find a readable conversation in that screenshot. Try a clear, close-up screenshot of the chat itself."
+        )
+    }
+
+    @MainActor
+    func testShortTextSubmissionKeepsTextUnreadableTranscriptMessage() async {
+        let client = StubCoachingAPI(
+            diagnosisResult: .failure(APIClientError.server(statusCode: 422, detail: "unreadable_transcript"))
+        )
+        let viewModel = CoachingViewModel(client: client)
+        viewModel.text = "Hi"
+        viewModel.consentGiven = true
+
+        await viewModel.submit()
+
+        XCTAssertEqual(client.diagnosisRequestCount, 1)
+        XCTAssertEqual(viewModel.error, .unreadableTranscript)
+        XCTAssertEqual(viewModel.error?.message, "Please add more of the conversation, with one message per line if you can.")
+    }
+
+    @MainActor
+    func testScreenshotModeIgnoresNonEmptyTextAndUsesScreenshotSubmission() async {
+        let client = StubCoachingAPI(
+            screenshotResult: .success(CoachingDiagnosisJob(jobID: "cj_123", status: "processing", pollURL: "/coaching/diagnoses/jobs/cj_123")),
+            pollResults: [.success(.report(StubCoachingAPI.sampleReport))]
+        )
+        let viewModel = screenshotViewModel(client: client)
+        viewModel.text = "Me: This text must not change screenshot submission."
+
+        await viewModel.submit()
+
+        XCTAssertEqual(client.screenshotRequestCount, 1)
+        XCTAssertEqual(client.diagnosisRequestCount, 0)
+        XCTAssertEqual(client.polledJobIDs, ["cj_123"])
     }
 
     func testDecodesScreenshotJobAndEveryPollStateFixture() throws {
@@ -356,7 +414,7 @@ final class SmallTalkCoachTests: XCTestCase {
         await viewModel.submit()
 
         XCTAssertEqual(viewModel.submissionState, .composing)
-        XCTAssertEqual(viewModel.error, .unreadableTranscript)
+        XCTAssertEqual(viewModel.error, .screenshotUnreadable)
     }
 
     @MainActor
@@ -580,6 +638,7 @@ private final class StubCoachingAPI: CoachingAPI {
     var pollResults: [Result<CoachingDiagnosisJobResponse, Error>]
     var summariesResult: Result<[CoachingReportSummary], Error>
     var deletedIDs: [String] = []
+    var diagnosisRequestCount = 0
     var screenshotRequestCount = 0
     var polledJobIDs: [String] = []
 
@@ -596,7 +655,10 @@ private final class StubCoachingAPI: CoachingAPI {
     }
 
     func health() async throws -> HealthResponse { HealthResponse(status: "ok", lessonsLoaded: 12, coachingEnabled: true) }
-    func diagnose(text: String, consentToProcess: Bool) async throws -> CoachingDiagnosisResponse { try diagnosisResult.get() }
+    func diagnose(text: String, consentToProcess: Bool) async throws -> CoachingDiagnosisResponse {
+        diagnosisRequestCount += 1
+        return try diagnosisResult.get()
+    }
     func diagnoseScreenshot(imageBase64: String, mediaType: String, userMessageSide: CoachingUserMessageSide, consentToProcess: Bool) async throws -> CoachingDiagnosisJob {
         screenshotRequestCount += 1
         return try screenshotResult.get()
