@@ -154,6 +154,21 @@ blocked, log that and stop — don't invent busywork.
 
 ## Cycle log
 
+- **2026-07-19 (cycle 23 — vision schema live-API fix):** Founder's first
+  real screenshot submission surfaced `coaching vision provider_error=400`
+  (job → ai_unavailable → app's "temporarily unavailable" error). Cause:
+  `"minimum": 0` on the turn-index integer in vision.py's extraction
+  schema — numerical constraints are API-unsupported (same class as
+  cycle 21's maxItems; that fix only covered diagnosis.py). Worker
+  micro-cycle: constraint removed, non-negative/contiguous indices
+  enforced app-side with a regression test. Brain verification: 51 tests
+  (own run); live screenshot job with a real PNG now traverses the API
+  and correctly returns `unreadable_transcript` for a non-chat image;
+  mandatory simulator launch clean — ACCEPTED. Lesson generalized: ALL
+  structured-output schemas must stay within the supported constraint
+  set; both schemas now audited. Founder can retest with a real chat
+  screenshot (the open vision-quality eval).
+
 - **2026-07-19 (cycle 22 — iOS response-coaching UI; role-fix complete):**
   Worker: `gpt-5.6-terra`, one round, honest partial (sandbox blocks
   simulator; brain ran tests). Schema-v2 models (nullable dimensions),

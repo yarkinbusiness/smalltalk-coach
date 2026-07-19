@@ -445,6 +445,7 @@ def test_screenshot_post_returns_202_poll_url_and_background_result(tmp_path: Pa
 
 
 @pytest.mark.parametrize("mutate", [
+    lambda item: item["turns"][0].__setitem__("index", -1),
     lambda item: item["turns"][1].__setitem__("index", 2),
     lambda item: item["turns"][0].__setitem__("speaker", "invalid"),
     lambda item: item.__setitem__("turns", []),

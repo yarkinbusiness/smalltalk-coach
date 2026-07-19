@@ -31,7 +31,7 @@ TRANSCRIPT_EXTRACTION_SCHEMA: dict[str, Any] = {
                 "additionalProperties": False,
                 "required": ["index", "speaker_id", "speaker", "text", "source"],
                 "properties": {
-                    "index": {"type": "integer", "minimum": 0},
+                    "index": {"type": "integer"},
                     "speaker_id": {"type": "string", "minLength": 1},
                     "speaker": {"enum": sorted(_SPEAKERS)},
                     "text": {"type": "string", "minLength": 1},
@@ -133,7 +133,7 @@ def validate_extraction(payload: object, user_message_side: object) -> dict[str,
     for index, turn in enumerate(turns):
         if not isinstance(turn, dict) or set(turn) != {"index", "speaker_id", "speaker", "text", "source"}:
             raise UnreadableTranscriptError("invalid turn")
-        if turn.get("index") != index or not _is_int(turn["index"]):
+        if not _is_int(turn.get("index")) or turn["index"] < 0 or turn["index"] != index:
             raise UnreadableTranscriptError("non-contiguous turns")
         if turn.get("speaker") not in _SPEAKERS or turn.get("source") != "vision":
             raise UnreadableTranscriptError("invalid attribution")

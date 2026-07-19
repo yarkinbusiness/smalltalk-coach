@@ -280,3 +280,15 @@ Entry format (keep an entry under ~15 lines):
   ios/SmallTalkCoach/CoachingViewModel.swift; ios/SmallTalkCoachTests/SmallTalkCoachTests.swift; WORKER_LOG.md
 - **Result / verification:** `xcodegen generate --spec ios/project.yml --project ios`, generic-simulator `xcodebuild build`, and `build-for-testing` passed (with derived data under `/private/tmp`). `xcodebuild test` was attempted, but CoreSimulatorService has no usable simulator device in this sandbox; tests were compiled but not executed. `git diff --check` passed.
 - **Open issues:** Reviewer should run the XCTest suite on an available simulator.
+
+## 2026-07-19 17:53 UTC — Fix vision extraction schema numeric constraint
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Removed the unsupported JSON-schema `minimum` from screenshot turn indices,
+  audited the remaining extraction schema constraints, and made non-negative contiguous indices explicit in app validation.
+  Added negative-index coverage to the screenshot extraction validation test.
+- **Files touched:** backend/app/vision.py; backend/tests/test_coaching.py; WORKER_LOG.md
+- **Result / verification:** `backend/.venv/bin/python -m pytest backend/tests/test_coaching.py -q`:
+  39 passed, 1 warning in 1.64s; `backend/.venv/bin/python -m pytest backend/tests -q`:
+  51 passed, 1 skipped, 1 warning in 1.36s; forbidden-model scan was clean; `git diff --check` passed.
+- **Open issues:** none
