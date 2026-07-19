@@ -153,6 +153,50 @@ Read by the brain and by every Codex worker at cycle start (see
   authored lessons (pause serving work and fix the schema), or the founder
   redirects the build order.
 
+### 2026-07-19 — Coaching Models Locked to Haiku 4.5 Only (Founder Cost Constraint)
+
+- **Status:** Confirmed (founder decision — strict rule)
+- **Decision:** ALL Anthropic API calls made by the backend use model id
+  `claude-haiku-4-5` and nothing else — no Sonnet, Opus, or any
+  higher-tier model anywhere in backend code, now or in future cycles
+  (including the eventual screenshot vision-extraction call, where Haiku
+  4.5 was already the recorded candidate and is vision-capable).
+  **Supersedes** "2026-07-18 — Coaching Diagnosis Model Pinned:
+  claude-sonnet-4-6" below. Enforced mechanically: a backend test scans
+  `backend/app/` source for forbidden model-name substrings and fails if
+  any appears.
+- **Why:** Founder instruction 2026-07-19: very limited API budget; cost
+  floor takes priority over per-call quality. Haiku 4.5 supports
+  structured outputs and vision per the current model catalog, so the
+  pipeline design is unchanged — only the model id.
+- **Revisit trigger:** Founder relaxes the budget constraint, or diagnosis
+  quality on real transcripts is unacceptable (then the founder decides
+  the cost/quality trade, not the brain).
+
+### 2026-07-19 — Mandatory Simulator Launch Verification Ends Every Cycle
+
+- **Status:** Confirmed (founder decision)
+- **Decision:** From now on, every accepted loop cycle ends with a full
+  build and launch of the app in the iPhone 16 simulator (backend running)
+  as a mandatory verification step, screenshot-verified, before the cycle
+  counts as complete. Build or launch errors found in this step are
+  **diagnosed and fixed directly by the brain** — a founder-granted scoped
+  exception to the brain-never-implements rule, limited to making the app
+  build and launch cleanly during verification — and the launch is
+  re-run until clean. (The brain may still route larger fixes through a
+  worker micro-cycle when practical; the obligation is that the cycle
+  does not close until a clean launch.)
+- **Why:** Founder instruction 2026-07-19, grounded in cycle 16's evidence:
+  a real launch surfaced two runtime bugs (compatibility-mode letterboxing;
+  `.task` on EmptyView never firing) that unit tests could not catch.
+- **Consequence:** `.claude/skills/brain-worker-loop/SKILL.md` loop
+  protocol gains the verification step (synced in the same cycle that
+  records this entry).
+- **Revisit trigger:** Founder amends; or the loop starts producing
+  backend-only changes where a simulator launch adds no information (then
+  propose narrowing to cycles that touch app-visible behavior — founder
+  call).
+
 ### 2026-07-18 — Coaching Diagnosis Model Pinned: claude-sonnet-4-6
 
 - **Status:** Confirmed (brain decision under recorded cost-tiering policy)
