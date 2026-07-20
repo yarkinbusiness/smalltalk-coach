@@ -8,9 +8,16 @@ the thread. `ARCHITECTURE.md` stays the technical reference (how the
 backend/CMA/iOS pieces fit together); this file is the product reference
 (what we're building and why).
 
-**Status as of this writing: implementation is paused for planning.**
-Nothing described in "Phase 2" below has been started. Do not assume any
-of it exists just because it's written here.
+**Status updated 2026-07-20:** the vision below stands, but implementation
+state has changed twice since this file was written: (1) the Phase 0
+implementation described in "What's already built" was removed from
+`master` in the 2026-07-18 Full Restart (archived at tag
+`phase0-archive`; see root `DECISIONS.md`); (2) v1 was then rebuilt fresh
+and shipped 2026-07-18/19 (PROGRESS.md cycles 4–23) to the design in
+`docs/planning/COACHING_PIPELINE_V1.md`, under the 2026-07-19 Haiku-only
+model lock. Current roadmap: PROGRESS.md "v2 backlog" +
+`docs/planning/ROADMAP_REVIEW_2026-07-20.md`. Each Phase 2 item below is
+annotated with its 2026-07-20 status.
 
 ## The actual vision, in one paragraph
 
@@ -109,6 +116,9 @@ next recommendation is more targeted
 
 ## What's already built — Phase 0, the foundation
 
+*Historical: this describes the pre-restart Phase 0 build, removed
+2026-07-18 (tag `phase0-archive`); the T1–T18 task ids are obsolete.*
+
 Everything tracked as T1-T14 (plus T6b and two security/UX follow-up
 fixes) in this session's task list is done, independently reviewed, and
 pushed to `github.com/yarkinbusiness/smalltalk-coach`. In the frame of
@@ -134,53 +144,69 @@ CMA-beta key), T17 (first Xcode build, needs Xcode installed), T18
 
 ## What's missing — Phase 2, the actual new work
 
-Roughly in dependency order, not yet scoped into T-numbered tasks or
-started:
+Roughly in dependency order; the 2026-07-20 annotations identify what has
+since shipped and what remains in the v2 backlog:
 
 1. **Lesson/curriculum content system.** Actual taught material per skill
    (e.g. "asking better follow-up questions," "graceful exits"), not just
    "practice a scenario and get graded." Needs: a content model (what is
    a lesson — text, structured steps, a paired roleplay drill?), and
    likely maps each lesson to one or more of the 4 existing dimensions so
-   recommendations can route into it.
+   recommendations can route into it. **[BUILT 2026-07-18 — static-JSON
+   model per CONTENT_MODEL_V1.md; 12 lessons authored and served]**
 2. **Daily habit loop.** Streak model + persistence, notification
    scheduling (needs APNs/push setup — a real new technical + Apple
-   Developer requirement), a "today's lesson" home surface.
+   Developer requirement), a "today's lesson" home surface. **[NOT BUILT
+   — v2 backlog T-D; local notifications chosen over APNs]**
 3. **Screenshot import pipeline.** Upload/share UI on iOS, backend
    endpoint, vision-model call to extract a clean transcript, the privacy
-   disclosure noted above.
+   disclosure noted above. **[BUILT 2026-07-19 — COACHING_PIPELINE_V1
+   path; Haiku-only vision extraction; per-submission consent in-app;
+   real-screenshot quality eval still founder-gated]**
 4. **Grading engine extended into a lesson router.** The coordinator's
    output needs a second output alongside the coaching report: which
    lesson (if any) this diagnosis should route the user into. This is
    new coordinator-prompt/response-shape work, not just a new endpoint —
-   it changes what "the report" means.
+   it changes what "the report" means. **[BUILT 2026-07-18/19 in
+   simplified form — one structured diagnosis call + deterministic
+   routing, not the CMA coordinator sketched here]**
 5. **Suggested-reply generation.** Draft an actual response to the real
    message, explicitly framed in the product as a bridge into the lesson
-   system, not a standalone copy-paste feature.
+   system, not a standalone copy-paste feature. **[BUILT 2026-07-19 —
+   response-oriented coaching v2: interpretation, reply coaching, 1–2
+   short examples, transferable takeaway]**
 6. **Longitudinal personal profile.** A persistent record of a user's
    real-world patterns over time that makes later diagnoses sharper —
    distinct from (may build on top of) the existing local `reports`
    table and/or the CMA memory_store already used for the coordinator's
-   cross-session context.
+   cross-session context. **[NOT BUILT — v2 backlog T-E]**
 7. **Cost-tiered model routing for all of the above** — wire in whichever
    cheap model gets chosen (DeepSeek or Haiku) for steps 4/5/6, keep
-   vision-capable model only for step 3's extraction.
+   vision-capable model only for step 3's extraction. **[SUPERSEDED —
+   2026-07-19 Haiku-only lock: every backend call is
+   `claude-haiku-4-5`]**
 
-## Open questions — not yet decided, need answers before Phase 2 implementation starts
+## Open questions — original planning framing; current states annotated below
 
 - **Streak mechanics, exact rule.** Does completing a daily lesson/drill
   alone keep the streak alive, or does submitting a real-conversation
   screenshot for review also count? (User's framing leaned toward lesson
   activity as the base engagement signal, with the real differentiator
   being the compounding diagnosis loop rather than the streak rule itself
-  — but the exact rule wasn't pinned down.)
+  — but the exact rule wasn't pinned down.) **[Being resolved by v2 task
+  T-D: lesson/review completion or coaching submission all count as daily
+  activity.]**
 - **DeepSeek vs. Haiku 4.5** for the downstream cheap-reasoning steps —
   not decided; worth a real cost/quality comparison once Phase 2 scoping
-  starts.
+  starts. **[Resolved by the 2026-07-19 Haiku-only lock.]**
 - **Lesson content authorship** — hand-written by a person, generated
   once by a model and reviewed, or some mix? Affects both quality and the
-  "generate once, reuse forever" cost assumption above.
+  "generate once, reuse forever" cost assumption above. **[Resolved in
+  practice: model-authored, brain-reviewed, against CONTENT_MODEL_V1
+  (cycles 4–9).]**
 - **How much of Phase 0's practice-mode UI needs to change** once lessons
   exist alongside plain roleplay scenarios — e.g. does the scenario
   picker become a lesson picker, or do lessons and free-practice scenarios
-  coexist as distinct sections?
+  coexist as distinct sections? **[Moot: the Phase 0 practice UI was
+  removed in the Full Restart; roleplay/practice chat is deferred
+  (COACHING_PIPELINE_V1 §7).]**

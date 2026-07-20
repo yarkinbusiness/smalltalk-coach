@@ -183,6 +183,22 @@ Read by the brain and by every Codex worker at cycle start (see
   retention tier); or any P1 task turns out to require model calls after
   all (then it needs a costed founder decision first, per the Haiku lock).
 
+### 2026-07-20 — Stale VISION/ARCHITECTURE Status Synced to Rebuilt v1
+
+- **Status:** Confirmed (executes task T-A of the founder-approved v2
+  backlog)
+- **Decision:** VISION.md's status header, Phase 0 section, Phase 2 list,
+  and open questions are annotated to post-restart/post-rebuild reality;
+  ARCHITECTURE.md's banner now names COACHING_PIPELINE_V1.md as the
+  implemented design of record and marks the CMA design as a
+  future-upgrade reference only. Historical content was annotated, never
+  deleted.
+- **Why:** Living docs contradicted the running system (ROADMAP_REVIEW
+  §1.3); a reader landing on either doc first got a wrong model of the app.
+- **Revisit trigger:** Any future architecture change that makes
+  COACHING_PIPELINE_V1.md itself stale (then re-sync or rewrite under a
+  new decision entry).
+
 ### 2026-07-19 — Coaching Models Locked to Haiku 4.5 Only (Founder Cost Constraint)
 
 - **Status:** Confirmed (founder decision — strict rule)

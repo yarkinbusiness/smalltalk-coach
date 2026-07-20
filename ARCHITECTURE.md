@@ -7,6 +7,18 @@
 > complete tree is archived at tag `phase0-archive`. Nothing described
 > below is currently running or present in the repo; this document is
 > kept as the v1 design reference for the rebuild.
+>
+> **2026-07-20 — rebuilt v1 status.** V1 has since been rebuilt and
+> shipped, but not to this document's design. The implemented design of
+> record is `docs/planning/COACHING_PIPELINE_V1.md`: plain Messages API,
+> one structured `claude-haiku-4-5` diagnosis call, deterministic
+> weakest-dimension routing, and an asynchronous screenshot path; no CMA
+> (deferred per its §7). The Haiku-only lock (root `DECISIONS.md`,
+> 2026-07-19) supersedes the `COORDINATOR_MODEL`/`WORKER_MODEL` tiering
+> below. This document remains a design reference for a possible future
+> CMA upgrade only; for the running system read
+> `COACHING_PIPELINE_V1.md`, `CONTENT_MODEL_V1.md`, and
+> `LESSON_PATH_V1.md`.
 
 **Product direction updated 2026-07-16 (v1 scope).** This document reflects
 a revised product structure agreed after the practice-mode foundation

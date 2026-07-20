@@ -1,6 +1,17 @@
 # Progress & backlog
 
-**2026-07-20 (latest): ROADMAP REFRESHED — v2 backlog adopted
+**2026-07-20 (later — latest): LOOP ACTIVE — v2 execution begun (founder
+instruction).** The loop is executing the v2 backlog below tier by tier
+(P0 → P1 → P2) under the locked model rules (brain: Claude Fable 5;
+workers: `gpt-5.6-terra` via `worker.sh` — DECISIONS: "2026-07-18 —
+Worker Model Locked to Codex (GPT 5.6)"). Founder-gated items (T-K
+pricing/free-tier, T-L free-draft budget, the real-screenshot vision
+eval) are **deferred, not blocking** — the loop skips to the next
+actionable task. Haiku-only lock, no new API spend, and mandatory
+simulator verification per cycle all remain in force. Cycle numbering
+continues from 23.
+
+**2026-07-20: ROADMAP REFRESHED — v2 backlog adopted
 (founder-approved).** The brain ran a full roadmap strength review against
 VISION.md, PRODUCT_BRIEF.md, ARCHITECTURE.md, both DECISIONS.md logs, and
 WORKER_LOG.md. Verdict: the v1 build backlog is complete and the rest of
@@ -218,6 +229,22 @@ items assume. -->
    4 workers → synthesized report) against real CMA.
 
 ## Cycle log
+
+- **2026-07-20 (cycle 24 — T-A docs sync; v2 execution begins):** First
+  cycle of the founder-ordered v2 execution (T-K/T-L and the
+  real-screenshot eval stay deferred as founder-gated). Worker:
+  `gpt-5.6-terra`, one round. VISION.md's stale status ("paused for
+  planning") replaced with the post-restart/post-rebuild state; Phase 0
+  section marked historical (tag `phase0-archive`); all 7 Phase 2 items
+  and 4 open questions annotated with 2026-07-20 status;
+  ARCHITECTURE.md banner now names COACHING_PIPELINE_V1.md as the
+  implemented design of record (Haiku lock supersedes its tiering);
+  decision entry appended ("Stale VISION/ARCHITECTURE Status Synced to
+  Rebuilt v1"). Brain verification: diff read in full, every annotation
+  traced to its source record; **51 passed, 1 skipped** (own run, from
+  repo root); mandatory simulator launch clean against the key-loaded
+  backend (curriculum renders, both tabs) — ACCEPTED. **Next:** T-B,
+  vision-eval harness.
 
 - **2026-07-19 (cycle 23 — vision schema live-API fix):** Founder's first
   real screenshot submission surfaced `coaching vision provider_error=400`

@@ -300,3 +300,11 @@ Entry format (keep an entry under ~15 lines):
 - **Files touched:** ios/SmallTalkCoach/CoachingViewModel.swift; ios/SmallTalkCoachTests/SmallTalkCoachTests.swift; WORKER_LOG.md
 - **Result / verification:** `xcodegen generate --spec ios/project.yml --project ios`, generic-simulator `xcodebuild build`, and `xcodebuild build-for-testing` passed; `git diff --check` passed. `xcodebuild test` was attempted but CoreSimulatorService returned connection refused/no simulator runtimes, so XCTest did not execute.
 - **Open issues:** Run the compiled XCTest suite on a host with a working iPhone 16 / iOS 18.2 simulator service.
+
+## 2026-07-20 20:42 UTC — Sync stale VISION and ARCHITECTURE status to rebuilt v1
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Updated VISION.md with post-restart/v1 status annotations and added the rebuilt-v1 banner to ARCHITECTURE.md. Added the T-A decision record without rewriting historical content.
+- **Files touched:** VISION.md; ARCHITECTURE.md; DECISIONS.md; WORKER_LOG.md
+- **Result / verification:** Spot-verified the cited restart, rebuild, model-lock, pipeline, and roadmap records; `git diff --check` passed before this append.
+- **Open issues:** Pre-existing uncommitted PROGRESS.md change was retained; task edits touch only the four files above.
