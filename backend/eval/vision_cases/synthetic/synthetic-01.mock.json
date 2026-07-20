@@ -1,0 +1,5 @@
+{
+  "content": [
+    {"text": "{\"schema_version\": 1, \"source_kind\": \"screenshot\", \"user_speaker_id\": \"user\", \"turns\": [{\"index\": 0, \"speaker_id\": \"other\", \"speaker\": \"other\", \"text\": \"Hey! Are you still up for coffee? ☕\", \"source\": \"vision\"}, {\"index\": 1, \"speaker_id\": \"user\", \"speaker\": \"user\", \"text\": \"Yes, I would love that!\", \"source\": \"vision\"}, {\"index\": 2, \"speaker_id\": \"other\", \"speaker\": \"other\", \"text\": \"Great — I know a quiet place nearby.\", \"source\": \"vision\"}, {\"index\": 3, \"speaker_id\": \"user\", \"speaker\": \"user\", \"text\": \"Perfect, see you at 7 😊\", \"source\": \"vision\"}]}"}
+  ]
+}

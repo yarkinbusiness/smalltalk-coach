@@ -6,4 +6,6 @@ __pycache__/
 *.pyc
 .venv/
 backend/data/
+backend/eval/vision_cases/real/*
+!backend/eval/vision_cases/real/.gitkeep
 *.xcodeproj/

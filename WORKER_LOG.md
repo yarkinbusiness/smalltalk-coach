@@ -308,3 +308,14 @@ Entry format (keep an entry under ~15 lines):
 - **Files touched:** VISION.md; ARCHITECTURE.md; DECISIONS.md; WORKER_LOG.md
 - **Result / verification:** Spot-verified the cited restart, rebuild, model-lock, pipeline, and roadmap records; `git diff --check` passed before this append.
 - **Open issues:** Pre-existing uncommitted PROGRESS.md change was retained; task edits touch only the four files above.
+
+## 2026-07-20 20:53 UTC — Build vision-quality eval harness
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Added the isolated vision extraction eval CLI, scoring, live-mode double gate,
+  synthetic mock fixtures, protected real-case directory, consent checklist, and mock-only tests.
+- **Files touched:** .gitignore; backend/eval/; backend/tests/test_vision_eval.py; WORKER_LOG.md
+- **Result / verification:** Synthetic mock CLI produced one pass and one intentional failure (exit 1);
+  ungated live CLI refused with exit 2; `backend/.venv/bin/python -m pytest backend/tests -q`:
+  57 passed, 1 skipped, 1 warning; `git diff --check` passed.
+- **Open issues:** Real consented screenshots and manual failure inspection remain founder-gated.

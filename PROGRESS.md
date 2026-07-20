@@ -230,6 +230,24 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-20 (cycle 25 — T-B vision-eval harness):** Worker:
+  `gpt-5.6-terra`, one round. Shipped `backend/eval/vision_eval.py`
+  (stdlib-only CLI: greedy difflib turn alignment; recall/fidelity/order/
+  attribution vs recorded thresholds 0.95/0.90/1.0/1.0; per-case +
+  aggregate report; `--out` JSON redacts transcript text by default),
+  double-gated live mode (`SMALLTALK_VISION_EVAL=1` + key, refused
+  before adapter construction), mock adapter reading per-case canned
+  payloads, 2 synthetic fixtures (one passing, one deliberately
+  failing), gitignored `real/` case dir + consent/anonymization
+  checklist in `backend/eval/README.md`, 6 new tests. Reuses
+  `extract_transcript`/`AnthropicVisionAdapter` — model lock untouched,
+  zero API spend. Brain verification: **57 passed, 1 skipped** (own
+  run); mock CLI exit 1 with the intended PASS/FAIL split (own run);
+  ungated live exit 2 (own run); gitignore probe blocked; mandatory
+  simulator launch clean — ACCEPTED. The founder screenshot gate is now
+  "drop image + expected.json into backend/eval/vision_cases/real/, run
+  one command." **Next:** T-C, diagnosis retry hardening.
+
 - **2026-07-20 (cycle 24 — T-A docs sync; v2 execution begins):** First
   cycle of the founder-ordered v2 execution (T-K/T-L and the
   real-screenshot eval stay deferred as founder-gated). Worker:

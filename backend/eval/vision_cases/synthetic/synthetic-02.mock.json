@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "source_kind": "screenshot",
+  "user_speaker_id": null,
+  "turns": [
+    {"index": 0, "speaker_id": "other", "speaker": "other", "text": "I began pottery classes.", "source": "vision"},
+    {"index": 1, "speaker_id": "other", "speaker": "other", "text": "What hobby have you been enjoying?", "source": "vision"}
+  ]
+}

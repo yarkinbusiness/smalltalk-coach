@@ -1,0 +1,13 @@
+{
+  "case_id": "synthetic-01",
+  "image": "synthetic-01.png",
+  "media_type": "image/png",
+  "user_message_side": "right",
+  "expected_turns": [
+    {"speaker": "other", "text": "Hey! Are you still up for coffee? ☕"},
+    {"speaker": "user", "text": "Yes, I would love that!"},
+    {"speaker": "other", "text": "Great — I know a quiet place nearby."},
+    {"speaker": "user", "text": "Perfect, see you at 7 😊"}
+  ],
+  "notes": "Both sides, small bubbles, and emoji."
+}

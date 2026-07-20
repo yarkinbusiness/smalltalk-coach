@@ -1,0 +1,12 @@
+{
+  "case_id": "synthetic-02",
+  "image": "synthetic-02.png",
+  "media_type": "image/png",
+  "user_message_side": "unknown",
+  "expected_turns": [
+    {"speaker": "other", "text": "I started pottery classes last month."},
+    {"speaker": "other", "text": "It is harder than it looks!"},
+    {"speaker": "other", "text": "What hobby have you been enjoying?"}
+  ],
+  "notes": "Unknown user side; intentionally degraded and incomplete mock response."
+}
