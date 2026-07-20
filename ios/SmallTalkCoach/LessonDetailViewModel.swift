@@ -1,6 +1,11 @@
 import Combine
 import Foundation
 
+enum LessonDetailMode: Equatable {
+    case standard
+    case review
+}
+
 @MainActor
 final class LessonDetailViewModel: ObservableObject {
     enum LoadPhase: Equatable {
@@ -26,27 +31,37 @@ final class LessonDetailViewModel: ObservableObject {
     @Published private(set) var freeDrafts: [Int: String] = [:]
 
     let lessonID: String
+    let mode: LessonDetailMode
     private let client: any LessonAPI
+    private let reviewClient: any ReviewAPI
     private let pendingReflectionStore: PendingReflectionStore
 
     init(
         lessonID: String,
         client: any LessonAPI = APIClient(),
+        reviewClient: any ReviewAPI = APIClient(),
+        mode: LessonDetailMode = .standard,
         pendingReflectionStore: PendingReflectionStore = PendingReflectionStore()
     ) {
         self.lessonID = lessonID
         self.client = client
+        self.reviewClient = reviewClient
+        self.mode = mode
         self.pendingReflectionStore = pendingReflectionStore
     }
 
     init(
         lesson: Lesson,
         client: any LessonAPI = APIClient(),
+        reviewClient: any ReviewAPI = APIClient(),
+        mode: LessonDetailMode = .standard,
         pendingReflectionStore: PendingReflectionStore = PendingReflectionStore()
     ) {
         self.lessonID = lesson.id
         self.lesson = lesson
         self.client = client
+        self.reviewClient = reviewClient
+        self.mode = mode
         self.pendingReflectionStore = pendingReflectionStore
         self.loadPhase = .loaded
     }
@@ -103,11 +118,17 @@ final class LessonDetailViewModel: ObservableObject {
 
         completionState = .submitting
         do {
-            let response = try await client.completeLesson(id: lessonID, answers: submissionAnswers)
+            let response: CompletionResponse
+            switch mode {
+            case .standard:
+                response = try await client.completeLesson(id: lessonID, answers: submissionAnswers)
+            case .review:
+                response = try await reviewClient.reviewLesson(id: lessonID, answers: submissionAnswers)
+            }
             if response.completed {
                 completionFeedback = [:]
                 completionState = .completed(unlockedNext: response.unlockedNext)
-                if let lesson {
+                if mode == .standard, let lesson {
                     pendingReflectionStore.setPending(kind: "lesson", id: lesson.id, title: lesson.title)
                 }
             } else {

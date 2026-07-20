@@ -10,6 +10,11 @@ protocol StreakAPI {
     func streak(timezoneIdentifier: String) async throws -> StreakResponse
 }
 
+protocol ReviewAPI {
+    func reviewQueue(timezoneIdentifier: String) async throws -> ReviewQueueResponse
+    func reviewLesson(id: String, answers: [String: Int]) async throws -> CompletionResponse
+}
+
 protocol ProfileAPI {
     func profile() async throws -> ProfileResponse
 }
@@ -98,7 +103,7 @@ enum APIClientError: LocalizedError {
     }
 }
 
-struct APIClient: LessonAPI, StreakAPI, ProfileAPI, ReflectionAPI, CoachingAPI {
+struct APIClient: LessonAPI, StreakAPI, ReviewAPI, ProfileAPI, ReflectionAPI, CoachingAPI {
     private let session: URLSession
     private let configuration: APIConfiguration
     private let userIdentityStore: UserIdentityStore
@@ -132,6 +137,13 @@ struct APIClient: LessonAPI, StreakAPI, ProfileAPI, ReflectionAPI, CoachingAPI {
         )
     }
 
+    func reviewQueue(timezoneIdentifier: String) async throws -> ReviewQueueResponse {
+        try await send(
+            path: "users/\(userIdentityStore.userID())/review-queue",
+            queryItems: [URLQueryItem(name: "tz", value: timezoneIdentifier)]
+        )
+    }
+
     func profile() async throws -> ProfileResponse {
         try await send(path: "users/\(userIdentityStore.userID())/profile")
     }
@@ -155,11 +167,19 @@ struct APIClient: LessonAPI, StreakAPI, ProfileAPI, ReflectionAPI, CoachingAPI {
     }
 
     func completeLesson(id: String, answers: [String: Int]) async throws -> CompletionResponse {
+        try await submitCompletion(path: "lessons/\(id)/complete", answers: answers)
+    }
+
+    func reviewLesson(id: String, answers: [String: Int]) async throws -> CompletionResponse {
+        try await submitCompletion(path: "lessons/\(id)/review", answers: answers)
+    }
+
+    private func submitCompletion(path: String, answers: [String: Int]) async throws -> CompletionResponse {
         let request = CompletionRequest(
             userID: userIdentityStore.userID(),
             answers: answers.mapValues(JSONValue.integer)
         )
-        var urlRequest = URLRequest(url: try url(path: "lessons/\(id)/complete"))
+        var urlRequest = URLRequest(url: try url(path: path))
         urlRequest.httpMethod = "POST"
         urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
         urlRequest.httpBody = try encoder.encode(request)

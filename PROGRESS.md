@@ -33,26 +33,19 @@ P2, one loop cycle each; P3 items are founder decisions scheduled in
 parallel. All tasks respect the Haiku-only lock (P1 tasks are fully
 deterministic — no new API calls) and the existing loop protocol.
 
-- **P0 (hygiene/unblocking):**
-  1. **T-A** — retire stale roadmap sections + sync stale docs.
-     PROGRESS.md half done in this refresh; remaining: VISION.md status
-     header + Phase 2 annotations, ARCHITECTURE.md banner pointing to
-     COACHING_PIPELINE_V1 as the implemented design.
-  2. **T-B** — vision-eval harness (the non-gated half of the screenshot
-     eval): scoring script + synthetic fixtures + consent checklist, so
-     the founder gate becomes "drop screenshots, run one command."
-  3. **T-C** — diagnosis retry hardening: per-attempt code-only
-     failure-reason logging, configurable retry count (default 3).
-- **P1 (retention loop — the vision's differentiator):**
-  4. **T-D** — daily habit loop v1: streak + earned freezes, "Today"
-     card, opt-in local notifications (no APNs).
-  5. **T-E** — skill profile v1: deterministic longitudinal aggregation
-     of reports + completions, `GET /users/{id}/profile`, iOS surface.
-  6. **T-F** — reflection loop ("How did it go?", BRIEF Flow D), feeds
-     the profile.
-  7. **T-G** — review/spaced-repetition pass: fixed-interval review
-     queue, review counts as streak activity, option-order shuffling
-     (clears the L02 nit).
+- **P0 (hygiene/unblocking): ~~ALL DONE~~ (cycles 24–26, 2026-07-20/21)**
+  1. ~~**T-A** — retire stale roadmap sections + sync stale docs~~ — done.
+  2. ~~**T-B** — vision-eval harness~~ — done; founder gate is now "drop
+     screenshots into backend/eval/vision_cases/real/, run one command."
+  3. ~~**T-C** — diagnosis retry hardening~~ — done.
+- **P1 (retention loop): ~~ALL DONE~~ (cycles 27–34, 2026-07-21)**
+  4. ~~**T-D** — daily habit loop v1~~ — done (streak/freezes/Today card/
+     opt-in local reminders).
+  5. ~~**T-E** — skill profile v1~~ — done (profile endpoint + Home
+     surface).
+  6. ~~**T-F** — reflection loop~~ — done (Flow D end to end).
+  7. ~~**T-G** — review/spaced repetition~~ — done (3/7/21 ladder,
+     prioritized queue, review mode; L02 nit cleared).
 - **P2 (activation + v1 Must-Haves):**
   8. **T-H** — onboarding + baseline (BRIEF Flow A), hosts notification
      opt-in.
@@ -229,6 +222,22 @@ items assume. -->
    4 workers → synthesized report) against real CMA.
 
 ## Cycle log
+
+- **2026-07-21 (cycle 34 — T-G iOS: review mode; T-G COMPLETE — P1 TIER
+  COMPLETE):** Worker: `gpt-5.6-terra`, one round. LessonDetail gains a
+  review mode (submits to `POST /lessons/{id}/review`; passing reviews
+  never arm a reflection — that stays first-completion/report-only),
+  Today card renders `kind: "review"` targets, Home gains a "Review due"
+  section (top 3, overdue + dimension tags, review-mode deep links),
+  TodayViewModel fetches streak + queue concurrently with non-blocking
+  failures; extracted testable `TodayCardTargetState`. Brain
+  verification: **51 XCTests, 0 failures** (own run; 4 new, first
+  round); mandatory simulator launch clean — ACCEPTED. **The v2 P1
+  retention loop is now fully shipped: streak/freezes/Today +
+  reminders (T-D), longitudinal skill profile (T-E), reflection Flow D
+  (T-F), spaced review (T-G) — all deterministic, zero new API spend
+  under the Haiku lock.** **Next:** P2 — cycle 35, T-H onboarding +
+  baseline (Flow A).
 
 - **2026-07-21 (cycle 33 — T-G backend: spaced review):** Worker:
   `gpt-5.6-terra`, one round. Shipped `backend/app/review.py` (3/7/21-

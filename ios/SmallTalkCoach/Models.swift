@@ -335,6 +335,27 @@ struct StreakResponse: Codable, Equatable {
     }
 }
 
+struct ReviewQueueResponse: Codable, Equatable {
+    let due: [ReviewDueLesson]
+}
+
+struct ReviewDueLesson: Codable, Equatable, Identifiable {
+    let lessonID: String
+    let title: String
+    let unitID: String
+    let daysOverdue: Int
+    let dimension: String
+
+    var id: String { lessonID }
+
+    enum CodingKeys: String, CodingKey {
+        case title, dimension
+        case lessonID = "lesson_id"
+        case unitID = "unit_id"
+        case daysOverdue = "days_overdue"
+    }
+}
+
 struct ProfileResponse: Codable, Equatable {
     let reportCount: Int
     let dimensions: [String: ProfileDimension]

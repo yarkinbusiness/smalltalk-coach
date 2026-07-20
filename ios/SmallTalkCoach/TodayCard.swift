@@ -1,5 +1,11 @@
 import SwiftUI
 
+enum TodayCardTargetState: Equatable {
+    case lesson(lessonID: String, title: String)
+    case review(lessonID: String, title: String)
+    case allComplete
+}
+
 @MainActor
 final class TodayViewModel: ObservableObject {
     enum Phase: Equatable {
@@ -10,26 +16,57 @@ final class TodayViewModel: ObservableObject {
     }
 
     @Published private(set) var streak: StreakResponse?
+    @Published private(set) var reviewQueue: ReviewQueueResponse?
     @Published private(set) var phase: Phase = .idle
 
     private let client: any StreakAPI
+    private let reviewClient: any ReviewAPI
     let reminderScheduler: any ReminderScheduling
 
     init(
         client: any StreakAPI = APIClient(),
+        reviewClient: any ReviewAPI = APIClient(),
         reminderScheduler: any ReminderScheduling = LocalReminderScheduler()
     ) {
         self.client = client
+        self.reviewClient = reviewClient
         self.reminderScheduler = reminderScheduler
     }
 
+    var dueLessons: [ReviewDueLesson] { reviewQueue?.due ?? [] }
+
     func load() async {
         phase = .loading
-        do {
-            streak = try await client.streak(timezoneIdentifier: TimeZone.current.identifier)
+        async let streakResult = fetchStreak()
+        async let reviewQueueResult = fetchReviewQueue()
+        let (loadedStreak, loadedReviewQueue) = await (streakResult, reviewQueueResult)
+
+        switch loadedStreak {
+        case .success(let streak):
+            self.streak = streak
             phase = .loaded
-        } catch {
+        case .failure(let error):
             phase = .failed(error.localizedDescription)
+        }
+
+        if case .success(let reviewQueue) = loadedReviewQueue {
+            self.reviewQueue = reviewQueue
+        }
+    }
+
+    private func fetchStreak() async -> Result<StreakResponse, Error> {
+        do {
+            return .success(try await client.streak(timezoneIdentifier: TimeZone.current.identifier))
+        } catch {
+            return .failure(error)
+        }
+    }
+
+    private func fetchReviewQueue() async -> Result<ReviewQueueResponse, Error> {
+        do {
+            return .success(try await reviewClient.reviewQueue(timezoneIdentifier: TimeZone.current.identifier))
+        } catch {
+            return .failure(error)
         }
     }
 }
@@ -185,26 +222,51 @@ struct TodayCard: View {
 
     @ViewBuilder
     private var targetLine: some View {
-        if let target = viewModel.streak?.today,
-           target.kind == "lesson",
-           let lessonID = target.lessonID,
-           let title = target.title {
-            NavigationLink {
-                LessonDetailView(lessonID: lessonID) { _ in
-                    onCompleted()
+        if let target = viewModel.streak?.today {
+            switch Self.targetState(for: target) {
+            case .lesson(let lessonID, let title):
+                NavigationLink {
+                    LessonDetailView(lessonID: lessonID) { _ in
+                        onCompleted()
+                    }
+                } label: {
+                    Label("Today: \(title)", systemImage: "book")
                 }
-            } label: {
-                Label("Today: \(title)", systemImage: "book")
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Today’s lesson: \(title)")
+            case .review(let lessonID, let title):
+                NavigationLink {
+                    LessonDetailView(lessonID: lessonID, mode: .review) { _ in
+                        onCompleted()
+                    }
+                } label: {
+                    Label("Review: \(title)", systemImage: "arrow.counterclockwise")
+                }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Today’s review: \(title)")
+            case .allComplete:
+                Text("All lessons complete — bring a real conversation to Coaching.")
+                    .foregroundStyle(.secondary)
+                    .accessibilityLabel("All lessons complete. Bring a real conversation to Coaching.")
             }
-            .accessibilityElement(children: .combine)
-            .accessibilityLabel("Today’s lesson: \(title)")
-        } else if viewModel.streak != nil {
-            Text("All lessons complete — bring a real conversation to Coaching.")
-                .foregroundStyle(.secondary)
-                .accessibilityLabel("All lessons complete. Bring a real conversation to Coaching.")
         } else {
             Text("Your next practice will appear here.")
                 .foregroundStyle(.secondary)
+        }
+    }
+
+    static func targetState(for target: TodayTarget) -> TodayCardTargetState {
+        guard let lessonID = target.lessonID, let title = target.title else {
+            return .allComplete
+        }
+
+        switch target.kind {
+        case "lesson":
+            return .lesson(lessonID: lessonID, title: title)
+        case "review":
+            return .review(lessonID: lessonID, title: title)
+        default:
+            return .allComplete
         }
     }
 

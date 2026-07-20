@@ -430,3 +430,17 @@ Entry format (keep an entry under ~15 lines):
 - **Result / verification:** `backend/.venv/bin/python -m pytest backend/tests -q`:
   92 passed, 1 skipped, 1 warning; `compileall`, L02 JSON parsing, and `git diff --check` passed.
 - **Open issues:** none
+
+## 2026-07-20 22:09 UTC — Surface review mode and review-due lessons on iOS
+- **Model:** gpt-5.6-terra
+- **Status:** partial
+- **What was done:** Added review queue/API models and calls, review-mode lesson submission without
+  reflections, Today review targets, and Home’s three-item review-due section; added focused XCTest coverage.
+- **Files touched:** ios/SmallTalkCoach/Models.swift; ios/SmallTalkCoach/APIClient.swift;
+  ios/SmallTalkCoach/LessonDetailView.swift; ios/SmallTalkCoach/LessonDetailViewModel.swift;
+  ios/SmallTalkCoach/TodayCard.swift; ios/SmallTalkCoach/HomeView.swift;
+  ios/SmallTalkCoachTests/SmallTalkCoachTests.swift; WORKER_LOG.md
+- **Result / verification:** `cd ios && xcodegen generate`, generic-simulator `xcodebuild build-for-testing`,
+  and `git diff --check` passed. iPhone 16 destination build/XCTest were blocked by CoreSimulatorService
+  connection refusal and no available runtimes.
+- **Open issues:** Run XCTest on a host with a working iPhone 16 simulator service.

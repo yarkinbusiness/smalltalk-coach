@@ -7,9 +7,16 @@ struct LessonDetailView: View {
     init(
         lessonID: String,
         client: any LessonAPI = APIClient(),
+        reviewClient: any ReviewAPI = APIClient(),
+        mode: LessonDetailMode = .standard,
         onCompleted: @escaping (String?) -> Void = { _ in }
     ) {
-        _viewModel = StateObject(wrappedValue: LessonDetailViewModel(lessonID: lessonID, client: client))
+        _viewModel = StateObject(wrappedValue: LessonDetailViewModel(
+            lessonID: lessonID,
+            client: client,
+            reviewClient: reviewClient,
+            mode: mode
+        ))
         self.onCompleted = onCompleted
     }
 
@@ -51,6 +58,15 @@ struct LessonDetailView: View {
     private func lessonContent(_ lesson: Lesson) -> some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 20) {
+                if viewModel.mode == .review {
+                    Label("Review", systemImage: "arrow.counterclockwise")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.blue)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(.blue.opacity(0.12), in: Capsule())
+                }
+
                 Text(lesson.concept)
                     .font(.title3.weight(.semibold))
 
@@ -163,7 +179,9 @@ struct LessonDetailView: View {
         switch viewModel.completionState {
         case .completed(let unlockedNext):
             Label(
-                unlockedNext.map { "Lesson unlocked: \($0)" } ?? "You completed the learning path.",
+                viewModel.mode == .review
+                    ? "Review complete"
+                    : (unlockedNext.map { "Lesson unlocked: \($0)" } ?? "You completed the learning path."),
                 systemImage: "checkmark.seal.fill"
             )
             .font(.headline)
@@ -186,7 +204,7 @@ struct LessonDetailView: View {
                     ProgressView()
                         .frame(maxWidth: .infinity)
                 } else {
-                    Text("Complete lesson")
+                    Text(viewModel.mode == .review ? "Complete review" : "Complete lesson")
                         .frame(maxWidth: .infinity)
                 }
             }

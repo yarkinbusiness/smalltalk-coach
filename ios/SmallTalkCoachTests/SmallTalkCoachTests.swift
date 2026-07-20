@@ -155,6 +155,53 @@ final class SmallTalkCoachTests: XCTestCase {
         XCTAssertNil(unknown.today.unitID)
     }
 
+    func testDecodesReviewQueueContractIncludingEmptyDueList() throws {
+        let fixture = """
+        {
+          "due": [{
+            "lesson_id": "l04-answer-and-return", "title": "Answer, then return",
+            "unit_id": "u2", "days_overdue": 1, "dimension": "reciprocity"
+          }]
+        }
+        """
+
+        let queue = try JSONDecoder().decode(ReviewQueueResponse.self, from: Data(fixture.utf8))
+
+        XCTAssertEqual(queue.due, [ReviewDueLesson(
+            lessonID: "l04-answer-and-return",
+            title: "Answer, then return",
+            unitID: "u2",
+            daysOverdue: 1,
+            dimension: "reciprocity"
+        )])
+        XCTAssertEqual(queue.due.first?.id, "l04-answer-and-return")
+
+        let emptyQueue = try JSONDecoder().decode(ReviewQueueResponse.self, from: Data("{\"due\": []}".utf8))
+        XCTAssertTrue(emptyQueue.due.isEmpty)
+    }
+
+    func testReviewTodayTargetDecodesAndRoutesToReview() throws {
+        let fixture = """
+        {
+          "streak_days": 3, "active_today": false, "freezes": 0,
+          "today": {"kind": "review", "lesson_id": "l04-answer-and-return",
+                    "title": "Answer, then return", "unit_id": "u2"}
+        }
+        """
+
+        let streak = try JSONDecoder().decode(StreakResponse.self, from: Data(fixture.utf8))
+
+        XCTAssertEqual(streak.today.kind, "review")
+        XCTAssertEqual(
+            TodayCard.targetState(for: streak.today),
+            .review(lessonID: "l04-answer-and-return", title: "Answer, then return")
+        )
+        XCTAssertEqual(
+            TodayCard.targetState(for: TodayTarget(kind: "future_kind", lessonID: "l01", title: "First hello", unitID: "u1")),
+            .allComplete
+        )
+    }
+
     func testProfileResponseDecodesContractWithNullWeaknessEmptyScoresAndUnknownDimension() throws {
         let fixture = """
         {
@@ -381,9 +428,10 @@ final class SmallTalkCoachTests: XCTestCase {
         defer { defaults.removePersistentDomain(forName: suiteName) }
         let completion = CompletionResponse(completed: true, feedback: nil, unlockedNext: nil)
         let store = PendingReflectionStore(defaults: defaults, sessionToken: "creating")
+        let client = StubLessonAPI(completionResult: .success(completion))
         let viewModel = LessonDetailViewModel(
             lesson: detailLesson(),
-            client: StubLessonAPI(completionResult: .success(completion)),
+            client: client,
             pendingReflectionStore: store
         )
         viewModel.selectAnswer(0, forPartAt: 0)
@@ -395,6 +443,38 @@ final class SmallTalkCoachTests: XCTestCase {
         XCTAssertEqual(laterSession.pending()?.kind, "lesson")
         XCTAssertEqual(laterSession.pending()?.id, "l01-first-hello")
         XCTAssertEqual(laterSession.pending()?.title, "First hello")
+        XCTAssertEqual(client.completedLessonIDs, ["l01-first-hello"])
+        XCTAssertTrue(client.reviewedLessonIDs.isEmpty)
+    }
+
+    @MainActor
+    func testReviewLessonCompletionUsesReviewEndpointAndDoesNotArmReflection() async throws {
+        let suiteName = "ReviewReflection-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let completion = CompletionResponse(completed: true, feedback: nil, unlockedNext: nil)
+        let store = PendingReflectionStore(defaults: defaults, sessionToken: "creating")
+        let client = StubLessonAPI(
+            completionResult: .success(completion),
+            reviewResult: .success(completion)
+        )
+        let viewModel = LessonDetailViewModel(
+            lesson: detailLesson(),
+            client: client,
+            reviewClient: client,
+            mode: .review,
+            pendingReflectionStore: store
+        )
+        viewModel.selectAnswer(0, forPartAt: 0)
+        viewModel.selectAnswer(0, forPartAt: 2)
+
+        await viewModel.submit()
+
+        let laterSession = PendingReflectionStore(defaults: defaults, sessionToken: "later")
+        XCTAssertEqual(viewModel.completionState, .completed(unlockedNext: nil))
+        XCTAssertEqual(client.reviewedLessonIDs, ["l01-first-hello"])
+        XCTAssertTrue(client.completedLessonIDs.isEmpty)
+        XCTAssertNil(laterSession.pending())
     }
 
     @MainActor
@@ -424,8 +504,8 @@ final class SmallTalkCoachTests: XCTestCase {
             freezes: 1,
             today: TodayTarget(kind: "lesson", lessonID: "l02-use-the-setting", title: "Use the setting", unitID: "u1")
         )
-        let client = StubStreakAPI(result: .success(response))
-        let viewModel = TodayViewModel(client: client, reminderScheduler: StubReminderScheduler())
+        let client = StubStreakAPI(result: .success(response), reviewQueueResult: .success(ReviewQueueResponse(due: [])))
+        let viewModel = TodayViewModel(client: client, reviewClient: client, reminderScheduler: StubReminderScheduler())
 
         await viewModel.load()
 
@@ -438,6 +518,41 @@ final class SmallTalkCoachTests: XCTestCase {
 
         XCTAssertEqual(viewModel.phase, .failed("You appear to be offline."))
         XCTAssertEqual(viewModel.streak, response)
+    }
+
+    @MainActor
+    func testTodayViewModelExposesDueLessonsWhenQueueSucceedsAndKeepsStreakWhenQueueFails() async {
+        let response = StreakResponse(
+            streakDays: 3,
+            activeToday: false,
+            freezes: 0,
+            today: TodayTarget(kind: "lesson", lessonID: "l02-use-the-setting", title: "Use the setting", unitID: "u1")
+        )
+        let due = ReviewDueLesson(
+            lessonID: "l04-answer-and-return",
+            title: "Answer, then return",
+            unitID: "u2",
+            daysOverdue: 2,
+            dimension: "reciprocity"
+        )
+        let client = StubStreakAPI(
+            result: .success(response),
+            reviewQueueResult: .success(ReviewQueueResponse(due: [due]))
+        )
+        let viewModel = TodayViewModel(client: client, reviewClient: client, reminderScheduler: StubReminderScheduler())
+
+        await viewModel.load()
+
+        XCTAssertEqual(viewModel.phase, .loaded)
+        XCTAssertEqual(viewModel.dueLessons, [due])
+        XCTAssertEqual(client.reviewQueueTimezoneIdentifiers, [TimeZone.current.identifier])
+
+        client.reviewQueueResult = .failure(StubError.offline)
+        await viewModel.load()
+
+        XCTAssertEqual(viewModel.phase, .loaded)
+        XCTAssertEqual(viewModel.streak, response)
+        XCTAssertEqual(viewModel.dueLessons, [due])
     }
 
     @MainActor
@@ -1015,16 +1130,21 @@ final class SmallTalkCoachTests: XCTestCase {
     }
 }
 
-private final class StubLessonAPI: LessonAPI {
+private final class StubLessonAPI: LessonAPI, ReviewAPI {
     var lessonResult: Result<Lesson, Error>
     var completionResult: Result<CompletionResponse, Error>
+    var reviewResult: Result<CompletionResponse, Error>
+    var completedLessonIDs: [String] = []
+    var reviewedLessonIDs: [String] = []
 
     init(
         lessonResult: Result<Lesson, Error> = .failure(StubError.unused),
-        completionResult: Result<CompletionResponse, Error> = .failure(StubError.unused)
+        completionResult: Result<CompletionResponse, Error> = .failure(StubError.unused),
+        reviewResult: Result<CompletionResponse, Error> = .failure(StubError.unused)
     ) {
         self.lessonResult = lessonResult
         self.completionResult = completionResult
+        self.reviewResult = reviewResult
     }
 
     func curriculum() async throws -> CurriculumResponse {
@@ -1036,21 +1156,46 @@ private final class StubLessonAPI: LessonAPI {
     }
 
     func completeLesson(id: String, answers: [String: Int]) async throws -> CompletionResponse {
-        try completionResult.get()
+        completedLessonIDs.append(id)
+        return try completionResult.get()
+    }
+
+    func reviewQueue(timezoneIdentifier: String) async throws -> ReviewQueueResponse {
+        throw StubError.unused
+    }
+
+    func reviewLesson(id: String, answers: [String: Int]) async throws -> CompletionResponse {
+        reviewedLessonIDs.append(id)
+        return try reviewResult.get()
     }
 }
 
-private final class StubStreakAPI: StreakAPI {
+private final class StubStreakAPI: StreakAPI, ReviewAPI {
     var result: Result<StreakResponse, Error>
+    var reviewQueueResult: Result<ReviewQueueResponse, Error>
     var timezoneIdentifiers: [String] = []
+    var reviewQueueTimezoneIdentifiers: [String] = []
 
-    init(result: Result<StreakResponse, Error> = .failure(StubError.unused)) {
+    init(
+        result: Result<StreakResponse, Error> = .failure(StubError.unused),
+        reviewQueueResult: Result<ReviewQueueResponse, Error> = .failure(StubError.unused)
+    ) {
         self.result = result
+        self.reviewQueueResult = reviewQueueResult
     }
 
     func streak(timezoneIdentifier: String) async throws -> StreakResponse {
         timezoneIdentifiers.append(timezoneIdentifier)
         return try result.get()
+    }
+
+    func reviewQueue(timezoneIdentifier: String) async throws -> ReviewQueueResponse {
+        reviewQueueTimezoneIdentifiers.append(timezoneIdentifier)
+        return try reviewQueueResult.get()
+    }
+
+    func reviewLesson(id: String, answers: [String: Int]) async throws -> CompletionResponse {
+        throw StubError.unused
     }
 }
 

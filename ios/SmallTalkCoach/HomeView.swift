@@ -73,6 +73,20 @@ struct HomeView: View {
                     }
                 }
 
+                if !todayViewModel.dueLessons.isEmpty {
+                    Section("Review due") {
+                        ForEach(Array(todayViewModel.dueLessons.prefix(3))) { lesson in
+                            NavigationLink {
+                                LessonDetailView(lessonID: lesson.lessonID, mode: .review) { _ in
+                                    Task { await refreshHome() }
+                                }
+                            } label: {
+                                ReviewDueRow(lesson: lesson)
+                            }
+                        }
+                    }
+                }
+
                 ForEach(curriculum.units) { unit in
                     Section("Unit \(unit.unit)") {
                         ForEach(unit.lessons) { lesson in
@@ -111,6 +125,39 @@ struct HomeView: View {
         await viewModel.load()
         await todayViewModel.load()
         await profileViewModel.load()
+    }
+}
+
+private struct ReviewDueRow: View {
+    let lesson: ReviewDueLesson
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(lesson.title)
+            HStack(spacing: 8) {
+                if lesson.daysOverdue > 0 {
+                    Text("\(lesson.daysOverdue)d overdue")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                Text(lesson.dimension.capitalized)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.blue)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+                    .background(.blue.opacity(0.12), in: Capsule())
+            }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(reviewAccessibilityLabel)
+    }
+
+    private var reviewAccessibilityLabel: String {
+        var label = "Review \(lesson.title), \(lesson.dimension)"
+        if lesson.daysOverdue > 0 {
+            label += ", \(lesson.daysOverdue) days overdue"
+        }
+        return label
     }
 }
 
