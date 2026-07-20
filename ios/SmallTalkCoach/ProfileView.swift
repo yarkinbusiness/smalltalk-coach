@@ -42,7 +42,8 @@ enum ProfileSummary {
         if let weakness = profile.recurringWeakness {
             return weaknessMessage(weakness)
         }
-        return "Skill profile — \(profile.reportCount) conversations analyzed"
+        let noun = profile.reportCount == 1 ? "conversation" : "conversations"
+        return "Skill profile — \(profile.reportCount) \(noun) analyzed"
     }
 
     static func weaknessMessage(_ weakness: ProfileRecurringWeakness) -> String {

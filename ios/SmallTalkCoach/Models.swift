@@ -340,9 +340,10 @@ struct ProfileResponse: Codable, Equatable {
     let dimensions: [String: ProfileDimension]
     let recurringWeakness: ProfileRecurringWeakness?
     let lessons: ProfileLessons
+    let reflections: ProfileReflections?
 
     enum CodingKeys: String, CodingKey {
-        case dimensions, lessons
+        case dimensions, lessons, reflections
         case reportCount = "report_count"
         case recurringWeakness = "recurring_weakness"
     }
@@ -356,6 +357,64 @@ struct ProfileResponse: Codable, Equatable {
                 dimension: dimension
             )
         }
+    }
+}
+
+struct ProfileReflections: Codable, Equatable {
+    let counts: [String: Int]
+    let recent: [ProfileReflectionRecent]
+}
+
+struct ProfileReflectionRecent: Codable, Equatable {
+    let subjectKind: String
+    let subjectID: String
+    let outcome: ReflectionOutcome
+    let createdAt: String
+
+    enum CodingKeys: String, CodingKey {
+        case outcome
+        case subjectKind = "subject_kind"
+        case subjectID = "subject_id"
+        case createdAt = "created_at"
+    }
+}
+
+enum ReflectionOutcome: String, Codable, CaseIterable, Equatable, Identifiable {
+    case wentWell = "went_well"
+    case partly
+    case avoided
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .wentWell: return "Went well"
+        case .partly: return "Partly"
+        case .avoided: return "Avoided it"
+        }
+    }
+}
+
+struct ReflectionRequest: Codable, Equatable {
+    let subjectKind: String
+    let subjectID: String
+    let outcome: ReflectionOutcome
+    let note: String
+
+    enum CodingKeys: String, CodingKey {
+        case outcome, note
+        case subjectKind = "subject_kind"
+        case subjectID = "subject_id"
+    }
+}
+
+struct ReflectionCreated: Codable, Equatable {
+    let id: String
+    let createdAt: String
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case createdAt = "created_at"
     }
 }
 

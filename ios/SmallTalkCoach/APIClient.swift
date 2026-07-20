@@ -14,6 +14,10 @@ protocol ProfileAPI {
     func profile() async throws -> ProfileResponse
 }
 
+protocol ReflectionAPI {
+    func submitReflection(subjectKind: String, subjectID: String, outcome: ReflectionOutcome, note: String) async throws -> ReflectionCreated
+}
+
 protocol CoachingAPI {
     func health() async throws -> HealthResponse
     func diagnose(text: String, consentToProcess: Bool) async throws -> CoachingDiagnosisResponse
@@ -94,7 +98,7 @@ enum APIClientError: LocalizedError {
     }
 }
 
-struct APIClient: LessonAPI, StreakAPI, ProfileAPI, CoachingAPI {
+struct APIClient: LessonAPI, StreakAPI, ProfileAPI, ReflectionAPI, CoachingAPI {
     private let session: URLSession
     private let configuration: APIConfiguration
     private let userIdentityStore: UserIdentityStore
@@ -130,6 +134,20 @@ struct APIClient: LessonAPI, StreakAPI, ProfileAPI, CoachingAPI {
 
     func profile() async throws -> ProfileResponse {
         try await send(path: "users/\(userIdentityStore.userID())/profile")
+    }
+
+    func submitReflection(subjectKind: String, subjectID: String, outcome: ReflectionOutcome, note: String) async throws -> ReflectionCreated {
+        let request = ReflectionRequest(
+            subjectKind: subjectKind,
+            subjectID: subjectID,
+            outcome: outcome,
+            note: note
+        )
+        var urlRequest = URLRequest(url: try url(path: "users/\(userIdentityStore.userID())/reflections"))
+        urlRequest.httpMethod = "POST"
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        urlRequest.httpBody = try encoder.encode(request)
+        return try await send(urlRequest)
     }
 
     func lesson(id: String) async throws -> Lesson {

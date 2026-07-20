@@ -134,6 +134,7 @@ final class CoachingViewModel: ObservableObject {
     @Published private(set) var consentNeedsAttention = false
 
     private let client: any CoachingAPI
+    private let pendingReflectionStore: PendingReflectionStore
     private let pollIntervalNanoseconds: UInt64
     private let maximumPollAttempts: Int
     private var screenshotPayload: ScreenshotUploadPayload?
@@ -141,10 +142,12 @@ final class CoachingViewModel: ObservableObject {
 
     init(
         client: any CoachingAPI = APIClient(),
+        pendingReflectionStore: PendingReflectionStore = PendingReflectionStore(),
         pollIntervalNanoseconds: UInt64 = 2_000_000_000,
         maximumPollAttempts: Int = 45
     ) {
         self.client = client
+        self.pendingReflectionStore = pendingReflectionStore
         self.pollIntervalNanoseconds = pollIntervalNanoseconds
         self.maximumPollAttempts = maximumPollAttempts
     }
@@ -221,7 +224,9 @@ final class CoachingViewModel: ObservableObject {
         submissionState = .submitting
         do {
             switch try await client.diagnose(text: text, consentToProcess: consentGiven) {
-            case .report(let report): submissionState = .report(report)
+            case .report(let report):
+                recordPendingReflection(for: report)
+                submissionState = .report(report)
             case .safetyGuidance(let guidance): submissionState = .safetyGuidance(guidance)
             }
         } catch {
@@ -274,6 +279,7 @@ final class CoachingViewModel: ObservableObject {
                     }
                 case .report(let report):
                     screenshotJobID = nil
+                    recordPendingReflection(for: report)
                     submissionState = .report(report)
                     return
                 case .failed(let failure):
@@ -311,6 +317,14 @@ final class CoachingViewModel: ObservableObject {
 
     func retry() async {
         await submit()
+    }
+
+    private func recordPendingReflection(for report: CoachingReport) {
+        pendingReflectionStore.setPending(
+            kind: "report",
+            id: report.id,
+            title: "your coaching practice action"
+        )
     }
 }
 

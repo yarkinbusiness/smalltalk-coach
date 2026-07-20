@@ -230,6 +230,27 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-21 (cycle 32 — T-F iOS: reflection prompt; T-F COMPLETE;
+  FIRST REJECTION THIS RUN):** Worker: `gpt-5.6-terra`, **two rounds**.
+  Round 1 shipped the feature set (PendingReflectionStore with
+  per-cold-launch session token so the prompt only surfaces on a LATER
+  open; markers armed on lesson completion + fresh coaching reports,
+  most-recent-wins; sheet with three outcomes, capped optional note,
+  "Not now" clears for good; submit failure keeps pending for retry;
+  pluralization fix) but brain test run found 3 failures: `let
+  reflections: ProfileReflections? = nil` — a `let` with a default is
+  excluded from synthesized Codable decoding, so the additive profile
+  block never decoded. Round 2 fix as prescribed (default removed).
+  (Ops note: my first round-2 dispatch failed on a relative worker.sh
+  path from the wrong cwd — not a worker round.) Brain verification:
+  **47 XCTests, 0 failures** (own run); simulator launch clean AND the
+  prompt surfaced live on cold launch from the prior session's report
+  (screenshot-verified), singular copy confirmed — ACCEPTED. **Lesson
+  recorded:** Swift `let` + default value silently disables decoding —
+  a recurring-hazard class with this worker (cf. cycle-14 timestamps).
+  **Next:** cycle 33, T-G review/spaced repetition (backend), which
+  completes P1.
+
 - **2026-07-21 (cycle 31 — T-F backend: reflection records):** Worker:
   `gpt-5.6-terra`, one round. Reflections table (id/user/subject_kind
   lesson|report/subject_id/outcome went_well|partly|avoided/note ≤500

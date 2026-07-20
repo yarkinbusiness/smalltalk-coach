@@ -392,3 +392,28 @@ Entry format (keep an entry under ~15 lines):
 - **Result / verification:** `backend/.venv/bin/python -m pytest backend/tests -q`:
   84 passed, 1 skipped, 1 warning in 1.91s; `git diff --check` passed.
 - **Open issues:** none
+
+## 2026-07-20 21:47 UTC — Build iOS reflection prompt and profile copy fix
+- **Model:** gpt-5.6-terra
+- **Status:** partial
+- **What was done:** Added typed reflection submission/profile decoding, session-gated pending
+  markers from completed lessons and coaching reports, Home sheet presentation, retry-safe
+  prompt submission/dismissal, and singular profile-summary copy.
+- **Files touched:** ios/SmallTalkCoach/Models.swift; ios/SmallTalkCoach/APIClient.swift;
+  ios/SmallTalkCoach/ReflectionPrompt.swift; ios/SmallTalkCoach/HomeView.swift;
+  ios/SmallTalkCoach/LessonDetailViewModel.swift; ios/SmallTalkCoach/CoachingViewModel.swift;
+  ios/SmallTalkCoach/ProfileView.swift; ios/SmallTalkCoachTests/SmallTalkCoachTests.swift; WORKER_LOG.md
+- **Result / verification:** `cd ios && xcodegen generate`, generic-simulator `xcodebuild build`,
+  and final `xcodebuild build-for-testing` passed; `git diff --check` passed. iPhone 16 destination
+  build and XCTest were attempted but CoreSimulatorService had no available runtime, so XCTest did not execute.
+- **Open issues:** Run the compiled XCTest suite on a host with a working iPhone 16 simulator service.
+
+## 2026-07-20 21:53 UTC — Fix optional profile reflections decoding
+- **Model:** gpt-5.6-terra
+- **Status:** partial
+- **What was done:** Removed the default initializer from optional `ProfileResponse.reflections`,
+  restoring synthesized `decodeIfPresent`; updated the two direct test constructions with `nil`.
+- **Files touched:** ios/SmallTalkCoach/Models.swift; ios/SmallTalkCoachTests/SmallTalkCoachTests.swift; WORKER_LOG.md
+- **Result / verification:** `cd ios && xcodegen generate` and generic-simulator `xcodebuild build`
+  passed; `git diff --check` passed. Named iPhone 16 build/XCTest could not run: CoreSimulatorService had no runtime.
+- **Open issues:** Run the XCTest suite on a host with a working iPhone 16 simulator service.

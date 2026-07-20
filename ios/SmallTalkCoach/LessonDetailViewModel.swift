@@ -27,16 +27,27 @@ final class LessonDetailViewModel: ObservableObject {
 
     let lessonID: String
     private let client: any LessonAPI
+    private let pendingReflectionStore: PendingReflectionStore
 
-    init(lessonID: String, client: any LessonAPI = APIClient()) {
+    init(
+        lessonID: String,
+        client: any LessonAPI = APIClient(),
+        pendingReflectionStore: PendingReflectionStore = PendingReflectionStore()
+    ) {
         self.lessonID = lessonID
         self.client = client
+        self.pendingReflectionStore = pendingReflectionStore
     }
 
-    init(lesson: Lesson, client: any LessonAPI = APIClient()) {
+    init(
+        lesson: Lesson,
+        client: any LessonAPI = APIClient(),
+        pendingReflectionStore: PendingReflectionStore = PendingReflectionStore()
+    ) {
         self.lessonID = lesson.id
         self.lesson = lesson
         self.client = client
+        self.pendingReflectionStore = pendingReflectionStore
         self.loadPhase = .loaded
     }
 
@@ -96,6 +107,9 @@ final class LessonDetailViewModel: ObservableObject {
             if response.completed {
                 completionFeedback = [:]
                 completionState = .completed(unlockedNext: response.unlockedNext)
+                if let lesson {
+                    pendingReflectionStore.setPending(kind: "lesson", id: lesson.id, title: lesson.title)
+                }
             } else {
                 completionFeedback = response.feedback ?? [:]
                 completionState = .needsReview

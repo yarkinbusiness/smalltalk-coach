@@ -183,6 +183,30 @@ final class SmallTalkCoachTests: XCTestCase {
         XCTAssertEqual(profile.lessons.completedCount, 4)
         XCTAssertEqual(profile.lessons.recommendedNotTaken.first?.lessonID, "l04-answer-and-return")
         XCTAssertNotNil(profile.dimensions["unknown_future_dimension"])
+        XCTAssertNil(profile.reflections)
+    }
+
+    func testProfileResponseDecodesReflectionsBlock() throws {
+        let fixture = """
+        {
+          "report_count": 1,
+          "dimensions": {}, "recurring_weakness": null,
+          "lessons": {"completed_count": 0, "recommended_not_taken": []},
+          "reflections": {
+            "counts": {"went_well": 2, "partly": 1, "avoided": 0},
+            "recent": [{
+              "subject_kind": "lesson", "subject_id": "l01-first-hello",
+              "outcome": "went_well", "created_at": "2026-07-21T12:00:00+00:00"
+            }]
+          }
+        }
+        """
+
+        let profile = try JSONDecoder().decode(ProfileResponse.self, from: Data(fixture.utf8))
+
+        XCTAssertEqual(profile.reflections?.counts["went_well"], 2)
+        XCTAssertEqual(profile.reflections?.recent.first?.subjectID, "l01-first-hello")
+        XCTAssertEqual(profile.reflections?.recent.first?.outcome, .wentWell)
     }
 
     func testProfileOrderedDimensionsUseKnownFixedOrderRegardlessOfDictionaryOrder() {
@@ -197,7 +221,8 @@ final class SmallTalkCoachTests: XCTestCase {
                 "unknown": emptyDimension
             ],
             recurringWeakness: nil,
-            lessons: ProfileLessons(completedCount: 0, recommendedNotTaken: [])
+            lessons: ProfileLessons(completedCount: 0, recommendedNotTaken: []),
+            reflections: nil
         )
 
         XCTAssertEqual(profile.orderedDimensions.map(\.key), ["warmth", "curiosity", "reciprocity", "flow"])
@@ -235,9 +260,160 @@ final class SmallTalkCoachTests: XCTestCase {
         )
 
         XCTAssertEqual(
+            ProfileSummary.message(for: profileResponse(reportCount: 1)),
+            "Skill profile — 1 conversation analyzed"
+        )
+
+        XCTAssertEqual(
             ProfileSummary.message(for: profileResponse(reportCount: 2)),
             "Skill profile — 2 conversations analyzed"
         )
+    }
+
+    func testPendingReflectionStoreRoundTripSessionBoundaryAndMostRecentWins() throws {
+        let suiteName = "ReflectionStore-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let firstSession = PendingReflectionStore(defaults: defaults, sessionToken: "first-session")
+
+        firstSession.setPending(kind: "lesson", id: "l01", title: "First hello")
+        XCTAssertNil(firstSession.pending(), "A marker must not surface in its creating session")
+
+        let laterSession = PendingReflectionStore(defaults: defaults, sessionToken: "later-session")
+        XCTAssertEqual(laterSession.pending(), PendingReflection(
+            kind: "lesson", id: "l01", title: "First hello", createdSessionToken: "first-session"
+        ))
+
+        laterSession.setPending(kind: "report", id: "cr_123", title: "your coaching practice action")
+        let newestSession = PendingReflectionStore(defaults: defaults, sessionToken: "newest-session")
+        XCTAssertEqual(newestSession.pending()?.id, "cr_123")
+        XCTAssertEqual(newestSession.pending()?.kind, "report")
+
+        newestSession.clear()
+        XCTAssertNil(newestSession.pending())
+    }
+
+    @MainActor
+    func testReflectionPromptSubmitUsesExactPayloadClearsPendingAndCallsCompletion() async throws {
+        let suiteName = "ReflectionSubmit-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let creatingStore = PendingReflectionStore(defaults: defaults, sessionToken: "creating")
+        creatingStore.setPending(kind: "lesson", id: "l01-first-hello", title: "First hello")
+        let presentingStore = PendingReflectionStore(defaults: defaults, sessionToken: "presenting")
+        let client = StubReflectionAPI(result: .success(ReflectionCreated(id: "r_123", createdAt: "2026-07-21T12:00:00+00:00")))
+        var completionCount = 0
+        let viewModel = ReflectionPromptViewModel(client: client, pendingStore: presentingStore) {
+            completionCount += 1
+        }
+
+        viewModel.checkForPending()
+        await viewModel.submit(outcome: .partly, note: "I got started after a pause.")
+
+        XCTAssertEqual(client.requests, [ReflectionRequest(
+            subjectKind: "lesson", subjectID: "l01-first-hello", outcome: .partly, note: "I got started after a pause."
+        )])
+        XCTAssertNil(presentingStore.pending())
+        XCTAssertFalse(viewModel.isPresented)
+        XCTAssertEqual(completionCount, 1)
+    }
+
+    @MainActor
+    func testReflectionPromptFailureRetainsPendingAndExposesError() async throws {
+        let suiteName = "ReflectionFailure-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let creatingStore = PendingReflectionStore(defaults: defaults, sessionToken: "creating")
+        creatingStore.setPending(kind: "report", id: "cr_123", title: "your coaching practice action")
+        let presentingStore = PendingReflectionStore(defaults: defaults, sessionToken: "presenting")
+        let client = StubReflectionAPI(result: .failure(StubError.offline))
+        let viewModel = ReflectionPromptViewModel(client: client, pendingStore: presentingStore)
+
+        viewModel.checkForPending()
+        await viewModel.submit(outcome: .avoided, note: "")
+
+        XCTAssertEqual(client.requests.count, 1)
+        XCTAssertEqual(presentingStore.pending()?.id, "cr_123")
+        XCTAssertEqual(viewModel.errorMessage, "You appear to be offline.")
+        XCTAssertTrue(viewModel.isPresented)
+    }
+
+    @MainActor
+    func testReflectionPromptDismissClearsPendingWithoutPosting() async throws {
+        let suiteName = "ReflectionDismiss-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let creatingStore = PendingReflectionStore(defaults: defaults, sessionToken: "creating")
+        creatingStore.setPending(kind: "lesson", id: "l01", title: "First hello")
+        let presentingStore = PendingReflectionStore(defaults: defaults, sessionToken: "presenting")
+        let client = StubReflectionAPI()
+        let viewModel = ReflectionPromptViewModel(client: client, pendingStore: presentingStore)
+
+        viewModel.checkForPending()
+        viewModel.dismiss()
+
+        XCTAssertTrue(client.requests.isEmpty)
+        XCTAssertNil(presentingStore.pending())
+        XCTAssertFalse(viewModel.isPresented)
+    }
+
+    @MainActor
+    func testReflectionPromptCapsNotesAtFiveHundredCharacters() async throws {
+        let suiteName = "ReflectionNoteCap-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let creatingStore = PendingReflectionStore(defaults: defaults, sessionToken: "creating")
+        creatingStore.setPending(kind: "lesson", id: "l01", title: "First hello")
+        let presentingStore = PendingReflectionStore(defaults: defaults, sessionToken: "presenting")
+        let client = StubReflectionAPI(result: .success(ReflectionCreated(id: "r_1", createdAt: "now")))
+        let viewModel = ReflectionPromptViewModel(client: client, pendingStore: presentingStore)
+        let overlongNote = String(repeating: "a", count: 501)
+
+        XCTAssertEqual(viewModel.cappedNote(overlongNote).count, 500)
+        await viewModel.submit(outcome: .wentWell, note: overlongNote)
+        XCTAssertEqual(client.requests.first?.note.count, 500)
+    }
+
+    @MainActor
+    func testLessonCompletionArmsPendingReflection() async throws {
+        let suiteName = "LessonReflection-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let completion = CompletionResponse(completed: true, feedback: nil, unlockedNext: nil)
+        let store = PendingReflectionStore(defaults: defaults, sessionToken: "creating")
+        let viewModel = LessonDetailViewModel(
+            lesson: detailLesson(),
+            client: StubLessonAPI(completionResult: .success(completion)),
+            pendingReflectionStore: store
+        )
+        viewModel.selectAnswer(0, forPartAt: 0)
+        viewModel.selectAnswer(0, forPartAt: 2)
+
+        await viewModel.submit()
+
+        let laterSession = PendingReflectionStore(defaults: defaults, sessionToken: "later")
+        XCTAssertEqual(laterSession.pending()?.kind, "lesson")
+        XCTAssertEqual(laterSession.pending()?.id, "l01-first-hello")
+        XCTAssertEqual(laterSession.pending()?.title, "First hello")
+    }
+
+    @MainActor
+    func testCoachingReportArmsPendingReflection() async throws {
+        let suiteName = "ReportReflection-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let store = PendingReflectionStore(defaults: defaults, sessionToken: "creating")
+        let client = StubCoachingAPI(diagnosisResult: .success(.report(StubCoachingAPI.sampleReport)))
+        let viewModel = CoachingViewModel(client: client, pendingReflectionStore: store)
+        viewModel.text = "Them: Want to join us?"
+        viewModel.consentGiven = true
+
+        await viewModel.submit()
+
+        let laterSession = PendingReflectionStore(defaults: defaults, sessionToken: "later")
+        XCTAssertEqual(laterSession.pending()?.kind, "report")
+        XCTAssertEqual(laterSession.pending()?.id, "cr_123")
+        XCTAssertEqual(laterSession.pending()?.title, "your coaching practice action")
     }
 
     @MainActor
@@ -824,7 +1000,8 @@ final class SmallTalkCoachTests: XCTestCase {
                 "flow": dimension
             ],
             recurringWeakness: recurringWeakness,
-            lessons: ProfileLessons(completedCount: 0, recommendedNotTaken: [])
+            lessons: ProfileLessons(completedCount: 0, recommendedNotTaken: []),
+            reflections: nil
         )
     }
 
@@ -886,6 +1063,20 @@ private final class StubProfileAPI: ProfileAPI {
 
     func profile() async throws -> ProfileResponse {
         try result.get()
+    }
+}
+
+private final class StubReflectionAPI: ReflectionAPI {
+    var result: Result<ReflectionCreated, Error>
+    var requests: [ReflectionRequest] = []
+
+    init(result: Result<ReflectionCreated, Error> = .failure(StubError.unused)) {
+        self.result = result
+    }
+
+    func submitReflection(subjectKind: String, subjectID: String, outcome: ReflectionOutcome, note: String) async throws -> ReflectionCreated {
+        requests.append(ReflectionRequest(subjectKind: subjectKind, subjectID: subjectID, outcome: outcome, note: note))
+        return try result.get()
     }
 }
 

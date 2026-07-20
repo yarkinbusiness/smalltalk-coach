@@ -1,9 +1,11 @@
 import SwiftUI
 
 struct HomeView: View {
+    @Environment(\.scenePhase) private var scenePhase
     @StateObject private var viewModel = CurriculumViewModel()
     @StateObject private var todayViewModel = TodayViewModel()
     @StateObject private var profileViewModel = ProfileViewModel()
+    @StateObject private var reflectionPromptViewModel = ReflectionPromptViewModel()
 
     var body: some View {
         NavigationStack {
@@ -33,6 +35,25 @@ struct HomeView: View {
             await viewModel.loadIfNeeded()
             await todayViewModel.load()
             await profileViewModel.loadIfNeeded()
+            reflectionPromptViewModel.checkForPending()
+        }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active {
+                reflectionPromptViewModel.checkForPending()
+            }
+        }
+        .onChange(of: reflectionPromptViewModel.didSubmit) { _, didSubmit in
+            if didSubmit {
+                Task { await refreshHome() }
+            }
+        }
+        .sheet(isPresented: $reflectionPromptViewModel.isPresented) {
+            ReflectionPromptView(viewModel: reflectionPromptViewModel)
+                .onDisappear {
+                    if reflectionPromptViewModel.isPresented {
+                        reflectionPromptViewModel.dismiss()
+                    }
+                }
         }
     }
 
