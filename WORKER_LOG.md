@@ -330,3 +330,15 @@ Entry format (keep an entry under ~15 lines):
   46 passed, 1 warning; `backend/.venv/bin/python -m pytest backend/tests -q`:
   64 passed, 1 skipped, 1 warning; `git diff --check` passed.
 - **Open issues:** none
+
+## 2026-07-20 21:06 UTC — Add deterministic streak and Today endpoint backend
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Added timezone-aware replayed streak/freeze computation from raw
+  lesson completions and coaching reports, plus the next-unlocked-lesson Today endpoint.
+  Added parsing, DST, freeze, malformed-row, and endpoint contract coverage.
+- **Files touched:** backend/app/streak.py; backend/app/store.py; backend/app/main.py;
+  backend/tests/test_streak.py; backend/README.md; WORKER_LOG.md
+- **Result / verification:** `backend/.venv/bin/python -m pytest backend/tests -q`:
+  72 passed, 1 skipped, 1 warning; `git diff --check` passed.
+- **Open issues:** none

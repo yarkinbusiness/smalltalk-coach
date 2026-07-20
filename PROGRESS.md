@@ -230,6 +230,25 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-21 (cycle 27 — T-D backend: streak/freeze/today endpoint):**
+  Worker: `gpt-5.6-terra`, one round. Shipped `backend/app/streak.py`
+  (dual-format UTC timestamp parser — the cycle-14 mixed-format trap
+  handled explicitly, malformed rows skipped; pure deterministic replay:
+  activity days from lesson completions + coaching reports, freeze
+  earned per completed unit capped at 2, gap days consume a freeze only
+  when a streak exists, today-in-progress never consumes or resets),
+  `store.activity_timestamps` raw read, and
+  `GET /users/{id}/streak?tz=<IANA>` (zoneinfo DST-correct day
+  boundaries, invalid tz → 422 `invalid_timezone`, `today` target
+  reusing `_unlocked_lesson_id` — no duplicated unlock logic;
+  `all_complete` state; `kind` extensible for T-G "review"). 8 new
+  tests incl. US spring-forward day and mixed-format dedup. Zero API
+  calls. Brain verification: **72 passed, 1 skipped** (own run); live
+  endpoint probe matched the contract exactly (200 shape + 422); helper
+  reuse and int-unit formatting checked in source; mandatory simulator
+  launch clean — ACCEPTED. **Next:** cycle 28, T-D iOS half (Today
+  card + streak display + opt-in local notifications).
+
 - **2026-07-20 (cycle 26 — T-C diagnosis retry hardening; P0 TIER
   COMPLETE):** Worker: `gpt-5.6-terra`, one round. `diagnose()` now runs
   a bounded retry loop: default 3 attempts

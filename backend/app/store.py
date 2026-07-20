@@ -55,6 +55,28 @@ class ProgressStore:
                 ).fetchall()
         return {row[0] for row in rows}
 
+    def activity_timestamps(self, user_id: str) -> dict[str, list[Any]]:
+        """Return raw persisted timestamps used to derive daily activity."""
+        with closing(self._connect()) as connection:
+            with connection:
+                lesson_rows = connection.execute(
+                    """
+                    SELECT lesson_id, completed_at FROM lesson_completions
+                    WHERE user_id = ?
+                    """,
+                    (user_id,),
+                ).fetchall()
+                report_rows = connection.execute(
+                    """
+                    SELECT created_at FROM coaching_reports WHERE user_id = ?
+                    """,
+                    (user_id,),
+                ).fetchall()
+        return {
+            "lesson_completions": [(row[0], row[1]) for row in lesson_rows],
+            "coaching_reports": [row[0] for row in report_rows],
+        }
+
     def record_completion(self, user_id: str, lesson_id: str) -> None:
         with closing(self._connect()) as connection:
             with connection:

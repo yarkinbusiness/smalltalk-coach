@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime
 import os
 from pathlib import Path
 from typing import Any, AsyncIterator, Annotated
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import FastAPI, HTTPException, Query, Request
 from pydantic import BaseModel
@@ -13,6 +15,7 @@ from pydantic import BaseModel
 from .content import Curriculum, load_curriculum
 from .coaching import setup_coaching
 from .diagnosis import DiagnosisAdapter
+from .streak import compute_streak, parse_activity_timestamp
 from .store import ProgressStore
 
 
@@ -101,6 +104,63 @@ def create_app(
                 unit_lessons.append(item)
             units.append({"unit": unit, "lessons": unit_lessons})
         return {"units": units}
+
+    @app.get("/users/{user_id}/streak")
+    def get_streak(
+        user_id: str,
+        request: Request,
+        tz: str = "UTC",
+    ) -> dict[str, object]:
+        user_id = _require_user_id(user_id)
+        try:
+            timezone = ZoneInfo(tz)
+        except (ZoneInfoNotFoundError, ValueError) as error:
+            raise HTTPException(status_code=422, detail="invalid_timezone") from error
+
+        curriculum = curriculum_for(request)
+        store = progress_store_for(request)
+        timestamps = store.activity_timestamps(user_id)
+        lesson_completions = [
+            (lesson_id, parsed)
+            for lesson_id, raw_timestamp in timestamps["lesson_completions"]
+            if (parsed := parse_activity_timestamp(raw_timestamp)) is not None
+        ]
+        coaching_reports = [
+            parsed
+            for raw_timestamp in timestamps["coaching_reports"]
+            if (parsed := parse_activity_timestamp(raw_timestamp)) is not None
+        ]
+        unit_lessons: dict[int, list[str]] = {}
+        for lesson in curriculum.lessons:
+            unit_lessons.setdefault(lesson["unit"], []).append(lesson["id"])
+        streak = compute_streak(
+            lesson_completions,
+            coaching_reports,
+            unit_lessons,
+            timezone,
+            datetime.now(UTC),
+        )
+
+        completed = store.completed_lesson_ids(user_id)
+        unlocked_id = _unlocked_lesson_id(curriculum, completed)
+        if unlocked_id is None:
+            today: dict[str, str | None] = {
+                "kind": "all_complete", "lesson_id": None, "title": None, "unit_id": None,
+            }
+        else:
+            lesson = curriculum.lessons_by_id[unlocked_id]
+            today = {
+                "kind": "lesson",
+                "lesson_id": lesson["id"],
+                "title": lesson["title"],
+                "unit_id": f"u{lesson['unit']}",
+            }
+        return {
+            "streak_days": streak["streak_days"],
+            "active_today": streak["active_today"],
+            "freezes": streak["freezes"],
+            "today": today,
+        }
 
     @app.get("/lessons/{lesson_id}")
     def get_lesson(
