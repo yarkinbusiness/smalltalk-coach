@@ -230,6 +230,22 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-21 (cycle 30 — T-E iOS: skill-profile surface; T-E
+  COMPLETE):** Worker: `gpt-5.6-terra`, one round, honest partial
+  (sandbox blocks simulator; brain ran tests). Shipped
+  `ProfileView.swift` (ProfileViewModel; `ProfileSummaryRow` on Home
+  under Today with three summary states via testable `ProfileSummary`
+  helper; detail view: recurring-weakness callout, four dimensions in
+  fixed order with latest score + "3 → 4 → 4" history, not-yet-scored
+  copy, recommended-not-taken deep links into LessonDetailView),
+  ProfileAPI + models (unknown dimension keys tolerated), shared
+  refreshHome now reloads profile too. Brain verification: **39
+  XCTests, 0 failures on iPhone 16** (own run; 4 new); simulator launch
+  clean — "Your skills" row renders with real persisted data
+  (screenshot-verified) — ACCEPTED. **Nit for next iOS cycle:**
+  pluralization ("1 conversations analyzed"). **Next:** cycle 31, T-F
+  backend (reflection records + endpoint).
+
 - **2026-07-21 (cycle 29 — T-E backend: skill-profile endpoint):**
   Worker: `gpt-5.6-terra`, one round. Shipped `backend/app/profile.py`
   (strict per-row validation with defensive skips — malformed rows never

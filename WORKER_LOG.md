@@ -367,3 +367,16 @@ Entry format (keep an entry under ~15 lines):
 - **Result / verification:** `backend/.venv/bin/python -m pytest backend/tests -q`:
   78 passed, 1 skipped, 1 warning; `compileall` and `git diff --check` passed.
 - **Open issues:** none
+
+## 2026-07-20 21:31 UTC — Render iOS skill profile on Home
+- **Model:** gpt-5.6-terra
+- **Status:** partial
+- **What was done:** Added profile models/API seam, a shared Home profile view model and
+  summary row, profile detail sections/history/lesson deep links, and focused fake-backed tests.
+- **Files touched:** ios/SmallTalkCoach/Models.swift; ios/SmallTalkCoach/APIClient.swift;
+  ios/SmallTalkCoach/HomeView.swift; ios/SmallTalkCoach/ProfileView.swift;
+  ios/SmallTalkCoachTests/SmallTalkCoachTests.swift; WORKER_LOG.md
+- **Result / verification:** `cd ios && xcodegen generate`, generic-simulator `xcodebuild build`,
+  and `build-for-testing` passed using `/private/tmp` derived data; `git diff --check` passed.
+  iPhone 16 / iOS 18.2 build and XCTest were attempted but CoreSimulatorService refused connections.
+- **Open issues:** Run the XCTest suite on a host with a working iPhone 16 / iOS 18.2 simulator service.

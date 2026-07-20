@@ -10,6 +10,10 @@ protocol StreakAPI {
     func streak(timezoneIdentifier: String) async throws -> StreakResponse
 }
 
+protocol ProfileAPI {
+    func profile() async throws -> ProfileResponse
+}
+
 protocol CoachingAPI {
     func health() async throws -> HealthResponse
     func diagnose(text: String, consentToProcess: Bool) async throws -> CoachingDiagnosisResponse
@@ -90,7 +94,7 @@ enum APIClientError: LocalizedError {
     }
 }
 
-struct APIClient: LessonAPI, StreakAPI, CoachingAPI {
+struct APIClient: LessonAPI, StreakAPI, ProfileAPI, CoachingAPI {
     private let session: URLSession
     private let configuration: APIConfiguration
     private let userIdentityStore: UserIdentityStore
@@ -122,6 +126,10 @@ struct APIClient: LessonAPI, StreakAPI, CoachingAPI {
             path: "users/\(userIdentityStore.userID())/streak",
             queryItems: [URLQueryItem(name: "tz", value: timezoneIdentifier)]
         )
+    }
+
+    func profile() async throws -> ProfileResponse {
+        try await send(path: "users/\(userIdentityStore.userID())/profile")
     }
 
     func lesson(id: String) async throws -> Lesson {

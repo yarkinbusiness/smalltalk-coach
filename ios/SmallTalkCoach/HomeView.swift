@@ -3,6 +3,7 @@ import SwiftUI
 struct HomeView: View {
     @StateObject private var viewModel = CurriculumViewModel()
     @StateObject private var todayViewModel = TodayViewModel()
+    @StateObject private var profileViewModel = ProfileViewModel()
 
     var body: some View {
         NavigationStack {
@@ -31,6 +32,7 @@ struct HomeView: View {
         .task {
             await viewModel.loadIfNeeded()
             await todayViewModel.load()
+            await profileViewModel.loadIfNeeded()
         }
     }
 
@@ -40,6 +42,12 @@ struct HomeView: View {
             List {
                 Section("Today") {
                     TodayCard(viewModel: todayViewModel) {
+                        Task { await refreshHome() }
+                    }
+                }
+
+                Section("Your skills") {
+                    ProfileSummaryRow(viewModel: profileViewModel) {
                         Task { await refreshHome() }
                     }
                 }
@@ -81,6 +89,7 @@ struct HomeView: View {
     private func refreshHome() async {
         await viewModel.load()
         await todayViewModel.load()
+        await profileViewModel.load()
     }
 }
 

@@ -155,6 +155,91 @@ final class SmallTalkCoachTests: XCTestCase {
         XCTAssertNil(unknown.today.unitID)
     }
 
+    func testProfileResponseDecodesContractWithNullWeaknessEmptyScoresAndUnknownDimension() throws {
+        let fixture = """
+        {
+          "report_count": 5,
+          "dimensions": {
+            "flow": {"scores": [], "flagged_count": 1},
+            "unknown_future_dimension": {"scores": [], "flagged_count": 0},
+            "warmth": {"scores": [{"report_id": "cr_1", "created_at": "2026-07-20T12:00:00+00:00", "score": 3}], "flagged_count": 0},
+            "reciprocity": {"scores": [], "flagged_count": 3},
+            "curiosity": {"scores": [], "flagged_count": 1}
+          },
+          "recurring_weakness": null,
+          "lessons": {
+            "completed_count": 4,
+            "recommended_not_taken": [{"lesson_id": "l04-answer-and-return", "title": "Answer, then return", "recommended_at": "2026-07-20T12:00:00+00:00"}]
+          }
+        }
+        """
+
+        let profile = try JSONDecoder().decode(ProfileResponse.self, from: Data(fixture.utf8))
+
+        XCTAssertEqual(profile.reportCount, 5)
+        XCTAssertEqual(profile.dimensions["warmth"]?.scores.first?.score, 3)
+        XCTAssertTrue(profile.dimensions["curiosity"]?.scores.isEmpty == true)
+        XCTAssertNil(profile.recurringWeakness)
+        XCTAssertEqual(profile.lessons.completedCount, 4)
+        XCTAssertEqual(profile.lessons.recommendedNotTaken.first?.lessonID, "l04-answer-and-return")
+        XCTAssertNotNil(profile.dimensions["unknown_future_dimension"])
+    }
+
+    func testProfileOrderedDimensionsUseKnownFixedOrderRegardlessOfDictionaryOrder() {
+        let emptyDimension = ProfileDimension(scores: [], flaggedCount: 0)
+        let profile = ProfileResponse(
+            reportCount: 0,
+            dimensions: [
+                "flow": emptyDimension,
+                "reciprocity": emptyDimension,
+                "warmth": emptyDimension,
+                "curiosity": emptyDimension,
+                "unknown": emptyDimension
+            ],
+            recurringWeakness: nil,
+            lessons: ProfileLessons(completedCount: 0, recommendedNotTaken: [])
+        )
+
+        XCTAssertEqual(profile.orderedDimensions.map(\.key), ["warmth", "curiosity", "reciprocity", "flow"])
+        XCTAssertEqual(profile.orderedDimensions.map(\.displayName), ["Warmth", "Curiosity", "Reciprocity", "Flow"])
+    }
+
+    @MainActor
+    func testProfileViewModelLoadsAndRetainsProfileAfterFailure() async {
+        let response = profileResponse(reportCount: 2)
+        let client = StubProfileAPI(result: .success(response))
+        let viewModel = ProfileViewModel(client: client)
+
+        await viewModel.load()
+
+        XCTAssertEqual(viewModel.phase, .loaded)
+        XCTAssertEqual(viewModel.profile, response)
+
+        client.result = .failure(StubError.offline)
+        await viewModel.load()
+
+        XCTAssertEqual(viewModel.phase, .failed("You appear to be offline."))
+        XCTAssertEqual(viewModel.profile, response)
+    }
+
+    func testProfileSummaryMessagesCoverEmptyWeaknessAndFallbackStates() {
+        XCTAssertEqual(
+            ProfileSummary.message(for: profileResponse(reportCount: 0)),
+            "Bring a real conversation to Coaching to build your skill profile."
+        )
+
+        let weakness = ProfileRecurringWeakness(dimension: "reciprocity", flaggedRecent: 3, window: 5)
+        XCTAssertEqual(
+            ProfileSummary.message(for: profileResponse(reportCount: 5, recurringWeakness: weakness)),
+            "Reciprocity keeps coming up — flagged 3 of your last 5"
+        )
+
+        XCTAssertEqual(
+            ProfileSummary.message(for: profileResponse(reportCount: 2)),
+            "Skill profile — 2 conversations analyzed"
+        )
+    }
+
     @MainActor
     func testTodayViewModelLoadsAndKeepsStreakAfterFailure() async {
         let response = StreakResponse(
@@ -722,6 +807,27 @@ final class SmallTalkCoachTests: XCTestCase {
         )
     }
 
+    private func profileResponse(
+        reportCount: Int,
+        recurringWeakness: ProfileRecurringWeakness? = nil
+    ) -> ProfileResponse {
+        let dimension = ProfileDimension(
+            scores: [ProfileScore(reportID: "cr_1", createdAt: "2026-07-20T12:00:00+00:00", score: 3)],
+            flaggedCount: 0
+        )
+        return ProfileResponse(
+            reportCount: reportCount,
+            dimensions: [
+                "warmth": dimension,
+                "curiosity": dimension,
+                "reciprocity": dimension,
+                "flow": dimension
+            ],
+            recurringWeakness: recurringWeakness,
+            lessons: ProfileLessons(completedCount: 0, recommendedNotTaken: [])
+        )
+    }
+
     @MainActor
     private func screenshotViewModel(client: StubCoachingAPI, maximumPollAttempts: Int = 45) -> CoachingViewModel {
         let viewModel = CoachingViewModel(client: client, pollIntervalNanoseconds: 0, maximumPollAttempts: maximumPollAttempts)
@@ -768,6 +874,18 @@ private final class StubStreakAPI: StreakAPI {
     func streak(timezoneIdentifier: String) async throws -> StreakResponse {
         timezoneIdentifiers.append(timezoneIdentifier)
         return try result.get()
+    }
+}
+
+private final class StubProfileAPI: ProfileAPI {
+    var result: Result<ProfileResponse, Error>
+
+    init(result: Result<ProfileResponse, Error> = .failure(StubError.unused)) {
+        self.result = result
+    }
+
+    func profile() async throws -> ProfileResponse {
+        try result.get()
     }
 }
 

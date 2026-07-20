@@ -335,6 +335,106 @@ struct StreakResponse: Codable, Equatable {
     }
 }
 
+struct ProfileResponse: Codable, Equatable {
+    let reportCount: Int
+    let dimensions: [String: ProfileDimension]
+    let recurringWeakness: ProfileRecurringWeakness?
+    let lessons: ProfileLessons
+
+    enum CodingKeys: String, CodingKey {
+        case dimensions, lessons
+        case reportCount = "report_count"
+        case recurringWeakness = "recurring_weakness"
+    }
+
+    var orderedDimensions: [ProfileDimensionDisplay] {
+        ProfileDimensionName.allCases.compactMap { name in
+            guard let dimension = dimensions[name.rawValue] else { return nil }
+            return ProfileDimensionDisplay(
+                key: name.rawValue,
+                displayName: name.displayName,
+                dimension: dimension
+            )
+        }
+    }
+}
+
+struct ProfileDimension: Codable, Equatable {
+    let scores: [ProfileScore]
+    let flaggedCount: Int
+
+    enum CodingKeys: String, CodingKey {
+        case scores
+        case flaggedCount = "flagged_count"
+    }
+}
+
+struct ProfileScore: Codable, Equatable, Identifiable {
+    let reportID: String
+    let createdAt: String
+    let score: Int
+
+    var id: String { reportID }
+
+    enum CodingKeys: String, CodingKey {
+        case score
+        case reportID = "report_id"
+        case createdAt = "created_at"
+    }
+}
+
+struct ProfileRecurringWeakness: Codable, Equatable {
+    let dimension: String
+    let flaggedRecent: Int
+    let window: Int
+
+    enum CodingKeys: String, CodingKey {
+        case dimension, window
+        case flaggedRecent = "flagged_recent"
+    }
+}
+
+struct ProfileLessons: Codable, Equatable {
+    let completedCount: Int
+    let recommendedNotTaken: [ProfileRecommendedLesson]
+
+    enum CodingKeys: String, CodingKey {
+        case completedCount = "completed_count"
+        case recommendedNotTaken = "recommended_not_taken"
+    }
+}
+
+struct ProfileRecommendedLesson: Codable, Equatable, Identifiable {
+    let lessonID: String
+    let title: String
+    let recommendedAt: String
+
+    var id: String { lessonID }
+
+    enum CodingKeys: String, CodingKey {
+        case title
+        case lessonID = "lesson_id"
+        case recommendedAt = "recommended_at"
+    }
+}
+
+struct ProfileDimensionDisplay: Equatable, Identifiable {
+    let key: String
+    let displayName: String
+    let dimension: ProfileDimension
+
+    var id: String { key }
+}
+
+private enum ProfileDimensionName: String, CaseIterable {
+    case warmth
+    case curiosity
+    case reciprocity
+    case flow
+
+    var displayName: String { rawValue.capitalized }
+}
+
 struct TodayTarget: Codable, Equatable {
     let kind: String
     let lessonID: String?
