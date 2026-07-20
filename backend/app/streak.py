@@ -33,6 +33,7 @@ def compute_streak(
     unit_lessons: Mapping[object, Iterable[str]],
     timezone: ZoneInfo,
     now: datetime,
+    review_completions: Iterable[datetime] = (),
 ) -> dict[str, int | bool]:
     """Replay activity history into a current local-day streak state."""
     if now.tzinfo is None:
@@ -53,6 +54,12 @@ def compute_streak(
         if created.tzinfo is None:
             continue
         local_day = created.astimezone(timezone).date()
+        if local_day <= today:
+            activity_days.add(local_day)
+    for reviewed in review_completions:
+        if reviewed.tzinfo is None:
+            continue
+        local_day = reviewed.astimezone(timezone).date()
         if local_day <= today:
             activity_days.add(local_day)
 

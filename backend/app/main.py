@@ -17,6 +17,7 @@ from .content import Curriculum, load_curriculum
 from .coaching import setup_coaching
 from .diagnosis import DiagnosisAdapter
 from .profile import build_profile
+from .review import build_review_queue
 from .streak import compute_streak, parse_activity_timestamp
 from .store import ProgressStore
 
@@ -56,6 +57,88 @@ def _lesson_state(lesson_id: str, completed: set[str], unlocked_id: str | None) 
     if lesson_id == unlocked_id:
         return "unlocked"
     return "locked"
+
+
+def _grade_completion(lesson: dict[str, Any], answers: dict[str, object]) -> dict[str, str]:
+    """Apply the deterministic choice checks shared by lessons and reviews."""
+    feedback: dict[str, str] = {}
+    parts = lesson["completion_check"]["parts"]
+    for part_index, part in enumerate(parts):
+        if part["kind"] != "choice":
+            continue
+        answer = answers.get(str(part_index))
+        options = part["options"]
+        if not isinstance(answer, int) or isinstance(answer, bool) or not 0 <= answer < len(options):
+            feedback[str(part_index)] = "Choose one of the available options for this part."
+        elif answer != part["correct_option_index"]:
+            feedback[str(part_index)] = options[answer]["feedback"]
+    return feedback
+
+
+def _timezone_or_422(tz: str) -> ZoneInfo:
+    try:
+        return ZoneInfo(tz)
+    except (ZoneInfoNotFoundError, ValueError) as error:
+        raise HTTPException(status_code=422, detail="invalid_timezone") from error
+
+
+def _profile_for(store: ProgressStore, user_id: str, curriculum: Curriculum) -> dict[str, object]:
+    return build_profile(
+        store.coaching_report_rows(user_id),
+        store.completed_lesson_ids(user_id),
+        curriculum,
+        store.reflections(user_id),
+    )
+
+
+def _review_priority_dimension(profile: dict[str, object]) -> str | None:
+    """Use a recurring weakness, otherwise the highest all-time flagged dimension."""
+    recurring = profile.get("recurring_weakness")
+    if isinstance(recurring, dict) and isinstance(recurring.get("dimension"), str):
+        return recurring["dimension"]
+
+    dimensions = profile.get("dimensions")
+    if not isinstance(dimensions, dict):
+        return None
+    priority: str | None = None
+    highest_count = 0
+    for dimension, value in dimensions.items():
+        if not isinstance(value, dict):
+            continue
+        flagged_count = value.get("flagged_count")
+        if isinstance(flagged_count, int) and flagged_count > highest_count:
+            priority = dimension
+            highest_count = flagged_count
+    return priority
+
+
+def _review_queue_for(
+    store: ProgressStore,
+    user_id: str,
+    curriculum: Curriculum,
+    timezone: ZoneInfo,
+    now: datetime,
+) -> list[dict[str, str | int]]:
+    timestamps = store.activity_timestamps(user_id)
+    lesson_completions = [
+        (lesson_id, parsed)
+        for lesson_id, raw_timestamp in timestamps["lesson_completions"]
+        if (parsed := parse_activity_timestamp(raw_timestamp)) is not None
+    ]
+    review_completions = [
+        (lesson_id, parsed)
+        for lesson_id, raw_timestamp in timestamps["review_completions"]
+        if (parsed := parse_activity_timestamp(raw_timestamp)) is not None
+    ]
+    profile = _profile_for(store, user_id, curriculum)
+    return build_review_queue(
+        lesson_completions,
+        review_completions,
+        curriculum,
+        _review_priority_dimension(profile),
+        timezone,
+        now,
+    )
 
 
 def create_app(
@@ -121,10 +204,7 @@ def create_app(
         tz: str = "UTC",
     ) -> dict[str, object]:
         user_id = _require_user_id(user_id)
-        try:
-            timezone = ZoneInfo(tz)
-        except (ZoneInfoNotFoundError, ValueError) as error:
-            raise HTTPException(status_code=422, detail="invalid_timezone") from error
+        timezone = _timezone_or_422(tz)
 
         curriculum = curriculum_for(request)
         store = progress_store_for(request)
@@ -139,23 +219,40 @@ def create_app(
             for raw_timestamp in timestamps["coaching_reports"]
             if (parsed := parse_activity_timestamp(raw_timestamp)) is not None
         ]
+        review_completions = [
+            parsed
+            for _, raw_timestamp in timestamps["review_completions"]
+            if (parsed := parse_activity_timestamp(raw_timestamp)) is not None
+        ]
         unit_lessons: dict[int, list[str]] = {}
         for lesson in curriculum.lessons:
             unit_lessons.setdefault(lesson["unit"], []).append(lesson["id"])
+        now = datetime.now(UTC)
         streak = compute_streak(
             lesson_completions,
             coaching_reports,
             unit_lessons,
             timezone,
-            datetime.now(UTC),
+            now,
+            review_completions=review_completions,
         )
 
         completed = store.completed_lesson_ids(user_id)
         unlocked_id = _unlocked_lesson_id(curriculum, completed)
         if unlocked_id is None:
-            today: dict[str, str | None] = {
-                "kind": "all_complete", "lesson_id": None, "title": None, "unit_id": None,
-            }
+            due = _review_queue_for(store, user_id, curriculum, timezone, now)
+            if due:
+                head = due[0]
+                today: dict[str, str | None] = {
+                    "kind": "review",
+                    "lesson_id": str(head["lesson_id"]),
+                    "title": str(head["title"]),
+                    "unit_id": str(head["unit_id"]),
+                }
+            else:
+                today = {
+                    "kind": "all_complete", "lesson_id": None, "title": None, "unit_id": None,
+                }
         else:
             lesson = curriculum.lessons_by_id[unlocked_id]
             today = {
@@ -171,16 +268,29 @@ def create_app(
             "today": today,
         }
 
+    @app.get("/users/{user_id}/review-queue")
+    def get_review_queue(
+        user_id: str,
+        request: Request,
+        tz: str = "UTC",
+    ) -> dict[str, object]:
+        user_id = _require_user_id(user_id)
+        timezone = _timezone_or_422(tz)
+        return {
+            "due": _review_queue_for(
+                progress_store_for(request),
+                user_id,
+                curriculum_for(request),
+                timezone,
+                datetime.now(UTC),
+            )
+        }
+
     @app.get("/users/{user_id}/profile")
     def get_profile(user_id: str, request: Request) -> dict[str, object]:
         user_id = _require_user_id(user_id)
         store = progress_store_for(request)
-        return build_profile(
-            store.coaching_report_rows(user_id),
-            store.completed_lesson_ids(user_id),
-            curriculum_for(request),
-            store.reflections(user_id),
-        )
+        return _profile_for(store, user_id, curriculum_for(request))
 
     @app.post("/users/{user_id}/reflections", status_code=201)
     def create_reflection(
@@ -256,17 +366,7 @@ def create_app(
         if lesson_id not in curriculum.content:
             raise HTTPException(status_code=404, detail="content_pending")
 
-        feedback: dict[str, str] = {}
-        parts = curriculum.content[lesson_id]["completion_check"]["parts"]
-        for part_index, part in enumerate(parts):
-            if part["kind"] != "choice":
-                continue
-            answer = body.answers.get(str(part_index))
-            options = part["options"]
-            if not isinstance(answer, int) or isinstance(answer, bool) or not 0 <= answer < len(options):
-                feedback[str(part_index)] = "Choose one of the available options for this part."
-            elif answer != part["correct_option_index"]:
-                feedback[str(part_index)] = options[answer]["feedback"]
+        feedback = _grade_completion(curriculum.content[lesson_id], body.answers)
         if feedback:
             return {"completed": False, "feedback": feedback}
 
@@ -275,6 +375,33 @@ def create_app(
         return {
             "completed": True,
             "unlocked_next": _unlocked_lesson_id(curriculum, updated_completed),
+        }
+
+    @app.post("/lessons/{lesson_id}/review")
+    def review_lesson(
+        lesson_id: str,
+        body: CompletionRequest,
+        request: Request,
+    ) -> dict[str, object]:
+        user_id = _require_user_id(body.user_id)
+        curriculum = curriculum_for(request)
+        if lesson_id not in curriculum.lessons_by_id:
+            raise HTTPException(status_code=404, detail="lesson_not_found")
+        store = progress_store_for(request)
+        completed = store.completed_lesson_ids(user_id)
+        if lesson_id not in completed:
+            raise HTTPException(status_code=409, detail="not_completed")
+        if lesson_id not in curriculum.content:
+            raise HTTPException(status_code=404, detail="content_pending")
+
+        feedback = _grade_completion(curriculum.content[lesson_id], body.answers)
+        if feedback:
+            return {"completed": False, "feedback": feedback}
+
+        store.record_review(user_id, lesson_id)
+        return {
+            "completed": True,
+            "unlocked_next": _unlocked_lesson_id(curriculum, completed),
         }
 
     return app

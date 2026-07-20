@@ -16,7 +16,8 @@ The v1 API has no authentication: callers supply a non-empty `user_id`. This
 is a known hardening gap and must be replaced before exposing the service to
 untrusted clients.
 
-Endpoints include `GET /curriculum?user_id=...`, lesson reads and completions,
-the coaching routes, `GET /users/{user_id}/streak?tz=<IANA timezone>`, and
+Endpoints include `GET /curriculum?user_id=...`, lesson reads, completions,
+and review submissions, the coaching routes, `GET /users/{user_id}/streak?tz=<IANA timezone>`,
+`GET /users/{user_id}/review-queue?tz=<IANA timezone>`, and
 `GET /users/{user_id}/profile`, plus reflection creation and history at
 `POST`/`GET /users/{user_id}/reflections`.

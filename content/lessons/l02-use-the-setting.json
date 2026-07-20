@@ -48,19 +48,19 @@
     "prompt": "You are waiting for an orientation session while people compare campus maps. Which opening best uses the setting without making an assumption?",
     "options": [
       {
-        "text": "Hi, do you know whether this map shows the shortcut to the library?",
-        "feedback": "Yes. The map is a shared, neutral detail, and the question is easy to answer whether the person knows or not."
-      },
-      {
         "text": "Hi, are you worried you will get lost all year?",
         "feedback": "Looking at a map does not tell you how the other person feels or what will happen to them. This makes the moment personal too quickly."
       },
       {
         "text": "Hi, why did you choose this university instead of somewhere better?",
         "feedback": "This leaves the shared moment and asks for a personal justification, which can feel confrontational with someone new."
+      },
+      {
+        "text": "Hi, do you know whether this map shows the shortcut to the library?",
+        "feedback": "Yes. The map is a shared, neutral detail, and the question is easy to answer whether the person knows or not."
       }
     ],
-    "correct_option_index": 0
+    "correct_option_index": 2
   },
   "practice": {
     "type": "Choose-the-better-reply",
@@ -74,15 +74,15 @@
         "question": "A long line forms outside the student-services desk. Which opening matches that environment cue?",
         "options": [
           {
-            "text": "This line is moving slowly—do you know if it is usually like this at the start of term?",
-            "feedback": "Correct. The line and its pace are shared facts, and the question can be answered briefly or not at all without pressure."
-          },
-          {
             "text": "You seem impatient. Do you have somewhere more important to be?",
             "feedback": "This guesses at the other person's feelings and priorities instead of using the line as a neutral shared cue."
+          },
+          {
+            "text": "This line is moving slowly—do you know if it is usually like this at the start of term?",
+            "feedback": "Correct. The line and its pace are shared facts, and the question can be answered briefly or not at all without pressure."
           }
         ],
-        "correct_option_index": 0
+        "correct_option_index": 1
       },
       {
         "kind": "choice",
@@ -104,15 +104,15 @@
         "question": "Several new students are comparing campus maps before a session. Which opening best matches that cue?",
         "options": [
           {
-            "text": "This map has a lot of buildings—have you found the one for our next session?",
-            "feedback": "Correct. It names the shared map and shared next step, while leaving room for a short answer or a mutual search."
-          },
-          {
             "text": "You look overwhelmed by moving here. Are you okay?",
             "feedback": "Looking at a map does not prove someone feels overwhelmed. This shifts from an observable cue to a personal assumption."
+          },
+          {
+            "text": "This map has a lot of buildings—have you found the one for our next session?",
+            "feedback": "Correct. It names the shared map and shared next step, while leaving room for a short answer or a mutual search."
           }
         ],
-        "correct_option_index": 0
+        "correct_option_index": 1
       },
       {
         "kind": "free_draft",

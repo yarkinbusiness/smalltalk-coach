@@ -58,6 +58,16 @@ class ProgressStore:
             )
             """
         )
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS review_completions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id TEXT NOT NULL,
+                lesson_id TEXT NOT NULL,
+                completed_at TEXT NOT NULL
+            )
+            """
+        )
         return connection
 
     def completed_lesson_ids(self, user_id: str) -> set[str]:
@@ -85,9 +95,17 @@ class ProgressStore:
                     """,
                     (user_id,),
                 ).fetchall()
+                review_rows = connection.execute(
+                    """
+                    SELECT lesson_id, completed_at FROM review_completions
+                    WHERE user_id = ?
+                    """,
+                    (user_id,),
+                ).fetchall()
         return {
             "lesson_completions": [(row[0], row[1]) for row in lesson_rows],
             "coaching_reports": [row[0] for row in report_rows],
+            "review_completions": [(row[0], row[1]) for row in review_rows],
         }
 
     def record_completion(self, user_id: str, lesson_id: str) -> None:
@@ -97,6 +115,32 @@ class ProgressStore:
                     "INSERT OR IGNORE INTO lesson_completions (user_id, lesson_id) VALUES (?, ?)",
                     (user_id, lesson_id),
                 )
+
+    def record_review(self, user_id: str, lesson_id: str) -> str:
+        """Persist a repeatable review completion and return its UTC timestamp."""
+        created_at = datetime.now(UTC).isoformat()
+        with closing(self._connect()) as connection:
+            with connection:
+                connection.execute(
+                    """
+                    INSERT INTO review_completions (user_id, lesson_id, completed_at)
+                    VALUES (?, ?, ?)
+                    """,
+                    (user_id, lesson_id, created_at),
+                )
+        return created_at
+
+    def review_timestamps(self, user_id: str) -> list[tuple[str, str]]:
+        """Return raw review timestamps for deterministic scheduling."""
+        with closing(self._connect()) as connection:
+            rows = connection.execute(
+                """
+                SELECT lesson_id, completed_at FROM review_completions
+                WHERE user_id = ?
+                """,
+                (user_id,),
+            ).fetchall()
+        return [(row[0], row[1]) for row in rows]
 
     def save_coaching_report(
         self,

@@ -230,6 +230,23 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-21 (cycle 33 — T-G backend: spaced review):** Worker:
+  `gpt-5.6-terra`, one round. Shipped `backend/app/review.py` (3/7/21-
+  then-21 ladder measured in user-local days from most recent
+  completion/review; queue ordered priority-dimension-match → overdue
+  desc → path order), `review_completions` table + streak integration
+  (review = activity day, never earns freezes), grading refactored into
+  one `_grade_completion` helper shared by completion AND the new
+  `POST /lessons/{id}/review` (409 `not_completed`, failing attempts
+  record nothing), `GET /users/{id}/review-queue?tz=`, streak `today`
+  now yields `kind: "review"` from the queue head when the path is
+  complete (falls back to `all_complete` only when nothing is due), and
+  the L02 content fix (correct indices now varied [1,0,1] — cycle-6 nit
+  cleared). 8 new tests. Brain verification: **92 passed, 1 skipped**
+  (own run); live probes (empty queue, 422 tz, 409) correct; mandatory
+  simulator launch clean — ACCEPTED. **Next:** cycle 34, T-G iOS
+  (review flow + Today review kind), which completes P1.
+
 - **2026-07-21 (cycle 32 — T-F iOS: reflection prompt; T-F COMPLETE;
   FIRST REJECTION THIS RUN):** Worker: `gpt-5.6-terra`, **two rounds**.
   Round 1 shipped the feature set (PendingReflectionStore with

@@ -417,3 +417,16 @@ Entry format (keep an entry under ~15 lines):
 - **Result / verification:** `cd ios && xcodegen generate` and generic-simulator `xcodebuild build`
   passed; `git diff --check` passed. Named iPhone 16 build/XCTest could not run: CoreSimulatorService had no runtime.
 - **Open issues:** Run the XCTest suite on a host with a working iPhone 16 simulator service.
+
+## 2026-07-20 22:01 UTC — Add deterministic spaced-repetition review backend
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Added repeatable review persistence, local-day review scheduling and priority,
+  review submission reusing lesson grading, review-backed streak activity, and review Today targets.
+  Reordered L02 choices so its correct answers use varied indices.
+- **Files touched:** backend/app/store.py; backend/app/streak.py; backend/app/review.py;
+  backend/app/main.py; backend/tests/test_review.py; content/lessons/l02-use-the-setting.json;
+  backend/README.md; WORKER_LOG.md
+- **Result / verification:** `backend/.venv/bin/python -m pytest backend/tests -q`:
+  92 passed, 1 skipped, 1 warning; `compileall`, L02 JSON parsing, and `git diff --check` passed.
+- **Open issues:** none
