@@ -322,6 +322,32 @@ struct CurriculumResponse: Codable, Equatable {
     let units: [CurriculumUnit]
 }
 
+struct StreakResponse: Codable, Equatable {
+    let streakDays: Int
+    let activeToday: Bool
+    let freezes: Int
+    let today: TodayTarget
+
+    enum CodingKeys: String, CodingKey {
+        case freezes, today
+        case streakDays = "streak_days"
+        case activeToday = "active_today"
+    }
+}
+
+struct TodayTarget: Codable, Equatable {
+    let kind: String
+    let lessonID: String?
+    let title: String?
+    let unitID: String?
+
+    enum CodingKeys: String, CodingKey {
+        case kind, title
+        case lessonID = "lesson_id"
+        case unitID = "unit_id"
+    }
+}
+
 struct CurriculumUnit: Codable, Equatable, Identifiable {
     let unit: Int
     let lessons: [CurriculumLesson]

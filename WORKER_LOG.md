@@ -342,3 +342,17 @@ Entry format (keep an entry under ~15 lines):
 - **Result / verification:** `backend/.venv/bin/python -m pytest backend/tests -q`:
   72 passed, 1 skipped, 1 warning; `git diff --check` passed.
 - **Open issues:** none
+
+## 2026-07-21 00:16 UTC — Build iOS Today card and opt-in daily reminder
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Added forward-compatible streak decoding/API access, a first-section
+  Today card with lesson deep links and shared curriculum/streak refresh, plus opt-in local
+  reminder scheduling, persisted time/preferences, denial handling, and focused fake-backed tests.
+- **Files touched:** ios/SmallTalkCoach/Models.swift; ios/SmallTalkCoach/APIClient.swift;
+  ios/SmallTalkCoach/HomeView.swift; ios/SmallTalkCoach/TodayCard.swift;
+  ios/SmallTalkCoach/ReminderScheduler.swift; ios/SmallTalkCoachTests/SmallTalkCoachTests.swift; WORKER_LOG.md
+- **Result / verification:** `cd ios && xcodegen generate`, generic-simulator `xcodebuild build`,
+  and `xcodebuild build-for-testing` passed; `git diff --check` passed. iPhone 16 / iOS 18.2
+  build and XCTest were attempted but CoreSimulatorService had no available runtime, so tests did not execute.
+- **Open issues:** Run the compiled XCTest suite on a host with a working iPhone 16 / iOS 18.2 simulator service.

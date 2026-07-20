@@ -2,6 +2,7 @@ import SwiftUI
 
 struct HomeView: View {
     @StateObject private var viewModel = CurriculumViewModel()
+    @StateObject private var todayViewModel = TodayViewModel()
 
     var body: some View {
         NavigationStack {
@@ -29,6 +30,7 @@ struct HomeView: View {
         }
         .task {
             await viewModel.loadIfNeeded()
+            await todayViewModel.load()
         }
     }
 
@@ -36,13 +38,19 @@ struct HomeView: View {
     private var curriculumList: some View {
         if let curriculum = viewModel.curriculum {
             List {
+                Section("Today") {
+                    TodayCard(viewModel: todayViewModel) {
+                        Task { await refreshHome() }
+                    }
+                }
+
                 ForEach(curriculum.units) { unit in
                     Section("Unit \(unit.unit)") {
                         ForEach(unit.lessons) { lesson in
                             if lesson.isNavigable {
                                 NavigationLink {
                                     LessonDetailView(lessonID: lesson.id) { _ in
-                                        Task { await viewModel.load() }
+                                        Task { await refreshHome() }
                                     }
                                 } label: {
                                     LessonRow(lesson: lesson)
@@ -55,7 +63,7 @@ struct HomeView: View {
                 }
             }
             .refreshable {
-                await viewModel.load()
+                await refreshHome()
             }
             .overlay(alignment: .top) {
                 if case .failed(let message) = viewModel.phase {
@@ -68,6 +76,11 @@ struct HomeView: View {
         } else {
             ProgressView("Loading your learning path…")
         }
+    }
+
+    private func refreshHome() async {
+        await viewModel.load()
+        await todayViewModel.load()
     }
 }
 

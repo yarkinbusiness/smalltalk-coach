@@ -6,6 +6,10 @@ protocol LessonAPI {
     func completeLesson(id: String, answers: [String: Int]) async throws -> CompletionResponse
 }
 
+protocol StreakAPI {
+    func streak(timezoneIdentifier: String) async throws -> StreakResponse
+}
+
 protocol CoachingAPI {
     func health() async throws -> HealthResponse
     func diagnose(text: String, consentToProcess: Bool) async throws -> CoachingDiagnosisResponse
@@ -86,7 +90,7 @@ enum APIClientError: LocalizedError {
     }
 }
 
-struct APIClient: LessonAPI, CoachingAPI {
+struct APIClient: LessonAPI, StreakAPI, CoachingAPI {
     private let session: URLSession
     private let configuration: APIConfiguration
     private let userIdentityStore: UserIdentityStore
@@ -111,6 +115,13 @@ struct APIClient: LessonAPI, CoachingAPI {
 
     func curriculum() async throws -> CurriculumResponse {
         try await send(path: "curriculum", queryItems: [URLQueryItem(name: "user_id", value: userIdentityStore.userID())])
+    }
+
+    func streak(timezoneIdentifier: String) async throws -> StreakResponse {
+        try await send(
+            path: "users/\(userIdentityStore.userID())/streak",
+            queryItems: [URLQueryItem(name: "tz", value: timezoneIdentifier)]
+        )
     }
 
     func lesson(id: String) async throws -> Lesson {

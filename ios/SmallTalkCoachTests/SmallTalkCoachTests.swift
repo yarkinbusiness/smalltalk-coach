@@ -123,6 +123,145 @@ final class SmallTalkCoachTests: XCTestCase {
         XCTAssertNil(response.unlockedNext)
     }
 
+    func testDecodesLiveStreakContractAndUnknownTodayKind() throws {
+        let fixture = """
+        {
+          "streak_days": 3, "active_today": true, "freezes": 1,
+          "today": {"kind": "lesson", "lesson_id": "l02-use-the-setting",
+                    "title": "Use the setting", "unit_id": "u1"}
+        }
+        """
+
+        let streak = try JSONDecoder().decode(StreakResponse.self, from: Data(fixture.utf8))
+
+        XCTAssertEqual(streak.streakDays, 3)
+        XCTAssertTrue(streak.activeToday)
+        XCTAssertEqual(streak.freezes, 1)
+        XCTAssertEqual(streak.today.kind, "lesson")
+        XCTAssertEqual(streak.today.lessonID, "l02-use-the-setting")
+        XCTAssertEqual(streak.today.title, "Use the setting")
+        XCTAssertEqual(streak.today.unitID, "u1")
+
+        let unknownFixture = """
+        {
+          "streak_days": 4, "active_today": false, "freezes": 0,
+          "today": {"kind": "review", "lesson_id": null, "title": null, "unit_id": null}
+        }
+        """
+        let unknown = try JSONDecoder().decode(StreakResponse.self, from: Data(unknownFixture.utf8))
+        XCTAssertEqual(unknown.today.kind, "review")
+        XCTAssertNil(unknown.today.lessonID)
+        XCTAssertNil(unknown.today.title)
+        XCTAssertNil(unknown.today.unitID)
+    }
+
+    @MainActor
+    func testTodayViewModelLoadsAndKeepsStreakAfterFailure() async {
+        let response = StreakResponse(
+            streakDays: 3,
+            activeToday: true,
+            freezes: 1,
+            today: TodayTarget(kind: "lesson", lessonID: "l02-use-the-setting", title: "Use the setting", unitID: "u1")
+        )
+        let client = StubStreakAPI(result: .success(response))
+        let viewModel = TodayViewModel(client: client, reminderScheduler: StubReminderScheduler())
+
+        await viewModel.load()
+
+        XCTAssertEqual(viewModel.phase, .loaded)
+        XCTAssertEqual(viewModel.streak, response)
+        XCTAssertEqual(client.timezoneIdentifiers, [TimeZone.current.identifier])
+
+        client.result = .failure(StubError.offline)
+        await viewModel.load()
+
+        XCTAssertEqual(viewModel.phase, .failed("You appear to be offline."))
+        XCTAssertEqual(viewModel.streak, response)
+    }
+
+    @MainActor
+    func testEnablingReminderWithGrantedAuthorizationSchedulesPersistedTime() async throws {
+        let suiteName = "ReminderGranted-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        defaults.set(8, forKey: ReminderPreferences.hourKey)
+        defaults.set(45, forKey: ReminderPreferences.minuteKey)
+        let scheduler = StubReminderScheduler(status: .notDetermined, requestResult: true)
+        let viewModel = ReminderSettingsViewModel(scheduler: scheduler, defaults: defaults)
+
+        await viewModel.setEnabled(true)
+
+        XCTAssertTrue(viewModel.isEnabled)
+        XCTAssertTrue(defaults.bool(forKey: ReminderPreferences.enabledKey))
+        XCTAssertEqual(scheduler.requestCount, 1)
+        XCTAssertEqual(scheduler.scheduledHours, [8])
+        XCTAssertEqual(scheduler.scheduledMinutes, [45])
+    }
+
+    @MainActor
+    func testDeniedReminderAuthorizationKeepsPreferenceOff() async throws {
+        let suiteName = "ReminderDenied-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let scheduler = StubReminderScheduler(status: .denied)
+        let viewModel = ReminderSettingsViewModel(scheduler: scheduler, defaults: defaults)
+
+        await viewModel.setEnabled(true)
+
+        XCTAssertFalse(viewModel.isEnabled)
+        XCTAssertTrue(viewModel.authorizationDenied)
+        XCTAssertFalse(defaults.bool(forKey: ReminderPreferences.enabledKey))
+        XCTAssertTrue(scheduler.scheduledHours.isEmpty)
+    }
+
+    @MainActor
+    func testDisablingReminderCancelsAndPersistsOff() async throws {
+        let suiteName = "ReminderDisable-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let scheduler = StubReminderScheduler(status: .authorized)
+        let viewModel = ReminderSettingsViewModel(scheduler: scheduler, defaults: defaults)
+        await viewModel.setEnabled(true)
+
+        await viewModel.setEnabled(false)
+
+        XCTAssertFalse(viewModel.isEnabled)
+        XCTAssertFalse(defaults.bool(forKey: ReminderPreferences.enabledKey))
+        XCTAssertEqual(scheduler.cancelCount, 1)
+    }
+
+    @MainActor
+    func testChangingEnabledReminderTimeReschedules() async throws {
+        let suiteName = "ReminderReschedule-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = TimeZone(secondsFromGMT: 0)!
+        let scheduler = StubReminderScheduler(status: .authorized)
+        let viewModel = ReminderSettingsViewModel(scheduler: scheduler, defaults: defaults, calendar: calendar)
+        await viewModel.setEnabled(true)
+        let newTime = try XCTUnwrap(calendar.date(from: DateComponents(year: 2026, month: 7, day: 21, hour: 9, minute: 30)))
+
+        await viewModel.setTime(newTime)
+
+        XCTAssertEqual(scheduler.scheduledHours.last, 9)
+        XCTAssertEqual(scheduler.scheduledMinutes.last, 30)
+        XCTAssertEqual(defaults.integer(forKey: ReminderPreferences.hourKey), 9)
+        XCTAssertEqual(defaults.integer(forKey: ReminderPreferences.minuteKey), 30)
+    }
+
+    func testReminderDefaultsToOffForFreshSuite() throws {
+        let suiteName = "ReminderDefault-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let preferences = ReminderPreferences(defaults: defaults)
+
+        XCTAssertFalse(preferences.isEnabled)
+        XCTAssertEqual(preferences.hour, 19)
+        XCTAssertEqual(preferences.minute, 0)
+    }
+
     func testDecodesFullCoachingReportFixture() throws {
         let fixture = """
         {
@@ -615,6 +754,52 @@ private final class StubLessonAPI: LessonAPI {
 
     func completeLesson(id: String, answers: [String: Int]) async throws -> CompletionResponse {
         try completionResult.get()
+    }
+}
+
+private final class StubStreakAPI: StreakAPI {
+    var result: Result<StreakResponse, Error>
+    var timezoneIdentifiers: [String] = []
+
+    init(result: Result<StreakResponse, Error> = .failure(StubError.unused)) {
+        self.result = result
+    }
+
+    func streak(timezoneIdentifier: String) async throws -> StreakResponse {
+        timezoneIdentifiers.append(timezoneIdentifier)
+        return try result.get()
+    }
+}
+
+private final class StubReminderScheduler: ReminderScheduling {
+    var status: ReminderAuthorizationStatus
+    var requestResult: Bool
+    var requestCount = 0
+    var scheduledHours: [Int] = []
+    var scheduledMinutes: [Int] = []
+    var cancelCount = 0
+
+    init(status: ReminderAuthorizationStatus = .authorized, requestResult: Bool = true) {
+        self.status = status
+        self.requestResult = requestResult
+    }
+
+    func authorizationStatus() async -> ReminderAuthorizationStatus {
+        status
+    }
+
+    func requestAuthorization() async -> Bool {
+        requestCount += 1
+        return requestResult
+    }
+
+    func scheduleDaily(hour: Int, minute: Int) async {
+        scheduledHours.append(hour)
+        scheduledMinutes.append(minute)
+    }
+
+    func cancel() async {
+        cancelCount += 1
     }
 }
 

@@ -230,6 +230,26 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-21 (cycle 28 — T-D iOS: Today card + reminders; T-D
+  COMPLETE):** Worker: `gpt-5.6-terra`, one round, honest partial
+  (sandbox blocks simulator; brain ran tests). Shipped `TodayCard.swift`
+  (TodayViewModel + ReminderSettingsViewModel; streak/freeze/done-today
+  states, "Today: <lesson>" deep link into LessonDetailView, unknown
+  `kind` tolerated as all_complete, endpoint failure shows inline note —
+  never blocks curriculum), `ReminderScheduler.swift`
+  (ReminderScheduling protocol; UNUserNotificationCenter impl with one
+  repeating calendar trigger, static content — no user data; UserDefaults
+  prefs, default OFF at 19:00), StreakAPI on APIClient, Home integration
+  with shared refresh (lesson completion refreshes curriculum + streak;
+  cycle-16 `.task` placement preserved). Brain verification: **35
+  XCTests, 0 failures on iPhone 16 / iOS 18.2** (own run; 10 new);
+  mandatory simulator launch clean — Today card renders with streak
+  line, bell (off), and lesson link (screenshot-verified; one re-run
+  after the simulator was shut down externally, and note: install must
+  exclude DerivedData `Index.noindex` bundles). **The VISION.md daily
+  habit loop is now implemented.** **Next:** cycle 29, T-E backend
+  (deterministic skill-profile aggregation endpoint).
+
 - **2026-07-21 (cycle 27 — T-D backend: streak/freeze/today endpoint):**
   Worker: `gpt-5.6-terra`, one round. Shipped `backend/app/streak.py`
   (dual-format UTC timestamp parser — the cycle-14 mixed-format trap
