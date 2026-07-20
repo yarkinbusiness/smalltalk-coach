@@ -380,3 +380,15 @@ Entry format (keep an entry under ~15 lines):
   and `build-for-testing` passed using `/private/tmp` derived data; `git diff --check` passed.
   iPhone 16 / iOS 18.2 build and XCTest were attempted but CoreSimulatorService refused connections.
 - **Open issues:** Run the XCTest suite on a host with a working iPhone 16 / iOS 18.2 simulator service.
+
+## 2026-07-20 21:37 UTC — Add reflection records backend and profile aggregation
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Added deterministic reflection persistence, validated lesson/report reflection APIs,
+  ownership checks, and a privacy-preserving reflection summary in the profile response.
+  Added coverage for API contracts, ordering, validation, profile aggregation, and streak isolation.
+- **Files touched:** backend/app/store.py; backend/app/main.py; backend/app/profile.py;
+  backend/tests/test_reflections.py; backend/tests/test_profile.py; backend/README.md; WORKER_LOG.md
+- **Result / verification:** `backend/.venv/bin/python -m pytest backend/tests -q`:
+  84 passed, 1 skipped, 1 warning in 1.91s; `git diff --check` passed.
+- **Open issues:** none

@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 import os
 from pathlib import Path
 from typing import Any, AsyncIterator, Annotated
+import uuid
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import FastAPI, HTTPException, Query, Request
@@ -23,6 +24,13 @@ from .store import ProgressStore
 class CompletionRequest(BaseModel):
     user_id: str
     answers: dict[str, object]
+
+
+class ReflectionRequest(BaseModel):
+    subject_kind: str
+    subject_id: str
+    outcome: str
+    note: object = ""
 
 
 def _default_repo_root() -> Path:
@@ -171,7 +179,46 @@ def create_app(
             store.coaching_report_rows(user_id),
             store.completed_lesson_ids(user_id),
             curriculum_for(request),
+            store.reflections(user_id),
         )
+
+    @app.post("/users/{user_id}/reflections", status_code=201)
+    def create_reflection(
+        user_id: str,
+        body: ReflectionRequest,
+        request: Request,
+    ) -> dict[str, str]:
+        user_id = _require_user_id(user_id)
+        if body.subject_kind not in {"lesson", "report"}:
+            raise HTTPException(status_code=422, detail="invalid_subject_kind")
+        if body.outcome not in {"went_well", "partly", "avoided"}:
+            raise HTTPException(status_code=422, detail="invalid_outcome")
+        if not isinstance(body.note, str) or len(body.note) > 500:
+            raise HTTPException(status_code=422, detail="invalid_note")
+
+        store = progress_store_for(request)
+        if body.subject_kind == "lesson":
+            subject_exists = body.subject_id in curriculum_for(request).lessons_by_id
+        else:
+            subject_exists = store.coaching_report(body.subject_id, user_id) is not None
+        if not subject_exists:
+            raise HTTPException(status_code=404, detail="unknown_subject")
+
+        reflection_id = str(uuid.uuid4())
+        created_at = store.save_reflection(
+            reflection_id=reflection_id,
+            user_id=user_id,
+            subject_kind=body.subject_kind,
+            subject_id=body.subject_id,
+            outcome=body.outcome,
+            note=body.note,
+        )
+        return {"id": reflection_id, "created_at": created_at}
+
+    @app.get("/users/{user_id}/reflections")
+    def get_reflections(user_id: str, request: Request) -> dict[str, object]:
+        user_id = _require_user_id(user_id)
+        return {"reflections": progress_store_for(request).reflections(user_id)}
 
     @app.get("/lessons/{lesson_id}")
     def get_lesson(

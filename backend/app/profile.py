@@ -12,6 +12,9 @@ from .diagnosis import DIMENSIONS
 from .streak import parse_activity_timestamp
 
 
+REFLECTION_OUTCOMES = ("went_well", "partly", "avoided")
+
+
 def _is_score(value: Any) -> bool:
     return isinstance(value, int) and not isinstance(value, bool) and 1 <= value <= 5
 
@@ -70,10 +73,38 @@ def _valid_report(row: Mapping[str, Any]) -> tuple[datetime, dict[str, Any]] | N
     }
 
 
+def _valid_reflection(row: Mapping[str, Any]) -> tuple[datetime, dict[str, str]] | None:
+    if not isinstance(row, Mapping):
+        return None
+    subject_kind = row.get("subject_kind")
+    subject_id = row.get("subject_id")
+    outcome = row.get("outcome")
+    created_at = row.get("created_at")
+    reflection_id = row.get("id")
+    parsed_created_at = parse_activity_timestamp(created_at)
+    if (
+        subject_kind not in {"lesson", "report"}
+        or not isinstance(subject_id, str)
+        or outcome not in REFLECTION_OUTCOMES
+        or not isinstance(created_at, str)
+        or parsed_created_at is None
+        or not isinstance(reflection_id, str)
+    ):
+        return None
+    return parsed_created_at, {
+        "id": reflection_id,
+        "subject_kind": subject_kind,
+        "subject_id": subject_id,
+        "outcome": outcome,
+        "created_at": created_at,
+    }
+
+
 def build_profile(
     reports: Iterable[Mapping[str, Any]],
     completed_lesson_ids: set[str],
     curriculum: Curriculum,
+    reflections: Iterable[Mapping[str, Any]] = (),
 ) -> dict[str, object]:
     """Aggregate valid persisted reports into the stable profile response shape."""
     valid_reports = [valid for row in reports if (valid := _valid_report(row)) is not None]
@@ -134,6 +165,12 @@ def build_profile(
         )
     ]
 
+    valid_reflections = [
+        valid for row in reflections if (valid := _valid_reflection(row)) is not None
+    ]
+    valid_reflections.sort(key=lambda item: (item[0], item[1]["id"]), reverse=True)
+    reflection_counts = Counter(reflection["outcome"] for _, reflection in valid_reflections)
+
     return {
         "report_count": len(valid_reports),
         "dimensions": dimensions,
@@ -141,5 +178,17 @@ def build_profile(
         "lessons": {
             "completed_count": len(completed_lesson_ids),
             "recommended_not_taken": recommended_not_taken,
+        },
+        "reflections": {
+            "counts": {outcome: reflection_counts[outcome] for outcome in REFLECTION_OUTCOMES},
+            "recent": [
+                {
+                    "subject_kind": reflection["subject_kind"],
+                    "subject_id": reflection["subject_id"],
+                    "outcome": reflection["outcome"],
+                    "created_at": reflection["created_at"],
+                }
+                for _, reflection in valid_reflections[:5]
+            ],
         },
     }

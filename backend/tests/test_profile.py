@@ -88,6 +88,10 @@ def test_empty_history_has_the_exact_profile_shape() -> None:
         },
         "recurring_weakness": None,
         "lessons": {"completed_count": 0, "recommended_not_taken": []},
+        "reflections": {
+            "counts": {"went_well": 0, "partly": 0, "avoided": 0},
+            "recent": [],
+        },
     }
 
 
@@ -209,5 +213,9 @@ def test_endpoint_skips_malformed_diagnosis_and_returns_contract(tmp_path: Path)
                 "title": "Answer, then return",
                 "recommended_at": created_at,
             }],
+        },
+        "reflections": {
+            "counts": {"went_well": 0, "partly": 0, "avoided": 0},
+            "recent": [],
         },
     }

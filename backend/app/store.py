@@ -45,6 +45,19 @@ class ProgressStore:
             )
             """
         )
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS reflections (
+                id TEXT PRIMARY KEY,
+                user_id TEXT NOT NULL,
+                subject_kind TEXT NOT NULL,
+                subject_id TEXT NOT NULL,
+                outcome TEXT NOT NULL,
+                note TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL
+            )
+            """
+        )
         return connection
 
     def completed_lesson_ids(self, user_id: str) -> set[str]:
@@ -154,6 +167,44 @@ class ProgressStore:
                        recommendation_kind, diagnosis_json
                 FROM coaching_reports WHERE user_id = ?
                 ORDER BY created_at ASC, id ASC
+                """,
+                (user_id,),
+            ).fetchall()
+        return [dict(row) for row in rows]
+
+    def save_reflection(
+        self,
+        *,
+        reflection_id: str,
+        user_id: str,
+        subject_kind: str,
+        subject_id: str,
+        outcome: str,
+        note: str,
+    ) -> str:
+        """Persist a user-owned reflection and return its UTC creation timestamp."""
+        created_at = datetime.now(UTC).isoformat()
+        with closing(self._connect()) as connection:
+            with connection:
+                connection.execute(
+                    """
+                    INSERT INTO reflections
+                    (id, user_id, subject_kind, subject_id, outcome, note, created_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (reflection_id, user_id, subject_kind, subject_id, outcome, note, created_at),
+                )
+        return created_at
+
+    def reflections(self, user_id: str) -> list[dict[str, str]]:
+        """Return a user's reflections newest first."""
+        with closing(self._connect()) as connection:
+            connection.row_factory = sqlite3.Row
+            rows = connection.execute(
+                """
+                SELECT id, subject_kind, subject_id, outcome, note, created_at
+                FROM reflections WHERE user_id = ?
+                ORDER BY created_at DESC, id DESC
                 """,
                 (user_id,),
             ).fetchall()

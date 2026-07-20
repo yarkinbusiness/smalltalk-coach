@@ -230,6 +230,20 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-21 (cycle 31 — T-F backend: reflection records):** Worker:
+  `gpt-5.6-terra`, one round. Reflections table (id/user/subject_kind
+  lesson|report/subject_id/outcome went_well|partly|avoided/note ≤500
+  chars/isoformat created_at), POST with stable 422 detail codes +
+  404 `unknown_subject` (report ownership enforced), GET newest-first,
+  additive profile `reflections` block (all-outcome counts + last-5
+  recent, notes structurally excluded), streak untouched. 6 new tests.
+  Brain verification: **84 passed, 1 skipped** (own run); live probes —
+  201 with unicode note verbatim, profile block note-free, 404, streak
+  isolation confirmed (reflection user stays 0) — and mandatory
+  simulator launch clean — ACCEPTED. **Next:** cycle 32, T-F iOS
+  (post-practice reflection prompt; includes the cycle-30 pluralization
+  nit).
+
 - **2026-07-21 (cycle 30 — T-E iOS: skill-profile surface; T-E
   COMPLETE):** Worker: `gpt-5.6-terra`, one round, honest partial
   (sandbox blocks simulator; brain ran tests). Shipped

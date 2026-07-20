@@ -18,4 +18,5 @@ untrusted clients.
 
 Endpoints include `GET /curriculum?user_id=...`, lesson reads and completions,
 the coaching routes, `GET /users/{user_id}/streak?tz=<IANA timezone>`, and
-`GET /users/{user_id}/profile`.
+`GET /users/{user_id}/profile`, plus reflection creation and history at
+`POST`/`GET /users/{user_id}/reflections`.
