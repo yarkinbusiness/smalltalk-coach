@@ -1,6 +1,64 @@
 # Progress & backlog
 
-**2026-07-18 (latest): BUILD MODE — build start approved, scope gate
+**2026-07-20 (latest): ROADMAP REFRESHED — v2 backlog adopted
+(founder-approved).** The brain ran a full roadmap strength review against
+VISION.md, PRODUCT_BRIEF.md, ARCHITECTURE.md, both DECISIONS.md logs, and
+WORKER_LOG.md. Verdict: the v1 build backlog is complete and the rest of
+this file's backlog sections were stale (they reference Phase 0 files
+deleted in the 2026-07-18 Full Restart) — see
+`docs/planning/ROADMAP_REVIEW_2026-07-20.md` for the full report, task
+rationale, and acceptance criteria, and root `DECISIONS.md` →
+"2026-07-20 — v2 Backlog Adopted After Roadmap Strength Review". The
+**v2 backlog** below is now the single actionable list. The sections
+"Blocked on human action", "Backlog (actionable now)", and "Once the
+human-gated items are cleared" further down are **HISTORICAL — do not
+action them.**
+
+## v2 backlog (current, maintained by the brain each cycle — adopted 2026-07-20)
+
+Task IDs, rationale, and acceptance criteria live in
+`docs/planning/ROADMAP_REVIEW_2026-07-20.md`. Execution order: P0 → P1 →
+P2, one loop cycle each; P3 items are founder decisions scheduled in
+parallel. All tasks respect the Haiku-only lock (P1 tasks are fully
+deterministic — no new API calls) and the existing loop protocol.
+
+- **P0 (hygiene/unblocking):**
+  1. **T-A** — retire stale roadmap sections + sync stale docs.
+     PROGRESS.md half done in this refresh; remaining: VISION.md status
+     header + Phase 2 annotations, ARCHITECTURE.md banner pointing to
+     COACHING_PIPELINE_V1 as the implemented design.
+  2. **T-B** — vision-eval harness (the non-gated half of the screenshot
+     eval): scoring script + synthetic fixtures + consent checklist, so
+     the founder gate becomes "drop screenshots, run one command."
+  3. **T-C** — diagnosis retry hardening: per-attempt code-only
+     failure-reason logging, configurable retry count (default 3).
+- **P1 (retention loop — the vision's differentiator):**
+  4. **T-D** — daily habit loop v1: streak + earned freezes, "Today"
+     card, opt-in local notifications (no APNs).
+  5. **T-E** — skill profile v1: deterministic longitudinal aggregation
+     of reports + completions, `GET /users/{id}/profile`, iOS surface.
+  6. **T-F** — reflection loop ("How did it go?", BRIEF Flow D), feeds
+     the profile.
+  7. **T-G** — review/spaced-repetition pass: fixed-interval review
+     queue, review counts as streak activity, option-order shuffling
+     (clears the L02 nit).
+- **P2 (activation + v1 Must-Haves):**
+  8. **T-H** — onboarding + baseline (BRIEF Flow A), hosts notification
+     opt-in.
+  9. **T-I** — privacy policy/ToS, account-wide coaching-data deletion,
+     App Store third-party-AI disclosure + Privacy Nutrition Label
+     mapping.
+  10. **T-J** — backend auth (shared-secret bearer), rate limiting on
+      coaching endpoints, test-key rotation, deploy readiness.
+- **P3 (founder-gated decisions):**
+  11. **T-K** — paywall experiment scaffolding (StoreKit 2, flag off) —
+      gated on founder pricing + free-tier decision.
+  12. **T-L** — free-draft grading costed proposal (docs-only) — gated
+      on founder budget approval.
+- **Standing founder-gated item:** vision-quality eval on real consented
+  screenshots (runs via the T-B harness once the founder provides them).
+
+**2026-07-18: BUILD MODE — build start approved, scope gate
 lifted.** Founder delegated the go/no-go to the brain (records: root
 `DECISIONS.md` → "2026-07-18 — Build Start Approved; Content-Model-First
 Sequencing"; `docs/planning/DECISIONS.md` → "2026-07-18 — Build Start
@@ -8,7 +66,7 @@ Approved (Founder Delegation)"). The loop now runs autonomous bounded
 cycles under the existing safety rules (never force-push, clean-tree gate,
 3-round cap, brain reviews everything before commit/push).
 
-## v1 build backlog (current, maintained by the brain each cycle)
+## v1 build backlog (COMPLETE 2026-07-19 — superseded by the v2 backlog above)
 
 1. ~~**Cycle A (docs):** CONTENT_MODEL_V1.md + l01 fixture + gate sync~~ —
    done, accepted 2026-07-18 (cycle 4 below).
@@ -114,7 +172,7 @@ reads this file, does the next actionable item, runs tests, commits, pushes
 to `master`, then appends a cycle log entry below. If every open item is
 blocked, log that and stop — don't invent busywork.
 
-## Blocked on human action (do not attempt these autonomously)
+## Blocked on human action — HISTORICAL (Phase 0; superseded 2026-07-20, see v2 backlog)
 
 - **CMA-enabled Anthropic API key**: `backend/scripts/provision_agents.py`
   needs a key with Claude Managed Agents beta access
@@ -125,7 +183,11 @@ blocked, log that and stop — don't invent busywork.
   Simulator — this machine has Command Line Tools only. Needs a Mac with the
   full Xcode app.
 
-## Backlog (actionable now, no human gate)
+## Backlog (actionable now, no human gate) — HISTORICAL: DO NOT ACTION
+<!-- Every file referenced below (recommend.py, progress.py, agents_setup.py,
+coach.py, partner.py, ios/Core) was deleted in the 2026-07-18 Full Restart.
+Kept for the record only; the v2 backlog at the top of this file is the
+actionable list. -->
 
 1. Backend: expand test coverage for edge cases in `recommend.py` /
    `progress.py` beyond the current 120-test baseline (e.g. empty-history
@@ -141,7 +203,10 @@ blocked, log that and stop — don't invent busywork.
 5. Re-evaluate this backlog each cycle — pull in whatever's the smallest
    next real improvement rather than treating this list as exhaustive.
 
-## Once the human-gated items are cleared
+## Once the human-gated items are cleared — HISTORICAL: DO NOT ACTION
+<!-- Superseded twice over: COACHING_PIPELINE_V1 §7 defers the CMA upgrade
+entirely, and the 2026-07-19 Haiku-only lock removes the model tiering these
+items assume. -->
 
 6. Run `provision_agents.py` against the real API, confirm every CMA agent
    provisions successfully, commit the resulting `.provisioned.json` state

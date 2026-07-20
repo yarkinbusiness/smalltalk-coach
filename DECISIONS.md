@@ -153,6 +153,36 @@ Read by the brain and by every Codex worker at cycle start (see
   authored lessons (pause serving work and fix the schema), or the founder
   redirects the build order.
 
+### 2026-07-20 — v2 Backlog Adopted After Roadmap Strength Review
+
+- **Status:** Confirmed (founder-approved plan, 2026-07-20)
+- **Decision:** The brain's roadmap strength review
+  (`docs/planning/ROADMAP_REVIEW_2026-07-20.md`) is adopted. Verdict: the
+  v1 build backlog is complete and the remaining PROGRESS.md backlog
+  sections are stale (they reference Phase 0 files deleted in the Full
+  Restart, or CMA work deferred by COACHING_PIPELINE_V1 §7). PROGRESS.md
+  now carries a v2 backlog of 12 tasks (T-A…T-L) in four priority tiers:
+  P0 hygiene/unblocking (doc sync, vision-eval harness, diagnosis retry
+  hardening), P1 retention loop (streak/Today surface with local
+  notifications, deterministic skill profile, reflection loop,
+  spaced-repetition review), P2 activation/Must-Haves (onboarding +
+  baseline, privacy/deletion completeness, backend auth + deploy
+  readiness), P3 founder-gated decisions (paywall scaffolding, free-draft
+  grading proposal). All tasks respect the Haiku-only lock — P1 features
+  are fully deterministic with no new API calls — and the existing
+  brain/worker loop protocol.
+- **Why:** The loop had exhausted every actionable item while substantial
+  v1 scope from PRODUCT_BRIEF §10 and VISION.md Phase 2 (habit loop,
+  longitudinal profile, reflection, onboarding, privacy, auth, paywall)
+  had no roadmap representation; stale backlog sections risked a future
+  cycle acting on deleted files. Task selection grounded in fresh
+  competitor research (Gleam feature set and paywall complaints; Duolingo
+  streak-retention evidence) — sources in the review doc.
+- **Revisit trigger:** Founder reprioritizes; the vision-quality eval
+  fails on real screenshots (then screenshot-path work outranks the
+  retention tier); or any P1 task turns out to require model calls after
+  all (then it needs a costed founder decision first, per the Haiku lock).
+
 ### 2026-07-19 — Coaching Models Locked to Haiku 4.5 Only (Founder Cost Constraint)
 
 - **Status:** Confirmed (founder decision — strict rule)
