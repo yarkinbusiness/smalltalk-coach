@@ -356,3 +356,14 @@ Entry format (keep an entry under ~15 lines):
   and `xcodebuild build-for-testing` passed; `git diff --check` passed. iPhone 16 / iOS 18.2
   build and XCTest were attempted but CoreSimulatorService had no available runtime, so tests did not execute.
 - **Open issues:** Run the compiled XCTest suite on a host with a working iPhone 16 / iOS 18.2 simulator service.
+
+## 2026-07-20 21:24 UTC — Build deterministic longitudinal skill profile endpoint
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Added pure profile aggregation of valid coaching reports and completions,
+  the read-only profile store query, and `GET /users/{user_id}/profile`.
+- **Files touched:** backend/app/profile.py; backend/app/store.py; backend/app/main.py;
+  backend/tests/test_profile.py; backend/README.md; WORKER_LOG.md
+- **Result / verification:** `backend/.venv/bin/python -m pytest backend/tests -q`:
+  78 passed, 1 skipped, 1 warning; `compileall` and `git diff --check` passed.
+- **Open issues:** none

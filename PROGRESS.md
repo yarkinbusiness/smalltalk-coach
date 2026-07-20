@@ -230,6 +230,22 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-21 (cycle 29 — T-E backend: skill-profile endpoint):**
+  Worker: `gpt-5.6-terra`, one round. Shipped `backend/app/profile.py`
+  (strict per-row validation with defensive skips — malformed rows never
+  500; deterministic (datetime, id) ordering reusing
+  `parse_activity_timestamp`; per-dimension score histories capped at
+  10; all-time `flagged_count` per weakest dimension; recurring
+  weakness = same dimension flagged ≥3 of last 5 reports;
+  `recommended_not_taken` deduped to most recent, completed/unknown ids
+  excluded), `store.coaching_report_rows` raw read, and
+  `GET /users/{id}/profile`. Zero API calls; `DIMENSIONS` imported, not
+  redeclared. 6 new tests covering all 7 spec points. Brain
+  verification: **78 passed, 1 skipped** (own run); live probe of the
+  empty-profile contract matched verbatim; mandatory simulator launch
+  clean with the Today card intact — ACCEPTED. **Next:** cycle 30, T-E
+  iOS surface (profile section on Home).
+
 - **2026-07-21 (cycle 28 — T-D iOS: Today card + reminders; T-D
   COMPLETE):** Worker: `gpt-5.6-terra`, one round, honest partial
   (sandbox blocks simulator; brain ran tests). Shipped `TodayCard.swift`

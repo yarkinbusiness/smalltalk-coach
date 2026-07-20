@@ -15,6 +15,7 @@ from pydantic import BaseModel
 from .content import Curriculum, load_curriculum
 from .coaching import setup_coaching
 from .diagnosis import DiagnosisAdapter
+from .profile import build_profile
 from .streak import compute_streak, parse_activity_timestamp
 from .store import ProgressStore
 
@@ -161,6 +162,16 @@ def create_app(
             "freezes": streak["freezes"],
             "today": today,
         }
+
+    @app.get("/users/{user_id}/profile")
+    def get_profile(user_id: str, request: Request) -> dict[str, object]:
+        user_id = _require_user_id(user_id)
+        store = progress_store_for(request)
+        return build_profile(
+            store.coaching_report_rows(user_id),
+            store.completed_lesson_ids(user_id),
+            curriculum_for(request),
+        )
 
     @app.get("/lessons/{lesson_id}")
     def get_lesson(

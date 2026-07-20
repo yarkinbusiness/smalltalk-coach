@@ -144,6 +144,21 @@ class ProgressStore:
             ).fetchall()
         return [dict(row) for row in rows]
 
+    def coaching_report_rows(self, user_id: str) -> list[dict[str, Any]]:
+        """Return raw persisted fields needed for deterministic profile aggregation."""
+        with closing(self._connect()) as connection:
+            connection.row_factory = sqlite3.Row
+            rows = connection.execute(
+                """
+                SELECT id, created_at, weakest_dimension, lesson_id,
+                       recommendation_kind, diagnosis_json
+                FROM coaching_reports WHERE user_id = ?
+                ORDER BY created_at ASC, id ASC
+                """,
+                (user_id,),
+            ).fetchall()
+        return [dict(row) for row in rows]
+
     def delete_coaching_report(self, report_id: str, user_id: str) -> bool:
         """Delete the single record containing both report and transcript atomically."""
         with closing(self._connect()) as connection:
