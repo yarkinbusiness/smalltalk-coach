@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from typing import Any, Protocol
 
 import anthropic
@@ -15,6 +16,7 @@ COACHING_MODEL = "claude-haiku-4-5"
 DIMENSIONS = ("warmth", "curiosity", "reciprocity", "flow")
 _KINDS = frozenset({"observation", "inference", "suggestion"})
 _SAFETY_CATEGORIES = frozenset({"crisis", "self_harm", "abuse", "other"})
+_DEFAULT_DIAGNOSIS_ATTEMPTS = 3
 
 DIAGNOSIS_SCHEMA: dict[str, Any] = {
     "type": "object",
@@ -331,22 +333,57 @@ def _payload_from_response(response: Any) -> object:
     return json.loads(text)
 
 
+def _diagnosis_attempts() -> int:
+    """Return the bounded per-request retry count without import-time config."""
+    try:
+        attempts = int(os.environ.get("SMALLTALK_DIAGNOSIS_ATTEMPTS", _DEFAULT_DIAGNOSIS_ATTEMPTS))
+    except (TypeError, ValueError):
+        return _DEFAULT_DIAGNOSIS_ATTEMPTS
+    return attempts if 1 <= attempts <= 5 else _DEFAULT_DIAGNOSIS_ATTEMPTS
+
+
+def _invalid_response_reason(error: Exception) -> str:
+    if isinstance(error, json.JSONDecodeError):
+        return error.msg
+    if isinstance(error, ValueError):
+        return str(error)
+    return type(error).__name__
+
+
 def diagnose(
     adapter: DiagnosisAdapter, transcript: dict[str, Any], forbidden_terms: set[str]
 ) -> dict[str, Any]:
-    """Make one call, retry invalid output once, and expose only safe errors."""
-    for attempt in range(2):
+    """Make a bounded diagnosis request and expose only safe errors."""
+    attempts = _diagnosis_attempts()
+    for attempt in range(1, attempts + 1):
         try:
             response = adapter.request(transcript)
             return validate_diagnosis(_payload_from_response(response), transcript, forbidden_terms)
         except CoachingRefusedError:
             raise
-        except (anthropic.APIConnectionError, anthropic.APITimeoutError, anthropic.APIStatusError) as error:
-            status = getattr(error, "status_code", "provider_error")
-            LOGGER.error("coaching diagnosis provider_error=%s", status)
-            raise DiagnosisError() from error
+        except anthropic.APIStatusError as error:
+            status = error.status_code
+            if status < 500 and status != 429:
+                LOGGER.error("coaching diagnosis provider_error=%s", status)
+                raise DiagnosisError() from error
+            LOGGER.error("coaching diagnosis attempt=%d/%d provider_error=%s", attempt, attempts, status)
+            if attempt == attempts:
+                LOGGER.error("coaching diagnosis exhausted attempts=%d", attempts)
+                raise DiagnosisError() from error
+        except (anthropic.APIConnectionError, anthropic.APITimeoutError) as error:
+            LOGGER.error(
+                "coaching diagnosis attempt=%d/%d provider_error=%s",
+                attempt, attempts, type(error).__name__,
+            )
+            if attempt == attempts:
+                LOGGER.error("coaching diagnosis exhausted attempts=%d", attempts)
+                raise DiagnosisError() from error
         except (ValueError, TypeError, KeyError, json.JSONDecodeError) as error:
-            if attempt == 1:
-                LOGGER.error("coaching diagnosis invalid_response")
+            LOGGER.error(
+                "coaching diagnosis attempt=%d/%d invalid_response reason=%s",
+                attempt, attempts, _invalid_response_reason(error),
+            )
+            if attempt == attempts:
+                LOGGER.error("coaching diagnosis exhausted attempts=%d", attempts)
                 raise DiagnosisError() from error
     raise DiagnosisError()

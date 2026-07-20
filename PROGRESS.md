@@ -230,6 +230,23 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-20 (cycle 26 — T-C diagnosis retry hardening; P0 TIER
+  COMPLETE):** Worker: `gpt-5.6-terra`, one round. `diagnose()` now runs
+  a bounded retry loop: default 3 attempts
+  (`SMALLTALK_DIAGNOSIS_ATTEMPTS`, clamped 1–5, lazy env read, garbage →
+  default), retries invalid output AND transient provider errors
+  (5xx/429/connection/timeout — the cycle-21 live 502 pattern now
+  recovers), never retries refusals or non-transient statuses (schema
+  400s fail fast per the cycle-21/23 lesson), per-attempt content-free
+  ERROR logs (`attempt=n/N`, fixed reason slugs) + exhaustion line;
+  external taxonomy unchanged (502 `ai_unavailable` verified at HTTP
+  layer). 7 new tests incl. both cycle-21 regression patterns and a
+  caplog assertion that transcript content never reaches logs. Brain
+  verification: **64 passed, 1 skipped** (own run); retry-focused subset
+  green; mandatory simulator launch clean against the restarted
+  cycle-26 backend — ACCEPTED. **Next:** P1 begins — T-D daily habit
+  loop, backend half first (streak/freeze/today endpoint).
+
 - **2026-07-20 (cycle 25 — T-B vision-eval harness):** Worker:
   `gpt-5.6-terra`, one round. Shipped `backend/eval/vision_eval.py`
   (stdlib-only CLI: greedy difflib turn alignment; recall/fidelity/order/

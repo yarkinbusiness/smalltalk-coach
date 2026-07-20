@@ -193,22 +193,89 @@ def test_text_normalization_labeled_name_and_unlabeled() -> None:
     lambda item: item.__setitem__("improvements", []),
     lambda item: item.update({"small_practice_action": "Review l04-answer-and-return next."}),
 ])
-def test_invalid_diagnosis_retries_once_then_returns_502(tmp_path: Path, mutate) -> None:
+def test_invalid_diagnosis_retries_to_default_attempt_limit_then_returns_502(tmp_path: Path, mutate) -> None:
     payload = _valid_diagnosis()
     mutate(payload)
-    fake = FakeAdapter(payload, payload)
+    fake = FakeAdapter(payload, payload, payload)
     with _client(tmp_path, fake) as client:
         response = _request(client)
         assert response.status_code == 502
         assert response.json()["detail"] == "ai_unavailable"
         assert client.get("/coaching/reports", params={"user_id": "maya"}).json() == []
-    assert fake.calls == 2
+    assert fake.calls == 3
 
 
 def test_valid_diagnosis_passes_validation() -> None:
     fake = FakeAdapter(_valid_diagnosis())
     assert diagnose(fake, _transcript(), {"l04-answer-and-return"})["dimensions"]["reciprocity"]["score"] == 2
     assert fake.calls == 1
+
+
+def _provider_status_error(status_code: int) -> anthropic.APIStatusError:
+    request = httpx.Request("POST", "https://example.test/messages")
+    response = httpx.Response(status_code, request=request)
+    return anthropic.APIStatusError("provider failure", response=response, body=None)
+
+
+def test_diagnosis_succeeds_after_two_invalid_payloads() -> None:
+    invalid = _valid_diagnosis()
+    invalid.pop("dimensions")
+    fake = FakeAdapter(invalid, copy.deepcopy(invalid), _valid_diagnosis())
+
+    assert diagnose(fake, _transcript(), set())["dimensions"]["reciprocity"]["score"] == 2
+    assert fake.calls == 3
+
+
+def test_diagnosis_retries_transient_provider_error() -> None:
+    fake = FakeAdapter(_provider_status_error(502), _valid_diagnosis())
+
+    assert diagnose(fake, _transcript(), set())["dimensions"]["reciprocity"]["score"] == 2
+    assert fake.calls == 2
+
+
+def test_diagnosis_does_not_retry_non_transient_provider_error() -> None:
+    fake = FakeAdapter(_provider_status_error(400), _valid_diagnosis())
+
+    with pytest.raises(diagnosis.DiagnosisError):
+        diagnose(fake, _transcript(), set())
+    assert fake.calls == 1
+
+
+def test_diagnosis_does_not_retry_refusal() -> None:
+    fake = FakeAdapter({"stop_reason": "refusal"}, _valid_diagnosis())
+
+    with pytest.raises(diagnosis.CoachingRefusedError):
+        diagnose(fake, _transcript(), set())
+    assert fake.calls == 1
+
+
+def test_diagnosis_logs_each_invalid_attempt_without_transcript_content(caplog) -> None:
+    transcript_text = "Sensitive transcript phrase that must not be logged."
+    transcript = normalize_text(f"Me: {transcript_text}\nThem: How are you finding it?")
+    fake = FakeAdapter({}, {}, {})
+
+    with caplog.at_level("ERROR", logger=diagnosis.__name__), pytest.raises(diagnosis.DiagnosisError):
+        diagnose(fake, transcript, set())
+
+    messages = [record.getMessage() for record in caplog.records]
+    assert messages == [
+        "coaching diagnosis attempt=1/3 invalid_response reason=invalid diagnosis fields",
+        "coaching diagnosis attempt=2/3 invalid_response reason=invalid diagnosis fields",
+        "coaching diagnosis attempt=3/3 invalid_response reason=invalid diagnosis fields",
+        "coaching diagnosis exhausted attempts=3",
+    ]
+    assert transcript_text not in "\n".join(messages)
+    assert fake.calls == 3
+
+
+@pytest.mark.parametrize(("attempts", "expected_calls"), [("1", 1), ("garbage", 3)])
+def test_diagnosis_attempts_environment_is_bounded(monkeypatch, attempts: str, expected_calls: int) -> None:
+    monkeypatch.setenv("SMALLTALK_DIAGNOSIS_ATTEMPTS", attempts)
+    fake = FakeAdapter(*({} for _ in range(3)))
+
+    with pytest.raises(diagnosis.DiagnosisError):
+        diagnose(fake, _transcript(), set())
+    assert fake.calls == expected_calls
 
 
 def test_stimulus_only_question_routes_persists_and_serves_response_coaching(tmp_path: Path) -> None:
@@ -510,7 +577,7 @@ def test_refusal_provider_failure_and_escalation_do_not_persist(tmp_path: Path) 
     connection_error = anthropic.APIConnectionError(request=request)
     cases = [
         (FakeAdapter(Refusal()), 422, "coaching_refused"),
-        (FakeAdapter(connection_error), 502, "ai_unavailable"),
+        (FakeAdapter(connection_error, connection_error, connection_error), 502, "ai_unavailable"),
         (FakeAdapter({**_valid_diagnosis(), "safety": {"status": "escalate", "category": "crisis"}}), 200, None),
     ]
     for index, (adapter, status, detail) in enumerate(cases):

@@ -319,3 +319,14 @@ Entry format (keep an entry under ~15 lines):
   ungated live CLI refused with exit 2; `backend/.venv/bin/python -m pytest backend/tests -q`:
   57 passed, 1 skipped, 1 warning; `git diff --check` passed.
 - **Open issues:** Real consented screenshots and manual failure inspection remain founder-gated.
+
+## 2026-07-20 20:59 UTC — Harden diagnosis retries and failure logging
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Made diagnosis attempts lazily configurable (default three), retried invalid
+  responses and transient provider failures, and added content-free per-attempt/exhaustion logs.
+- **Files touched:** backend/app/diagnosis.py; backend/tests/test_coaching.py; WORKER_LOG.md
+- **Result / verification:** `backend/.venv/bin/python -m pytest backend/tests/test_coaching.py -q`:
+  46 passed, 1 warning; `backend/.venv/bin/python -m pytest backend/tests -q`:
+  64 passed, 1 skipped, 1 warning; `git diff --check` passed.
+- **Open issues:** none
