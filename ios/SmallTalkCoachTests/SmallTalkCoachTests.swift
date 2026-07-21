@@ -2,6 +2,33 @@ import XCTest
 @testable import SmallTalkCoach
 
 final class SmallTalkCoachTests: XCTestCase {
+    func testTextDisclosureCopyPreservesExistingWording() throws {
+        let lines = CoachingDisclosureCopy.lines(for: .text)
+
+        XCTAssertEqual(
+            try XCTUnwrap(lines.first),
+            "Your conversation text is sent to Anthropic, a third-party AI, for analysis."
+        )
+        XCTAssertTrue(try XCTUnwrap(lines.first).contains("conversation text"))
+        XCTAssertTrue(try XCTUnwrap(lines.first).contains("Anthropic"))
+    }
+
+    func testScreenshotDisclosureCopyNamesAnthropicAndImage() throws {
+        let firstLine = try XCTUnwrap(CoachingDisclosureCopy.lines(for: .screenshot).first)
+
+        XCTAssertTrue(firstLine.contains("Anthropic"))
+        XCTAssertTrue(firstLine.localizedCaseInsensitiveContains("screenshot") || firstLine.localizedCaseInsensitiveContains("image"))
+    }
+
+    func testDisclosureCopyIsNonEmptyAndVariesByCompositionMode() {
+        let textLines = CoachingDisclosureCopy.lines(for: .text)
+        let screenshotLines = CoachingDisclosureCopy.lines(for: .screenshot)
+
+        XCTAssertFalse(textLines.isEmpty)
+        XCTAssertFalse(screenshotLines.isEmpty)
+        XCTAssertNotEqual(textLines, screenshotLines)
+    }
+
     func testDecodesCurriculumFixture() throws {
         let fixture = """
         {

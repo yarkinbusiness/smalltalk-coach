@@ -64,18 +64,13 @@ requirement: it appears before submission, names Anthropic, says that
 conversation text is sent for analysis, and requires an affirmative consent
 toggle.
 
-### Actionable follow-up — screenshot disclosure gap
+### Follow-up — screenshot disclosure gap — RESOLVED 2026-07-21 (cycle 40)
 
-**High priority:** Screenshot coaching uses the same consent section, but the
-current disclosure says only “conversation text.” It does **not** explicitly
-say that the selected screenshot image is sent to Anthropic to extract the
-conversation transcript and provide coaching. Before App Store submission,
-update the screenshot-path consent copy so it names Anthropic and explicitly
-states that the screenshot image and its extracted conversation text are sent
-for transcript extraction and coaching analysis, before the user turns on the
-consent toggle.
-
-Also make the consent label specific to the selected source, so the affirmative
-permission clearly covers text in text mode and the screenshot image in
-screenshot mode. This document records the gap only; no app code is changed in
-this cycle.
+Screenshot-mode consent copy now explicitly names Anthropic and states that
+the screenshot image itself (not just extracted text) is sent for transcript
+extraction and coaching analysis, shown before the consent toggle. Text-mode
+copy is unchanged. Implementation: `CoachingDisclosureCopy.lines(for:)` in
+`ios/SmallTalkCoach/CoachingView.swift`, keyed on the same composition-mode
+state that already drives the input picker. Regression-tested (text-mode
+copy asserted byte-identical; screenshot-mode copy asserted to contain both
+"Anthropic" and an image reference).

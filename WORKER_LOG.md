@@ -500,3 +500,15 @@ Entry format (keep an entry under ~15 lines):
   1 warning in 3.25s; `git diff --check` passed before this append.
 - **Open issues:** Before App Store submission, update screenshot-mode consent copy to explicitly say
   that the screenshot image and extracted conversation text are sent to Anthropic, then re-audit it.
+
+## 2026-07-21 09:16 UTC — Make coaching consent disclosure mode-aware
+- **Model:** gpt-5.6-terra
+- **Status:** partial
+- **What was done:** Extracted the three consent-disclosure lines into mode-aware copy. Text mode preserves
+  the existing first sentence verbatim; screenshot mode explicitly names the screenshot image and Anthropic.
+  Added regressions for the text wording, screenshot disclosure, and distinct non-empty mode copy.
+- **Files touched:** ios/SmallTalkCoach/CoachingView.swift; ios/SmallTalkCoachTests/SmallTalkCoachTests.swift; WORKER_LOG.md
+- **Result / verification:** `cd ios && xcodegen generate` and generic simulator `xcodebuild build-for-testing`
+  succeeded. Named iPhone 16 build and XCTest could not run because CoreSimulatorService has no available runtimes;
+  `git diff --check` passed.
+- **Open issues:** Run XCTest and the live Source-picker disclosure check on a host with a working iPhone 16 simulator.

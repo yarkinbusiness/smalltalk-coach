@@ -1,6 +1,27 @@
 import SwiftUI
 import PhotosUI
 
+enum CoachingDisclosureCopy {
+    static func lines(for mode: CoachingCompositionMode) -> [String] {
+        let storageNotice = "It may include another person’s words or identity. A successful analysis is stored on your own SmallTalk Coach backend, and you can delete it from History at any time."
+
+        switch mode {
+        case .text:
+            return [
+                "Your conversation text is sent to Anthropic, a third-party AI, for analysis.",
+                storageNotice,
+                "Only paste what you’re comfortable sharing."
+            ]
+        case .screenshot:
+            return [
+                "Your screenshot image is sent to Anthropic, a third-party AI, to extract the conversation text and provide analysis.",
+                storageNotice,
+                "Only share a screenshot you’re comfortable sending."
+            ]
+        }
+    }
+}
+
 @MainActor
 struct CoachingView: View {
     @StateObject private var viewModel: CoachingViewModel
@@ -120,9 +141,13 @@ private struct CoachingComposeView: View {
             }
             Section("Before you send") {
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("Your conversation text is sent to Anthropic, a third-party AI, for analysis.")
-                    Text("It may include another person’s words or identity. A successful analysis is stored on your own SmallTalk Coach backend, and you can delete it from History at any time.")
-                    Text("Only paste what you’re comfortable sharing.").foregroundStyle(.secondary)
+                    ForEach(Array(CoachingDisclosureCopy.lines(for: viewModel.compositionMode).enumerated()), id: \.offset) { index, line in
+                        if index == 2 {
+                            Text(line).foregroundStyle(.secondary)
+                        } else {
+                            Text(line)
+                        }
+                    }
                 }
                 .font(.subheadline)
                 Toggle("I understand and consent", isOn: $viewModel.consentGiven)

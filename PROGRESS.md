@@ -230,6 +230,33 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-21 (cycle 40 — micro-fix: mode-aware screenshot consent
+  disclosure; App Store Nov-2025 gap closed):** Worker: `gpt-5.6-terra`,
+  one round, honest partial (sandbox blocks simulator; brain ran
+  tests). `CoachingDisclosureCopy.lines(for:)` extracted as a pure
+  function keyed on `CoachingCompositionMode` (the same binding already
+  driving the composer's TextEditor/PhotosPicker switch); `.text`
+  line kept byte-identical to the pre-existing copy (regression-tested);
+  `.screenshot` line now explicitly names both Anthropic and the image
+  itself ("Your screenshot image is sent to Anthropic... to extract the
+  conversation text and provide analysis"), third line adjusted
+  ("share a screenshot" vs "paste"). 3 new tests assert exact substrings
+  per mode. Brain verification: **64 XCTests, 0 failures** (own run,
+  3 new); mandatory simulator launch clean — ACCEPTED. **Verification
+  note (honest, not inflated):** the interactive toggle-and-observe
+  click-through was not performed this cycle — this environment's
+  `simctl` has no tap/touch-injection primitive, and standing up a new
+  XCUITest target was out of scope for a text-only fix. Confidence
+  instead rests on: the copy is driven by the exact same
+  `viewModel.compositionMode` binding already proven reactive (it
+  already switches the composer's input UI, shipped and
+  screenshot-verified since cycle 19), and Swift's exhaustive `switch`
+  over the two-case enum makes an unhandled mode a compile error, not a
+  runtime risk. `docs/legal/APP_STORE_PRIVACY.md`'s follow-up item is
+  now resolved in-app. **T-I is now fully closed, including its
+  audit-surfaced follow-up.** **Next:** T-J — backend auth, rate
+  limiting, key rotation (the hard gate before any exposed deployment).
+
 - **2026-07-21 (cycle 39 — T-I docs half; T-I COMPLETE):** Worker:
   `gpt-5.6-terra`, one round, docs-only. Shipped `docs/legal/`:
   PRIVACY_POLICY.md (controller Yarkin Yavuz /
