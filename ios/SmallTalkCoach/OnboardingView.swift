@@ -33,7 +33,6 @@ final class OnboardingViewModel: ObservableObject {
         case goal
         case context
         case baseline
-        case reminder
     }
 
     @Published private(set) var step: Step = .goal
@@ -57,7 +56,7 @@ final class OnboardingViewModel: ObservableObject {
         switch step {
         case .goal: return goal != nil
         case .context: return context != nil
-        case .baseline, .reminder: return true
+        case .baseline: return true
         }
     }
 
@@ -119,17 +118,14 @@ final class OnboardingViewModel: ObservableObject {
 
 struct OnboardingView: View {
     @StateObject private var viewModel: OnboardingViewModel
-    @StateObject private var reminderViewModel: ReminderSettingsViewModel
     private let onFinished: (Bool) -> Void
 
     init(
         stateStore: OnboardingStateStore,
         client: any OnboardingAPI = APIClient(),
-        reminderScheduler: any ReminderScheduling = LocalReminderScheduler(),
         onFinished: @escaping (Bool) -> Void
     ) {
         _viewModel = StateObject(wrappedValue: OnboardingViewModel(client: client, stateStore: stateStore))
-        _reminderViewModel = StateObject(wrappedValue: ReminderSettingsViewModel(scheduler: reminderScheduler))
         self.onFinished = onFinished
     }
 
@@ -149,7 +145,7 @@ struct OnboardingView: View {
                     .buttonStyle(.bordered)
                 }
 
-                if viewModel.step == .reminder {
+                if viewModel.step == .baseline {
                     Button(viewModel.isSubmitting ? "Getting started…" : "Get started") {
                         Task {
                             onFinished(await viewModel.submit())
@@ -216,14 +212,6 @@ struct OnboardingView: View {
                 rating("Asking questions that open people up", value: viewModel.curiosity, dimension: "curiosity")
                 rating("Sharing about yourself", value: viewModel.reciprocity, dimension: "reciprocity")
                 rating("Keeping a conversation flowing", value: viewModel.flow, dimension: "flow")
-            }
-        case .reminder:
-            VStack(alignment: .leading, spacing: 16) {
-                Text("A small nudge, if you want one")
-                    .font(.title2.bold())
-                Text("Reminders are off by default. You can update this anytime.")
-                    .foregroundStyle(.secondary)
-                ReminderSettingsControls(viewModel: reminderViewModel)
             }
         }
     }

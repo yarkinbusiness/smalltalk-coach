@@ -315,6 +315,62 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-21 (cycle 54 — UI quick win #7: defer the notification-
+  permission ask; ONE ROUND, accepted as specified):** Worker:
+  `gpt-5.6-terra`. Onboarding shortened from 4 steps
+  (`goal → context → baseline → reminder`) to 3
+  (`goal → context → baseline`) — the `.reminder` step (which embedded
+  `ReminderSettingsControls` and could trigger the real
+  `UNUserNotificationCenter` OS prompt before the user had done anything
+  in the app) is gone entirely. No functionality lost: `TodayCard`'s
+  always-visible bell icon (Home tab, first screen after onboarding)
+  already reaches the exact same `ReminderSettingsControls` /
+  `ReminderSettingsViewModel` flow independently — confirmed untouched.
+  `canAdvance`, the terminal-step button branch (now `.baseline` shows
+  "Get started" instead of `.reminder`), and `OnboardingView`'s now-dead
+  `reminderViewModel`/`reminderScheduler` property and init parameter all
+  correctly removed. Worker grepped for other `OnboardingView(` call
+  sites before deleting the init parameter (only `RootView.swift`, which
+  doesn't pass it explicitly, so no other call site broke). Test fix:
+  `testOnboardingViewModelProgressesAndPostsExactPayload`'s now-invalid
+  extra `advance()` + `.reminder` assertion replaced with a direct
+  `.baseline` assertion before `submit()`; worker additionally caught and
+  cleaned up a second, harmless-but-now-redundant `advance()` call in
+  `testOnboardingStateFreshSuiteSkipAndFinishPersist` (would have been a
+  silent no-op under the new 3-case enum, not a failure, but correctly
+  tidied anyway) — broader and more thorough than what the spec
+  explicitly named.
+  **Brain verification:** full source review found no bugs. `xcodegen
+  generate` + `xcodebuild build`/`test` — 76 passed, 3 pre-existing
+  skips, 0 failures. Visual check via fresh onboarding state: discovered
+  along the way that `xcrun simctl uninstall` on this simulator reports
+  success but does **not** actually clear the app's `UserDefaults` (a
+  simulator/tooling characteristic, not a product bug — confirmed by
+  reading the flag immediately after uninstall, before any reinstall,
+  and finding it unchanged) — noted for future cycles' own verification
+  hygiene; likely means cycle 51's "fresh install" empty-state check
+  worked because that persistent user genuinely had zero reports, not
+  because the install was actually fresh. Worked around by deleting the
+  specific `smalltalkCoach.hasCompletedOnboarding` key directly via
+  `defaults delete`, which does work reliably. Confirmed: (1) fresh
+  onboarding entry shows the `.goal` step with a progress bar correctly
+  reflecting 3 total steps, not 4; (2) via a temporary, fully-reverted
+  one-line default-value change (`step: Step = .goal` → `.baseline`, the
+  same class of temporary diagnostic edit used in prior cycles, reverted
+  and confirmed clean via `git diff` before finalizing), the terminal
+  `.baseline` step correctly shows a full progress bar, a "Get started"
+  button (not "Continue"), a "Back" button, and no reminder content
+  anywhere. Final real (non-diagnostic) build reinstalled and left with
+  onboarding reachable, so the founder can see the shortened flow
+  firsthand on next launch. **Next:** quick win #8 — empty-state copy
+  pass for coaching history. **Scoping note carried forward:** #8's
+  entire acceptance criterion (sample report card + "Analyze your first
+  conversation" CTA replacing the generic `ContentUnavailableView`) was
+  already fully delivered by #5a's `CoachingHistoryView` rework (cycle
+  51) — will confirm against the plan's exact wording and either mark #8
+  done-via-#5a with no new dispatch, or dispatch only a narrow residual
+  if the plan's text asks for anything #5a didn't cover.
+
 - **2026-07-21 (cycle 53 — UI quick win #6: MotionPolicy + Dynamic Type
   spot-check; ONE ROUND, accepted as specified):** Worker: `gpt-5.6-terra`.
   New `ios/SmallTalkCoach/MotionPolicy.swift`: a pure

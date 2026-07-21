@@ -289,7 +289,6 @@ final class SmallTalkCoachTests: XCTestCase {
         completedViewModel.advance()
         completedViewModel.select(context: .office)
         completedViewModel.advance()
-        completedViewModel.advance()
         let completedSubmissionFailed = await completedViewModel.submit()
         XCTAssertFalse(completedSubmissionFailed)
         XCTAssertTrue(OnboardingStateStore(defaults: defaults, key: "completed").hasCompletedOnboarding)
@@ -316,8 +315,7 @@ final class SmallTalkCoachTests: XCTestCase {
         viewModel.setRating(2, for: "curiosity")
         viewModel.setRating(4, for: "reciprocity")
         viewModel.setRating(1, for: "flow")
-        viewModel.advance()
-        XCTAssertEqual(viewModel.step, .reminder)
+        XCTAssertEqual(viewModel.step, .baseline)
 
         let submissionFailed = await viewModel.submit()
         XCTAssertFalse(submissionFailed)

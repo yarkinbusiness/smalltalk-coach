@@ -710,3 +710,11 @@ Entry format (keep an entry under ~15 lines):
 - **Files touched:** ios/SmallTalkCoach/{MotionPolicy,SkeletonBlock,CoachingView,CardStyle}.swift; WORKER_LOG.md. Part 4: checked TodayCard, PrimaryActionButton, CardStyle previews, CoachingView, HomeView, ProfileView, and LessonDetailView; changed none because no clear clipping risk was found.
 - **Result / verification:** iPhone Simulator SDK type-check passed for MotionPolicy excluding sandbox-blocked Preview macro expansion; all four Swift files parse; `cd ios && xcodegen generate` and `git diff --check` passed. iPhone 16 `xcodebuild build`/`test` were attempted but CoreSimulatorService refused connections and no runtimes were available, so XCTest did not run.
 - **Open issues:** Run full iPhone 16 build/test and visually inspect previews on a host with a working simulator runtime; the requested `.environment(\.accessibilityReduceMotion, true)` preview setter remains unavailable in this installed SDK.
+
+## 2026-07-21 16:00 UTC — UI quick win #7: defer notification permission
+- **Model:** gpt-5
+- **Status:** partial
+- **What was done:** Removed onboarding’s reminder step and its scheduler/view-model wiring; baseline now submits directly. Updated onboarding progression tests for the three-step flow.
+- **Files touched:** ios/SmallTalkCoach/OnboardingView.swift; ios/SmallTalkCoachTests/SmallTalkCoachTests.swift; WORKER_LOG.md
+- **Result / verification:** `cd ios && xcodegen generate`, `xcrun swiftc -parse SmallTalkCoach/OnboardingView.swift`, no-remnant scans, and `git diff --check` passed. iPhone 16 `xcodebuild build` and `xcodebuild test` were attempted independently but did not start because CoreSimulatorService refused connections and exposed no runtimes; no XCTest cases ran.
+- **Open issues:** Run the iPhone 16 build and full XCTest suite on a host with a working simulator runtime.
