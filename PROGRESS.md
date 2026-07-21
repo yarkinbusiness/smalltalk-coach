@@ -1,6 +1,31 @@
 # Progress & backlog
 
-**2026-07-21 (latest): LOOP ACTIVE — UI Improvement Plan execution
+**2026-07-21 (newest): STANDING INSTRUCTION — loop becomes perpetual once
+the UI Improvement Plan backlog is exhausted (founder-issued, mid-cycle
+52/53).** Verbatim intent: after every quick win and every deeper
+redesign in `docs/planning/UI_IMPROVEMENT_PLAN.md` is shipped, do **not**
+stop and report back — instead (1) build + run live on the iPhone 16
+simulator, verify end to end (backend health, learning path, lesson
+states), fixing any build/runtime failure first; (2) the brain researches
+further UI/UX polish opportunities (layout, motion, copy, habit loops),
+comparing current screens against `docs/research/smalltalk-coach-research.pdf`
+and the (by then fully-actioned) UI Improvement Plan for anything newly
+relevant; (3) hand each finding to the worker as one small, well-scoped
+task at a time via the existing loop protocol; (4) after each task,
+build + verify again, log to `WORKER_LOG.md`, and loop back to (2) —
+continuously, indefinitely, not a fixed backlog. Same guardrails as
+always: founder-deferred items (paywall-sequencing; Coach-tab/free-draft
+IA placement) still get flagged and stopped on, not decided unilaterally;
+never commit without a `PROGRESS.md` note; existing spec docs still
+govern. **Mechanism note (not yet actioned — decide when actually
+reached):** `CronList` checked 2026-07-21, no conflicting scheduled jobs
+on this repo. When the fixed backlog below is actually exhausted, use
+`ScheduleWakeup`'s dynamic-loop mechanism (or `CronCreate` if
+cross-session persistence beyond a single conversation turns out to be
+needed) to keep the cycle firing rather than just stopping — don't
+over-build this until that point is actually reached.
+
+**2026-07-21 (earlier): LOOP ACTIVE — UI Improvement Plan execution
 begun (founder-approved).** The v3 roadmap (T-K, T-L, and the follow-up
 privacy-policy fix) is fully shipped — see the cycle log below. The
 founder then commissioned UI/UX research (`docs/research/`, condensed
