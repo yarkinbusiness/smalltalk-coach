@@ -2,6 +2,7 @@ import SwiftUI
 
 struct LessonDetailView: View {
     @StateObject private var viewModel: LessonDetailViewModel
+    @State private var currentStep: LessonStep = .idea
     private let onCompleted: (String?) -> Void
 
     init(
@@ -79,84 +80,119 @@ struct LessonDetailView: View {
     }
 
     private func lessonContent(_ lesson: Lesson) -> some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
-                if viewModel.mode == .review {
-                    Label("Review", systemImage: "arrow.counterclockwise")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.blue)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(.blue.opacity(0.12), in: Capsule())
-                }
+        VStack(spacing: 0) {
+            LessonProgressHeader(
+                currentStep: currentStep.rawValue + 1,
+                totalSteps: LessonStep.allCases.count,
+                stepTitle: currentStep.title,
+                isReview: viewModel.mode == .review
+            )
 
+            ScrollView {
+                currentStepContent(lesson)
+                    .padding(AppTheme.Spacing.cardPadding)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .transition(.opacity)
+            }
+            .id(currentStep)
+            .motionAwareAnimation(AppTheme.Motion.standard, value: currentStep)
+
+            stepNavigation
+        }
+    }
+
+    @ViewBuilder
+    private func currentStepContent(_ lesson: Lesson) -> some View {
+        switch currentStep {
+        case .idea:
+            VStack(alignment: .leading, spacing: AppTheme.Spacing.rowSpacing) {
                 Text(lesson.concept)
                     .font(.title3.weight(.semibold))
 
                 LessonSection("The idea") {
                     Text(lesson.conceptIntro.text)
                 }
+            }
+        case .example:
+            LessonSection("Example") {
+                Text(lesson.example.setting)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.secondary)
 
-                LessonSection("Example") {
-                    Text(lesson.example.setting)
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.secondary)
-
-                    if let narration = lesson.example.narration {
-                        Text(narration)
-                            .italic()
-                    }
-
-                    if let dialogue = lesson.example.dialogue {
-                        ForEach(dialogue) { line in
-                            DialogueRow(line: line)
-                        }
-                    }
+                if let narration = lesson.example.narration {
+                    Text(narration)
+                        .italic()
                 }
 
-                LessonSection("Bad, better, best") {
-                    ResponseTier(title: "Bad", response: lesson.responses.bad, color: .red)
-                    ResponseTier(title: "Better", response: lesson.responses.better, color: .orange)
-                    ResponseTier(title: "Best", response: lesson.responses.best, color: .green)
-                }
-
-                LessonSection("Quick exercise") {
-                    Text(lesson.exercise.prompt)
-                    ForEach(lesson.exercise.options.indices, id: \.self) { index in
-                        ChoiceButton(
-                            text: lesson.exercise.options[index].text,
-                            isSelected: viewModel.selectedAnswers[-1] == index,
-                            state: exerciseOptionState(index, lesson: lesson)
-                        ) {
-                            viewModel.selectAnswer(index, forPartAt: -1)
-                        }
+                if let dialogue = lesson.example.dialogue {
+                    ForEach(dialogue) { line in
+                        DialogueRow(line: line)
                     }
-                    if let selected = viewModel.selectedAnswers[-1] {
-                        let isCorrect = selected == lesson.exercise.correctOptionIndex
-                        Label(
-                            isCorrect ? "Correct" : "Not quite",
-                            systemImage: isCorrect ? "checkmark.circle.fill" : "xmark.circle.fill"
-                        )
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(isCorrect ? .green : .red)
-                        Text(lesson.exercise.options[selected].feedback)
-                            .font(.subheadline)
-                    }
-                }
-
-                LessonSection("Practice") {
-                    Text(lesson.practice.scenarioSetup)
-                    Text(lesson.practice.userTask)
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                }
-
-                LessonSection("Completion check") {
-                    completionCheck(lesson)
                 }
             }
-            .padding()
+        case .responseTiers:
+            LessonSection("Bad, better, best") {
+                ResponseTier(title: "Bad", response: lesson.responses.bad, color: .red)
+                ResponseTier(title: "Better", response: lesson.responses.better, color: .orange)
+                ResponseTier(title: "Best", response: lesson.responses.best, color: .green)
+            }
+        case .exercise:
+            LessonSection("Quick exercise") {
+                Text(lesson.exercise.prompt)
+                ForEach(lesson.exercise.options.indices, id: \.self) { index in
+                    ChoiceButton(
+                        text: lesson.exercise.options[index].text,
+                        isSelected: viewModel.selectedAnswers[-1] == index,
+                        state: exerciseOptionState(index, lesson: lesson)
+                    ) {
+                        viewModel.selectAnswer(index, forPartAt: -1)
+                    }
+                }
+                if let selected = viewModel.selectedAnswers[-1] {
+                    let isCorrect = selected == lesson.exercise.correctOptionIndex
+                    Label(
+                        isCorrect ? "Correct" : "Not quite",
+                        systemImage: isCorrect ? "checkmark.circle.fill" : "xmark.circle.fill"
+                    )
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(isCorrect ? .green : .red)
+                    Text(lesson.exercise.options[selected].feedback)
+                        .font(.subheadline)
+                }
+            }
+        case .practice:
+            LessonSection("Practice") {
+                Text(lesson.practice.scenarioSetup)
+                Text(lesson.practice.userTask)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(.secondary)
+            }
+        case .completionCheck:
+            LessonSection("Completion check") {
+                completionCheck(lesson)
+            }
         }
+    }
+
+    private var stepNavigation: some View {
+        HStack(spacing: AppTheme.Spacing.rowSpacing) {
+            if currentStep != .idea {
+                Button("Back") {
+                    currentStep = currentStep.previous
+                }
+                .buttonStyle(.bordered)
+            }
+
+            Spacer(minLength: 0)
+
+            if currentStep != .completionCheck {
+                Button("Next") {
+                    currentStep = currentStep.next
+                }
+                .buttonStyle(.borderedProminent)
+            }
+        }
+        .padding(AppTheme.Spacing.cardPadding)
     }
 
     @ViewBuilder
@@ -280,6 +316,34 @@ struct LessonDetailView: View {
             return selected == lesson.exercise.correctOptionIndex ? .correct : .incorrect
         }
         return .neutral
+    }
+}
+
+private enum LessonStep: Int, CaseIterable {
+    case idea
+    case example
+    case responseTiers
+    case exercise
+    case practice
+    case completionCheck
+
+    var title: String {
+        switch self {
+        case .idea: "The idea"
+        case .example: "Example"
+        case .responseTiers: "Bad, better, best"
+        case .exercise: "Quick exercise"
+        case .practice: "Practice"
+        case .completionCheck: "Completion check"
+        }
+    }
+
+    var previous: LessonStep {
+        LessonStep(rawValue: rawValue - 1) ?? self
+    }
+
+    var next: LessonStep {
+        LessonStep(rawValue: rawValue + 1) ?? self
     }
 }
 

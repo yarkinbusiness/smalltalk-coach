@@ -718,3 +718,19 @@ Entry format (keep an entry under ~15 lines):
 - **Files touched:** ios/SmallTalkCoach/OnboardingView.swift; ios/SmallTalkCoachTests/SmallTalkCoachTests.swift; WORKER_LOG.md
 - **Result / verification:** `cd ios && xcodegen generate`, `xcrun swiftc -parse SmallTalkCoach/OnboardingView.swift`, no-remnant scans, and `git diff --check` passed. iPhone 16 `xcodebuild build` and `xcodebuild test` were attempted independently but did not start because CoreSimulatorService refused connections and exposed no runtimes; no XCTest cases ran.
 - **Open issues:** Run the iPhone 16 build and full XCTest suite on a host with a working simulator runtime.
+
+## 2026-07-21 16:15 UTC — Deeper redesign #3a: paced lesson flow and progress header
+- **Model:** gpt-5.6-terra
+- **Status:** partial
+- **What was done:** Added a tokenized, preview-covered LessonProgressHeader and paged the six existing lesson sections behind local Back/Next navigation. The review badge is now persistent, each step gets a fresh ScrollView identity, and step changes use the Reduce-Motion-aware motion policy; completion-check internals are unchanged.
+- **Files touched:** ios/SmallTalkCoach/LessonProgressHeader.swift; ios/SmallTalkCoach/LessonDetailView.swift; WORKER_LOG.md
+- **Result / verification:** `cd ios && xcodegen generate`, `xcrun swiftc -parse` for both changed Swift files, and `git diff --check` passed. XcodeGen includes the new header in the app target. iPhone 16 `xcodebuild build` and `xcodebuild test` were attempted, but CoreSimulatorService reported no available runtimes, so neither build nor XCTest executed.
+- **Open issues:** Run the iPhone 16 build/test suite and visually inspect the header previews on a host with a working simulator runtime.
+
+## 2026-07-21 16:22 UTC — Round-2 fix for Deeper Redesign #3a: lesson background seam
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Removed the two production `AppTheme.Colors.background` modifiers from the lesson progress header and step navigation; preview framing remains unchanged.
+- **Files touched:** ios/SmallTalkCoach/LessonProgressHeader.swift; ios/SmallTalkCoach/LessonDetailView.swift; WORKER_LOG.md
+- **Result / verification:** `xcrun swiftc -parse` passed for both Swift files; `git diff --check` passed. Scoped scan found the branded background only in the header's two previews.
+- **Open issues:** none

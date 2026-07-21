@@ -315,6 +315,65 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-21 (cycle 55 — Deeper Redesign #3a: step-based lesson flow +
+  LessonProgressHeader; TWO ROUNDS, accepted):** Worker: `gpt-5.6-terra`.
+  The largest single-file redesign in the plan. `LessonDetailView`'s
+  single long scroll (concept + 6 sections shown all at once) is now a
+  paced, one-step-at-a-time flow: new private `LessonStep` enum (`idea,
+  example, responseTiers, exercise, practice, completionCheck`, 1:1 with
+  the six pre-existing `LessonSection`s, no re-grouping), a new pinned
+  `LessonProgressHeader.swift` ("Step N of 6" + progress bar + step title
+  + the review-mode badge, relocated here so it stays visible on every
+  step instead of only above step 1), and pinned Back/Next navigation —
+  layout modeled directly on `OnboardingView`'s already-shipped pinned-
+  header/scroll-content/pinned-footer pattern, per spec. Scroll position
+  correctly resets between steps via `.id(currentStep)` on the
+  `ScrollView` (forces a fresh view identity per step, not a manual
+  offset hack — exactly the technique the spec asked for). Step
+  transitions route through `.motionAwareAnimation` (`MotionPolicy`,
+  cycle 53), so they're Reduce-Motion-aware from day one. Zero changes to
+  `LessonDetailViewModel` or any business logic — `selectedAnswers`,
+  `completionFeedback`, `freeDrafts`, `draftGradingStates`,
+  `completionState`, `submit()`, `gradeDraft()` all untouched; every
+  existing interactive behavior (exercise feedback, completion-check
+  choice parts, free-draft grading) preserved exactly, just presented one
+  step later. `CompletionSummary` and the "animate choice into feedback,
+  move focus" motion polish were explicitly deferred per spec — separate
+  later tasks, not built here.
+  **Brain verification, extra depth given this task's size:** full
+  source review found the restructuring correct and complete — traced
+  all six switch cases against the original inline content to confirm
+  nothing was dropped or duplicated. `xcodegen generate` +
+  `xcodebuild build`/`test` — 76 passed, 3 pre-existing skips, 0
+  failures (confirmed no View-level tests existed for this file
+  beforehand, so this is purely a regression guard). Visual verification
+  via a diagnostic harness calling the real `APIClient()` against the
+  live local backend with a real lesson (`l01-first-hello`, reused from
+  three separate temporary `@State` default overrides, each rebuilt and
+  reverted in turn): step 1 (real data, light+dark) — no Back, Next
+  present, "Step 1 of 6"; step 4 "Quick exercise" (middle step) — both
+  Back and Next present, choice buttons render correctly; step 6
+  "Completion check" (terminal step) — Back present, correctly no Next,
+  completion content intact.
+  **Round 1 finding (round 2, accepted):** the only issue across all of
+  that verification — `LessonProgressHeader` and the pinned nav bar both
+  applied `.background(AppTheme.Colors.background)` while the scrolling
+  content area used the plain system background, producing a visible
+  three-band seam (subtle in light mode, clear in dark mode). Root cause
+  matches the cycle-51 side-finding: `AppTheme.Colors.background`/
+  `AppSurface` has never been rolled out to any real screen, so this
+  component became the first to apply it partially. Fix (round 2,
+  precisely targeted, one file each): removed the background call from
+  both production sites, left both `#Preview`s' own framing backgrounds
+  alone. Re-verified: rebuilt, retested (76/76 clean again), re-
+  screenshotted step 1 in dark mode — seam completely gone, header/
+  content/footer now share one consistent background. Final real
+  (non-diagnostic) build reinstalled; Home tab confirmed rendering live
+  data normally, no regression from any prior cycle. **Next:** Deeper
+  Redesign #4 — narrative report reveal (motion) + historical trend
+  visualization (`SkillMetricBar`), the other unblocked item, before
+  re-checking whether #1/#5 have been unblocked by the founder.
+
 - **2026-07-21 (no cycle dispatched — FOUNDER FLAG, two deeper-redesign
   items blocked, not deciding unilaterally):** Started reviewing
   `UI_IMPROVEMENT_PLAN.md`'s "Deeper redesigns" tier now that all 8 quick
