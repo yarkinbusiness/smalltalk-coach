@@ -472,3 +472,16 @@ Entry format (keep an entry under ~15 lines):
 - **Files touched:** backend/app/store.py; backend/app/main.py; backend/tests/test_deletion.py; backend/README.md; ios/SmallTalkCoach/{APIClient,CoachingView,CoachingViewModel,Models}.swift; ios/SmallTalkCoachTests/SmallTalkCoachTests.swift; WORKER_LOG.md
 - **Result / verification:** `backend/.venv/bin/python -m pytest backend/tests -q`: 102 passed, 1 skipped, 1 warning. `xcodegen generate` and generic simulator `xcodebuild build-for-testing` succeeded; `git diff --check` passed. Named iPhone 16 XCTest was attempted but CoreSimulatorService had no available runtime.
 - **Open issues:** XCTest execution and simulator launch require a working CoreSimulatorService.
+
+## 2026-07-21 08:53 UTC — Fix onboarding cover presentation state
+- **Model:** gpt-5.6-terra
+- **Status:** partial
+- **What was done:** Replaced RootView's computed no-op presentation binding with writable state
+  re-armed on appearance; completion dismisses it and swipe dismissal is disabled. Added a shared,
+  tested initial-presentation decision helper covering fresh and persisted-complete defaults states.
+- **Files touched:** ios/SmallTalkCoach/RootView.swift; ios/SmallTalkCoach/OnboardingView.swift;
+  ios/SmallTalkCoachTests/SmallTalkCoachTests.swift; WORKER_LOG.md
+- **Result / verification:** `cd ios && xcodegen generate` and generic-simulator
+  `xcodebuild build-for-testing` passed; `git diff --check` passed. Named iPhone 16 / iOS 18.2
+  build and XCTest were attempted but CoreSimulatorService refused connections before execution.
+- **Open issues:** Run XCTest and repeated fresh-install relaunch verification on a host with a working simulator service.

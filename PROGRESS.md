@@ -228,6 +228,22 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-21 (cycle 38 — micro-fix: onboarding cover presentation):**
+  Fixes the cycle-35 latent bug caught by cycle 37's launch check.
+  Worker: `gpt-5.6-terra`, one round. RootView's get-only no-op
+  `Binding` (which desynchronized SwiftUI presentation state when the
+  first present attempt misfired) replaced with writable `@State` armed
+  in `.onAppear`, closed via `.onChange` of the store, plus
+  `interactiveDismissDisabled()` so swipe cannot bypass onboarding;
+  decision expression extracted testable. Brain verification: **61
+  XCTests, 0 failures** (own run); decisive live check — fresh install,
+  3 terminate/relaunch cycles, cover presented EVERY time
+  (screenshot-verified); completion key set → straight to Home —
+  ACCEPTED. **Lesson recorded:** never drive SwiftUI presentation from
+  a computed Binding with a no-op setter — same never-re-fires family
+  as the cycle-16 `.task`-on-EmptyView trap. **Next:** T-I docs half —
+  paused at the founder gate (entity/contact + retention policy).
+
 - **2026-07-21 (cycle 37 — T-I code half: account-wide deletion):**
   Worker: `gpt-5.6-terra`, one round, honest partial (sandbox blocks
   simulator; brain ran tests). `DELETE /users/{id}/coaching-data` wipes

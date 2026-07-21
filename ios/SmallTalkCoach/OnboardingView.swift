@@ -17,6 +17,10 @@ final class OnboardingStateStore: ObservableObject {
         self.hasCompletedOnboarding = defaults.bool(forKey: key)
     }
 
+    static func shouldPresentOnboarding(hasCompletedOnboarding: Bool) -> Bool {
+        !hasCompletedOnboarding
+    }
+
     func complete() {
         defaults.set(true, forKey: key)
         hasCompletedOnboarding = true

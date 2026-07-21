@@ -79,6 +79,25 @@ final class SmallTalkCoachTests: XCTestCase {
         XCTAssertEqual(response.emphasis?.lessonID, "l03-easy-first-question")
     }
 
+    func testOnboardingPresentationDecisionFollowsPersistedCompletionState() throws {
+        let suiteName = "OnboardingPresentation-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let freshStore = OnboardingStateStore(defaults: defaults)
+        XCTAssertFalse(freshStore.hasCompletedOnboarding)
+        XCTAssertTrue(OnboardingStateStore.shouldPresentOnboarding(
+            hasCompletedOnboarding: freshStore.hasCompletedOnboarding
+        ))
+
+        freshStore.complete()
+        let completedStore = OnboardingStateStore(defaults: defaults)
+        XCTAssertTrue(completedStore.hasCompletedOnboarding)
+        XCTAssertFalse(OnboardingStateStore.shouldPresentOnboarding(
+            hasCompletedOnboarding: completedStore.hasCompletedOnboarding
+        ))
+    }
+
     @MainActor
     func testOnboardingStateFreshSuiteSkipAndFinishPersist() async throws {
         let suiteName = "OnboardingState-\(UUID().uuidString)"

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct RootView: View {
     @StateObject private var onboardingState = OnboardingStateStore()
+    @State private var showsOnboarding = false
     @State private var showsOnboardingSubmissionNote = false
 
     var body: some View {
@@ -16,13 +17,21 @@ struct RootView: View {
                     Label("AI Coaching", systemImage: "sparkles")
                 }
         }
-        .fullScreenCover(isPresented: Binding(
-            get: { !onboardingState.hasCompletedOnboarding },
-            set: { _ in }
-        )) {
+        .onAppear {
+            showsOnboarding = OnboardingStateStore.shouldPresentOnboarding(
+                hasCompletedOnboarding: onboardingState.hasCompletedOnboarding
+            )
+        }
+        .onChange(of: onboardingState.hasCompletedOnboarding) { _, completed in
+            if completed {
+                showsOnboarding = false
+            }
+        }
+        .fullScreenCover(isPresented: $showsOnboarding) {
             OnboardingView(stateStore: onboardingState) { submissionFailed in
                 showsOnboardingSubmissionNote = submissionFailed
             }
+            .interactiveDismissDisabled()
         }
         .alert("You’re all set", isPresented: $showsOnboardingSubmissionNote) {
             Button("Continue", role: .cancel) {}
