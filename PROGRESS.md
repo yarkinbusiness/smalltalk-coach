@@ -277,6 +277,31 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-21 (cycle 46 — micro-cycle: disclose free-draft grading in
+  the privacy policy; ONE ROUND, accepted as specified):** Worker:
+  `gpt-5.6-terra`. Closed the gap cycle 45 flagged: `PRIVACY_POLICY.md`'s
+  "How AI coaching works" section named only conversation text and
+  screenshots as sent to Anthropic, and asserted "this is the only
+  third-party sharing described in this policy" — false the moment
+  free-draft grading shipped. New paragraph discloses the draft-grading
+  flow accurately (separate from the coaching consent toggle — there
+  isn't one for this feature, matching the actual code; draft text +
+  practice prompt sent to Anthropic; nothing persisted server-side).
+  The self-contradicting sentence was replaced with a standalone true
+  claim ("Anthropic is the only third party we share data with") that
+  stays true regardless of how many distinct scenarios involve
+  Anthropic, rather than patched with a second, competing "only"
+  claim. Verified myself: the non-persistence claim is true against
+  `grade_lesson_draft` (no `store.*` call in that function — confirmed
+  by re-reading the code, not by trusting the worker's report, which
+  itself said it had checked the same code before writing the claim);
+  diff scope limited to the two allowed files; read the full updated
+  section end-to-end for internal consistency. ACCEPTED as specified —
+  zero rounds of rejection. **Next:** none — the v3 roadmap's two
+  actionable items and this follow-up are all shipped; only the two
+  deferred founder-gated items remain (real-screenshot vision eval,
+  Anthropic test-key rotation), neither reachable from this loop.
+
 - **2026-07-21 (cycle 45 — T-L: free-draft grading + $5/mo cost ceiling;
   ONE ROUND, accepted as specified):** Worker: `gpt-5.6-terra`. Backend:
   `draft_grading.py` mirrors `diagnosis.py`'s adapter/retry structure

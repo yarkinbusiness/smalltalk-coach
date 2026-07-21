@@ -595,3 +595,13 @@ Entry format (keep an entry under ~15 lines):
   passed; `git diff --check` passed.
 - **Open issues:** iPhone 16 XCTest could not execute: CoreSimulatorService refused connections and no runtime
   was available. Privacy policy currently scopes Anthropic sharing to conversation text/screenshots, not practice drafts.
+
+## 2026-07-21 11:33 UTC — Disclose free-draft grading in the privacy policy
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Added the separate user-initiated free-draft feedback disclosure, including the draft
+  text and practice prompt sent to Anthropic and the non-persistence of draft feedback.
+- **Files touched:** docs/legal/PRIVACY_POLICY.md; WORKER_LOG.md
+- **Result / verification:** Reviewed `grade_lesson_draft` and its adapter to confirm it returns feedback
+  without persistence; policy read end-to-end and `git diff --check` passed.
+- **Open issues:** none

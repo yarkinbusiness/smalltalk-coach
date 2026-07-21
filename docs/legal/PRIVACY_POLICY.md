@@ -50,8 +50,14 @@ in-app consent toggle.
 When you submit conversation text, we send it to **Anthropic**, our
 third-party AI provider, to produce a coaching diagnosis. When you submit a
 screenshot, we send the screenshot to Anthropic to extract a transcript and
-produce the coaching diagnosis. This is the only third-party sharing described
-in this policy; we do not share data with other third parties.
+produce the coaching diagnosis.
+
+Free-draft feedback is separate from the coaching consent toggle. When you
+write a draft for a lesson practice prompt and tap **Get feedback**, we send
+your draft text and that practice prompt to Anthropic to generate feedback.
+We do not store the draft or the resulting feedback on our server.
+
+Anthropic is the only third party we share data with.
 
 We do not store the raw screenshot image bytes on our server. They are deleted
 immediately after transcript extraction. We do store the extracted transcript
