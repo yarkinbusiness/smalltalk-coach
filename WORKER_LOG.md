@@ -802,3 +802,19 @@ Entry format (keep an entry under ~15 lines):
 - **Files touched:** ios/SmallTalkCoach/DailyProgressRing.swift; ios/SmallTalkCoach/TodayCard.swift; WORKER_LOG.md
 - **Result / verification:** `cd ios && xcodegen generate`, `xcrun swiftc -parse` for both changed Swift files, and `git diff --check` passed. Simulator `xcodebuild build` reached asset compilation but failed (exit 65) because CoreSimulatorService exposes no iOS runtimes; `xcodebuild test` could not run tests on a concrete simulator (exit 70), so no XCTest cases ran.
 - **Open issues:** Run full build/test and visually inspect light/dark and Reduce Motion behavior on a host with a working iPhone 16 simulator runtime.
+
+## 2026-07-21 17:51 UTC — Quick Exercise answer-to-feedback matched geometry
+- **Model:** gpt-5
+- **Status:** partial
+- **What was done:** Shipped the true matched-geometry morph: only an evaluated Quick Exercise choice background is the source, and its matching-color, matching-corner-radius feedback card is the destination. Feedback reveal uses MotionPolicy’s standard token; completion-check ChoiceButtons and all selection/scoring logic are unchanged.
+- **Files touched:** ios/SmallTalkCoach/LessonDetailView.swift; WORKER_LOG.md
+- **Result / verification:** `xcrun swiftc -parse SmallTalkCoach/LessonDetailView.swift`, `cd ios && xcodegen generate`, and `git diff --check` passed. iPhone 16 `xcodebuild build` and `xcodebuild test` were attempted separately, but CoreSimulatorService reported no available runtimes (and a device-SDK build stopped in asset compilation for the same reason), so no XCTest cases or live transition check ran.
+- **Open issues:** Visually verify the true morph and Reduce Motion behavior, then run the full suite, on a host with a working iPhone 16 simulator runtime.
+
+## 2026-07-21 18:00 UTC — Round 2 (final): Quick Exercise matched-geometry compile fix
+- **Model:** gpt-5
+- **Status:** done
+- **What was done:** Moved the existing standard-motion animation modifier onto the feedback VStack's concrete view chain, after its matched-geometry background.
+- **Files touched:** ios/SmallTalkCoach/LessonDetailView.swift; WORKER_LOG.md
+- **Result / verification:** `xcrun swiftc -parse SmallTalkCoach/LessonDetailView.swift` and `git diff --check` passed.
+- **Open issues:** none

@@ -315,6 +315,66 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-21 (cycle 64 — matched-geometry Quick Exercise answer→feedback
+  morph; TWO ROUNDS, accepted):** Worker: `gpt-5.6-terra`. Final item from
+  the perpetual loop's initial research backlog, and the fussiest
+  technique used all week — deliberately saved for last with an explicit
+  pre-approved fallback if the true morph looked broken. Worker attempted
+  and shipped the true `matchedGeometryEffect` version, not the fallback.
+  Design: `ChoiceButton` gained optional `matchedGeometryID`/
+  `matchedGeometryNamespace` parameters (default `nil`, so completion-
+  check usage is completely unaffected — confirmed no morph there);
+  when set and `state != .neutral`, the selected exercise button's
+  background participates as the effect's implicit source
+  (`isSource: true`, default); the feedback block below (now a proper
+  `RoundedRectangle`-backed card matching the button's color/corner-
+  radius language, not plain text) is `isSource: false`, so it animates
+  growing from the button's geometry on insertion — correct semantics
+  for "one stable anchor, one view being newly inserted alongside it,"
+  not the more common "swap one view for another" pattern most
+  matchedGeometryEffect examples show. Since only the selected button
+  ever has `state != .neutral` (verified against `exerciseOptionState`'s
+  logic), there's never more than one view claiming the shared id at
+  once — no collision risk. `ChoiceButtonState` correctly gained
+  `Equatable` conformance, required by the new `state != .neutral` check.
+  **Round 1 finding:** a real compile error the worker's sandbox
+  structurally couldn't have caught (`Instance member
+  'motionAwareAnimation' cannot be used on type 'View'`) — caused by
+  chaining the modifier directly onto a bare `if let ... { }` with no
+  `else` inside a `@ViewBuilder` closure, a general SwiftUI DSL
+  limitation unrelated to matched geometry specifically. Brain diagnosed
+  the exact fix (relocate the modifier inside the `if`, onto the feedback
+  VStack's own chain) and specified it precisely in the round-2 spec.
+  **Round 2:** exactly the diagnosed fix, nothing else touched — compiles
+  clean.
+  **Process note:** the round-2 dispatch itself failed on the first
+  attempt (exit 127, `worker.sh: no such file or directory`) — same
+  Bash-cwd-drift issue as two earlier `git add` calls this session (a
+  `cd ios && ...` chain leaves the shell in `ios/` for subsequent
+  separate Bash calls). Redispatched successfully using an absolute path
+  to `worker.sh`; no worker-side issue, purely a brain-side invocation
+  slip, corrected immediately.
+  **Brain verification:** `xcodegen generate` + `xcodebuild build`/`test`
+  — 76 passed, 3 pre-existing skips, 0 failures. Visual check via a
+  temporary, fully-reverted diagnostic addition (forced `currentStep =
+  .exercise` plus an auto-selecting `viewModel.selectAnswer(0, forPartAt:
+  -1)` call in the load `.task`, both reverted and confirmed clean via
+  `git diff` before finalizing): the settled result is genuinely
+  cohesive — the selected (incorrect) button renders red with the xmark
+  icon (cycle 62's Differentiate-Without-Color fix still correctly
+  active), and the feedback card below it renders in a matching red
+  tint and corner radius, visually reading as one connected element
+  rather than a disconnected pop-in, in both light and dark. **Honest
+  scoping note:** the literal animated transition frame-by-frame still
+  isn't screenshottable (same category as cycles 53/57/59), but unlike
+  pure-timing cases, the settled-state comparison here is unusually
+  strong evidence: a wrong geometry/color mapping would show up as
+  visibly broken (overlap, mismatched colors, odd sizing) even in a
+  static shot, and nothing like that appeared. **This closes out the
+  perpetual loop's entire initial research-pass backlog.** Next session
+  turn: run a fresh research/analysis pass over the app and research PDF
+  again for the next batch of findings, per the standing loop directive.
+
 - **2026-07-21 (cycle 63 — DailyProgressRing on TodayCard; ONE ROUND,
   accepted as specified):** Worker: `gpt-5.6-terra`. Fifth perpetual-
   loop cycle. New `DailyProgressRing.swift`: a small binary (0/1)

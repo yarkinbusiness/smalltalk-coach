@@ -5,6 +5,7 @@ struct LessonDetailView: View {
     @State private var currentStep: LessonStep = .idea
     @State private var showsCompletionCelebration = false
     @AccessibilityFocusState private var isStepHeadingFocused: Bool
+    @Namespace private var exerciseFeedbackNamespace
     private let onCompleted: (String?) -> Void
 
     init(
@@ -155,21 +156,38 @@ struct LessonDetailView: View {
                     ChoiceButton(
                         text: lesson.exercise.options[index].text,
                         isSelected: viewModel.selectedAnswers[-1] == index,
-                        state: exerciseOptionState(index, lesson: lesson)
+                        state: exerciseOptionState(index, lesson: lesson),
+                        matchedGeometryID: "exerciseFeedback",
+                        matchedGeometryNamespace: exerciseFeedbackNamespace
                     ) {
                         viewModel.selectAnswer(index, forPartAt: -1)
                     }
                 }
                 if let selected = viewModel.selectedAnswers[-1] {
                     let isCorrect = selected == lesson.exercise.correctOptionIndex
-                    Label(
-                        isCorrect ? "Correct" : "Not quite",
-                        systemImage: isCorrect ? "checkmark.circle.fill" : "xmark.circle.fill"
-                    )
-                    .font(.subheadline.weight(.semibold))
-                    .foregroundStyle(isCorrect ? .green : .red)
-                    Text(lesson.exercise.options[selected].feedback)
-                        .font(.subheadline)
+                    let state = exerciseOptionState(selected, lesson: lesson)
+                    VStack(alignment: .leading, spacing: 6) {
+                        Label(
+                            isCorrect ? "Correct" : "Not quite",
+                            systemImage: isCorrect ? "checkmark.circle.fill" : "xmark.circle.fill"
+                        )
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(state.color)
+                        Text(lesson.exercise.options[selected].feedback)
+                            .font(.subheadline)
+                    }
+                    .padding(10)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background {
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(state.color.opacity(0.14))
+                            .matchedGeometryEffect(
+                                id: "exerciseFeedback",
+                                in: exerciseFeedbackNamespace,
+                                isSource: false
+                            )
+                    }
+                    .motionAwareAnimation(AppTheme.Motion.standard, value: viewModel.selectedAnswers[-1])
                 }
             }
         case .practice:
@@ -433,7 +451,7 @@ private struct ResponseTier: View {
     }
 }
 
-private enum ChoiceButtonState {
+private enum ChoiceButtonState: Equatable {
     case neutral
     case correct
     case incorrect
@@ -451,17 +469,23 @@ private struct ChoiceButton: View {
     let text: String
     let isSelected: Bool
     let state: ChoiceButtonState
+    let matchedGeometryID: String?
+    let matchedGeometryNamespace: Namespace.ID?
     let action: () -> Void
 
     init(
         text: String,
         isSelected: Bool,
         state: ChoiceButtonState = .neutral,
+        matchedGeometryID: String? = nil,
+        matchedGeometryNamespace: Namespace.ID? = nil,
         action: @escaping () -> Void
     ) {
         self.text = text
         self.isSelected = isSelected
         self.state = state
+        self.matchedGeometryID = matchedGeometryID
+        self.matchedGeometryNamespace = matchedGeometryNamespace
         self.action = action
     }
 
@@ -476,7 +500,21 @@ private struct ChoiceButton: View {
             .foregroundStyle(state.color)
             .padding(10)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(state.color.opacity(isSelected ? 0.14 : 0.06), in: RoundedRectangle(cornerRadius: 10))
+            .background {
+                if state != .neutral,
+                   let matchedGeometryID,
+                   let matchedGeometryNamespace {
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(state.color.opacity(isSelected ? 0.14 : 0.06))
+                        .matchedGeometryEffect(
+                            id: matchedGeometryID,
+                            in: matchedGeometryNamespace
+                        )
+                } else {
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(state.color.opacity(isSelected ? 0.14 : 0.06))
+                }
+            }
         }
         .buttonStyle(.plain)
     }
