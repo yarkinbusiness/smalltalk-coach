@@ -605,3 +605,23 @@ Entry format (keep an entry under ~15 lines):
 - **Result / verification:** Reviewed `grade_lesson_draft` and its adapter to confirm it returns feedback
   without persistence; policy read end-to-end and `git diff --check` passed.
 - **Open issues:** none
+
+## 2026-07-21 13:43 UTC — UI quick win #1: design tokens foundation
+- **Model:** gpt-5.6-terra
+- **Status:** partial
+- **What was done:** Added the AppTheme token namespace, generated-symbol asset catalog, app surface/card/button
+  components, and light/dark SwiftUI previews. Cleared the stale AppIcon setting because this project has no AppIcon set.
+- **Files touched:** ios/SmallTalkCoach/{AppTheme,AppSurface,CardStyle,PrimaryActionButton}.swift;
+  ios/SmallTalkCoach/Assets.xcassets/; ios/project.yml; WORKER_LOG.md
+- **Result / verification:** `cd ios && xcodegen generate` wired Assets.xcassets into Resources and generated symbols;
+  all asset JSON validated with `jq`; production portions type-checked against generated symbols; backend tests: 128 passed,
+  1 skipped. `git diff --check` passed. The iPhone 16 build could not start: CoreSimulatorService has no available runtimes.
+- **Open issues:** Xcode Preview macro execution and full iOS build/test require a host with a working simulator service.
+
+## 2026-07-21 14:05 UTC — UI quick win #1 round-2 card surface correction
+- **Model:** gpt-5.6-terra
+- **Status:** partial
+- **What was done:** Replaced the standard/interactive foreground-label background with a 6% AppTheme brand-indigo surface tint; highlighted and warning variants are unchanged.
+- **Files touched:** ios/SmallTalkCoach/CardStyle.swift; WORKER_LOG.md
+- **Result / verification:** Asset-RGB/source-over math gives #EFEDF1 in light mode (default black contrast 18.03:1) and #1A1928 in dark mode (default white contrast 17.27:1). `cd ios && xcodegen generate` and `git diff --check` passed. Simulator-SDK `xcodebuild build` failed at asset compilation because CoreSimulatorService exposes no simulator runtimes.
+- **Open issues:** Real iPhone 16 build and both-appearance screenshot verification require a host with a working simulator runtime.

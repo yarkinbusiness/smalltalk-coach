@@ -290,6 +290,46 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-21 (cycle 47 — UI quick win #1: design tokens foundation;
+  TWO ROUNDS, accepted after fix):** Worker: `gpt-5.6-terra`. Round 1
+  added `AppTheme` (colors/spacing/radii/typography/motion tokens),
+  a new `Assets.xcassets` catalog (9 colorsets — verified every single
+  light/dark hex value byte-for-byte against spec, including the
+  Okabe-Ito colorblind-safe skill-dimension palette), `AppSurface`,
+  `CardStyle`, and `PrimaryActionButton` — all foundation-only, zero
+  existing screens touched. Reading the code alone, everything looked
+  right. It wasn't: the brain built a temporary, uncommitted diagnostic
+  harness (a scratch view wired briefly into the app's entry point,
+  reverted before either round's diff was finalized) specifically to
+  *see* the new components rendered, rather than trusting the code read
+  — and caught a real bug that pure review missed. `CardStyle`'s
+  `.standard`/`.interactive` background used SwiftUI's system
+  `Color.primary` (adaptive black/white foreground color) instead of
+  the new `AppTheme.Colors.primary` (brand indigo) — rendering as a
+  near-black card with near-illegible near-black text in light mode,
+  and the inverse in dark mode. `PrimaryActionButton`, written in the
+  same round, correctly used `AppTheme.Colors.primary` throughout,
+  confirming this was a naming mix-up rather than a knowledge gap.
+  Rejected with a precise, isolated spec (one file, two fix paths
+  offered). Round 2 used a 6% brand-indigo tint instead, computed and
+  reported contrast ratios (18.03:1 light, 17.27:1 dark — both far
+  above WCAG AA), and the brain re-verified this claim the same way it
+  caught the original bug: rebuilt the same diagnostic harness,
+  screenshotted both appearances again, confirmed both variants now
+  render as legible, subtly-tinted cards with no regression to the
+  already-correct `.highlighted`/`.warning` variants or to
+  `AppSurface`/`PrimaryActionButton`. Full iOS suite re-run after
+  cleanup: 76 passed, 3 pre-existing skips, 0 failures — identical to
+  the pre-cycle baseline, confirming this foundation-only cycle changed
+  zero existing behavior as intended. File scope both rounds matched
+  spec exactly. ACCEPTED. **Process note for future foundation-style
+  cycles:** build-and-screenshot beat code-review alone here — worth
+  defaulting to a quick throwaway render check on any new visual
+  component, not just screens with existing users to protect.
+  **Next:** quick win #2 — branded Today header + elevated Daily
+  Mission card (`HomeView.swift`, `TodayCard.swift`), the first cycle
+  that actually applies these tokens somewhere real.
+
 - **2026-07-21 (cycle 46 — micro-cycle: disclose free-draft grading in
   the privacy policy; ONE ROUND, accepted as specified):** Worker:
   `gpt-5.6-terra`. Closed the gap cycle 45 flagged: `PRIVACY_POLICY.md`'s
