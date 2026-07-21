@@ -290,6 +290,43 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-21 (cycle 49 — UI quick win #3: explicit Coach mode cards;
+  ACCEPTED, unusual provenance):** Worker: `gpt-5.6-terra`. The worker's
+  own dispatch process was externally killed mid-run (status: "killed" —
+  a harsher variant than every prior cycle's "no simulator runtime
+  available": this time `CoreSimulatorService connection became
+  invalid" mid-command, still the same underlying sandbox limitation,
+  just a worse symptom of it), before it could append its own
+  `WORKER_LOG.md` entry. `git status` showed the two authorized files
+  (`CoachingView.swift`, `CoachingViewModel.swift`) already modified and
+  nothing else — the code changes themselves were complete, only the
+  process supervising them wasn't. The brain read the resulting diff in
+  full rather than discarding and re-dispatching from scratch: it
+  matched spec closely enough (verbatim research copy for the mode-card
+  subtitles, `CoachingReplyMode` correctly reset in
+  `beginNewComposition()`, mode-aware text/screenshot prompts, a "Change"
+  affordance, three previews) to be worth verifying rather than
+  redoing. Brain appended an explicitly self-labeled brain-authored
+  `WORKER_LOG.md` entry in place of the missing worker one — honest
+  about provenance rather than backfilling as if the worker had written
+  it — then ran the loop's normal full acceptance bar itself: full
+  build + test suite (76 passed, 3 pre-existing skips, 0 failures,
+  matching baseline), and real simulator screenshots via a temporary
+  diagnostic entry-point swap (reverted after) covering the
+  mode-selection screen and the "Review my reply" composer state in
+  both light and dark mode. Everything rendered correctly — mode cards
+  legible and correctly styled, mode-aware placeholder copy exactly as
+  specified, disclosure/consent/submit sections untouched. A brain
+  verification follow-up entry was appended to `WORKER_LOG.md`
+  documenting the completed check (append-only — the original entry
+  wasn't edited). ACCEPTED. **Process note:** a killed worker process
+  with a partial-but-complete diff doesn't automatically mean redo from
+  scratch — reading the actual diff before deciding saved a full cycle
+  here, but the honesty obligation (don't claim work is worker-verified
+  when it wasn't) still has to be met explicitly, not skipped. **Next:**
+  quick win #4 — reorder the coaching report so takeaway and next move
+  come before scores (`CoachingView.swift`'s `CoachingReportView`).
+
 - **2026-07-21 (cycle 48 — UI quick win #2: branded Today header +
   elevated Daily Mission card; ONE ROUND, accepted as specified):**
   Worker: `gpt-5.6-terra`. First cycle to actually apply quick-win-#1's

@@ -633,3 +633,20 @@ Entry format (keep an entry under ~15 lines):
 - **Files touched:** ios/SmallTalkCoach/TodayCard.swift; ios/SmallTalkCoach/HomeView.swift; WORKER_LOG.md
 - **Result / verification:** `cd ios && xcodegen generate`, `xcrun swiftc -parse SmallTalkCoach/TodayCard.swift`, and `git diff --check` passed. `xcodebuild build` and full `xcodebuild test` were attempted with workspace-local derived data but stopped in asset compilation: CoreSimulatorService reported no available iOS simulator runtimes; no XCTest cases executed.
 - **Open issues:** Run the iPhone 16 build, full XCTest suite, and light/dark Home screenshot check on a host with a working simulator runtime. The `~3 min`/`~2 min` labels are intentionally type-based approximations; add a real per-lesson duration field only through a future content-model change if greater precision is needed.
+
+## 2026-07-21 17:33 UTC — UI quick win #3: explicit Coach mode cards
+- **Model:** gpt-5.6-terra
+- **Status:** partial
+- **Note:** this entry is brain-authored, not worker-self-reported — the worker process was killed mid-run (external stop, not a normal exit) while attempting its own build verification; it never reached its own logging step. Recorded here so the append-only log stays honest about provenance rather than silently backfilling as if the worker had written it.
+- **What was done:** Diff reviewed directly by the brain and found complete: `CoachingReplyMode` enum (verbatim research copy) and `replyMode` state added to `CoachingViewModel`, correctly reset in `beginNewComposition()`; `CoachingComposeView` gates on `replyMode` — shows two `.cardStyle(.interactive)` mode-selection cards when unset, else the existing form with a "Change" affordance and mode-aware text/screenshot prompts. Three previews added (selection, both modes, one in dark). No backend or request-shape changes, matching spec.
+- **Files touched:** ios/SmallTalkCoach/CoachingView.swift; ios/SmallTalkCoach/CoachingViewModel.swift
+- **Result / verification:** Not run by the worker (killed before its build attempt completed — `CoreSimulatorService connection became invalid` mid-command, a harsher variant of the same sandbox simulator-access gap seen every prior cycle). Brain verifying independently now: full build, full test suite, and real light/dark screenshots on its own environment (confirmed healthy — simulator booted, all runtimes present — before proceeding).
+- **Open issues:** None identified from the code review; pending the brain's own build/test/visual verification before accept/reject.
+
+## 2026-07-21 17:44 UTC — UI quick win #3 verification follow-up (brain)
+- **Model:** n/a — brain verification note, appended per append-only discipline rather than editing the entry above
+- **Status:** done
+- **What was done:** Completed the verification the previous entry deferred. Full build + `xcodebuild test`: 76 passed, 3 pre-existing skips, 0 failures — matches baseline exactly. Real simulator screenshots (diagnostic entry-point swap, reverted after): mode-selection screen (light) shows both cards correctly; "Review my reply" composer verified in both light and dark — mode label, "Change" link, and mode-aware placeholder copy all render exactly as specified, rest of the form (disclosure, consent, submit) untouched.
+- **Files touched:** none beyond this log entry
+- **Result / verification:** ACCEPTED as specified — zero rejections needed despite the unusual killed-worker-process provenance.
+- **Open issues:** none

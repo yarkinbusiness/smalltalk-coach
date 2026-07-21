@@ -105,6 +105,19 @@ enum CoachingCompositionMode: String, CaseIterable, Identifiable {
     var label: String { self == .text ? "Paste text" : "Screenshot" }
 }
 
+enum CoachingReplyMode: String, CaseIterable, Identifiable {
+    case helpMeReply
+    case reviewMyReply
+
+    var id: String { rawValue }
+    var title: String { self == .helpMeReply ? "Help me reply" : "Review my reply" }
+    var subtitle: String {
+        self == .helpMeReply
+            ? "Paste what they said. Get a response strategy and examples."
+            : "Include what you wrote. See what worked and what to improve."
+    }
+}
+
 struct CoachingReportDisplayModel: Equatable {
     let report: CoachingReport
 
@@ -125,6 +138,7 @@ struct CoachingReportDisplayModel: Equatable {
 final class CoachingViewModel: ObservableObject {
     @Published var text = ""
     @Published var consentGiven = false
+    @Published var replyMode: CoachingReplyMode?
     @Published var compositionMode: CoachingCompositionMode = .text
     @Published var userMessageSide: CoachingUserMessageSide = .right
     @Published private(set) var screenshotPreview: UIImage?
@@ -305,6 +319,7 @@ final class CoachingViewModel: ObservableObject {
     func beginNewComposition() {
         text = ""
         consentGiven = false
+        replyMode = nil
         compositionMode = .text
         userMessageSide = .right
         screenshotPayload = nil

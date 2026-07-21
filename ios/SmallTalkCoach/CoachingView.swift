@@ -95,8 +95,52 @@ private struct CoachingComposeView: View {
     @State private var selectedPhoto: PhotosPickerItem?
 
     var body: some View {
+        Group {
+            if let replyMode = viewModel.replyMode {
+                composer(for: replyMode)
+            } else {
+                replyModeSelection
+            }
+        }
+    }
+
+    private var replyModeSelection: some View {
+        VStack(alignment: .leading, spacing: AppTheme.Spacing.rowSpacing) {
+            ForEach(CoachingReplyMode.allCases) { mode in
+                Button {
+                    viewModel.replyMode = mode
+                } label: {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(mode.title)
+                            .font(AppTheme.Typography.cardTitle)
+                        Text(mode.subtitle)
+                            .font(AppTheme.Typography.body)
+                            .foregroundStyle(.secondary)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .cardStyle(.interactive)
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Choose \(mode.title) coaching")
+            }
+        }
+        .padding(AppTheme.Spacing.cardPadding)
+    }
+
+    private func composer(for replyMode: CoachingReplyMode) -> some View {
         Form {
             Section("Conversation") {
+                HStack {
+                    Text(replyMode.title)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Button("Change") {
+                        viewModel.replyMode = nil
+                    }
+                    .accessibilityLabel("Change coaching mode")
+                }
+
                 Picker("Source", selection: $viewModel.compositionMode) {
                     ForEach(CoachingCompositionMode.allCases) { mode in
                         Text(mode.label).tag(mode)
@@ -111,11 +155,15 @@ private struct CoachingComposeView: View {
                         .accessibilityLabel("Conversation to analyze")
                         .overlay(alignment: .topLeading) {
                             if viewModel.text.isEmpty {
-                                Text("Paste what THEY said for help replying. Add Me: lines to score your reply.")
+                                Text(textPrompt(for: replyMode))
                                     .foregroundStyle(.tertiary).padding(.top, 8).padding(.leading, 5).allowsHitTesting(false)
                             }
                         }
                 case .screenshot:
+                    Text(screenshotPrompt(for: replyMode))
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+
                     PhotosPicker(selection: $selectedPhoto, matching: .images) {
                         Label("Choose screenshot", systemImage: "photo")
                     }
@@ -183,6 +231,24 @@ private struct CoachingComposeView: View {
         }
     }
 
+    private func textPrompt(for replyMode: CoachingReplyMode) -> String {
+        switch replyMode {
+        case .helpMeReply:
+            return "Paste what they said."
+        case .reviewMyReply:
+            return "Paste the conversation, including your reply. Start your own lines with 'Me:' so we know which part is yours."
+        }
+    }
+
+    private func screenshotPrompt(for replyMode: CoachingReplyMode) -> String {
+        switch replyMode {
+        case .helpMeReply:
+            return "Choose a screenshot of what they said."
+        case .reviewMyReply:
+            return "Choose a screenshot that includes your reply too."
+        }
+    }
+
     private var isSubmitting: Bool {
         switch viewModel.submissionState {
         case .uploading, .analyzing, .submitting: return true
@@ -196,6 +262,34 @@ private struct CoachingComposeView: View {
         case .analyzing: return "Analyzing screenshot…"
         default: return "Analyzing…"
         }
+    }
+}
+
+#Preview("Coach mode selection") {
+    CoachingComposePreview(replyMode: nil)
+}
+
+#Preview("Coach composer — Help me reply") {
+    CoachingComposePreview(replyMode: .helpMeReply)
+}
+
+#Preview("Coach composer — Review my reply, Dark") {
+    CoachingComposePreview(replyMode: .reviewMyReply)
+        .preferredColorScheme(.dark)
+}
+
+@MainActor
+private struct CoachingComposePreview: View {
+    @StateObject private var viewModel: CoachingViewModel
+
+    init(replyMode: CoachingReplyMode?) {
+        let viewModel = CoachingViewModel()
+        viewModel.replyMode = replyMode
+        _viewModel = StateObject(wrappedValue: viewModel)
+    }
+
+    var body: some View {
+        CoachingComposeView(viewModel: viewModel)
     }
 }
 
