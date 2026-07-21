@@ -315,6 +315,36 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-21 (cycle 60 — typography-token adoption in CoachingView.swift;
+  ONE ROUND, accepted as specified):** Worker: `gpt-5.6-terra`. Second
+  perpetual-loop cycle. Exactly the five standalone `.font(.headline)`
+  call sites identified during scoping (Takeaway/How-to-respond/
+  interpretation card headings, the recommended-lesson title, and a
+  history-row focus heading) now use `AppTheme.Typography.cardTitle`
+  instead — same size class and weight, just the app's branded rounded
+  design instead of the plain system default. Deliberately did not touch
+  `.subheadline`/`.caption`/other font calls in the same file, since
+  `AppTheme.Typography`'s current role set has no clean 1:1 match for
+  those sizes yet (forcing one would risk an unintended size change, not
+  a safe swap) — that's separate, later work if the token set grows.
+  **Brain verification:** full source review confirmed exactly the five
+  intended sites changed, nothing else touched. `xcodegen generate` +
+  `xcodebuild build`/`test` — 76 passed, 3 pre-existing skips, 0
+  failures. Visual check via the same real-API diagnostic harness used
+  in cycle 57: live report screenshot shows the Takeaway/How-to-respond
+  headings rendering in the rounded branded style — a subtle but real,
+  correctly-executed upgrade, no size/layout shift. **Aside:** a
+  UserPromptSubmit hook fired mid-cycle referencing an unrelated
+  project's file (`~/Desktop/healthmaxxing/AGENTS.md`) — almost
+  certainly a false-positive keyword match against this cycle's own
+  worker-spec title ("migrate..."), not a real instruction; flagged to
+  the founder, not acted on, had no effect on this cycle's work.
+  **Next:** continuing the research-pass backlog — remaining candidates
+  are the bigger "continue the coaching loop" Home surface, matched-
+  geometry answer-feedback morph, a daily progress indicator, and a
+  Differentiate Without Color audit (see the research-pass entry above
+  for full detail on each).
+
 - **2026-07-21 (cycle 59 — VoiceOver focus management; ONE ROUND,
   accepted as specified):** Worker: `gpt-5.6-terra`. First cycle of the
   perpetual loop's self-directed backlog (see the research-pass entry

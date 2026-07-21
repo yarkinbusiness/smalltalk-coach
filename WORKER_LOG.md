@@ -766,3 +766,15 @@ Entry format (keep an entry under ~15 lines):
 - **Files touched:** ios/SmallTalkCoach/CoachingView.swift; ios/SmallTalkCoach/LessonDetailView.swift; WORKER_LOG.md
 - **Result / verification:** `cd ios && xcodegen generate`, `xcrun swiftc -parse` for both edited views, and `git diff --check` passed. iPhone 16 `xcodebuild build` and `xcodebuild test` were attempted, but CoreSimulatorService became invalid and exposed no simulator runtimes; no XCTest cases ran.
 - **Open issues:** Run the iPhone 16 build and full XCTest suite on a host with a working simulator runtime.
+
+## 2026-07-21 17:14 UTC — Migrate CoachingView headline titles to cardTitle
+- **Model:** gpt-5
+- **Status:** partial
+- **What was done:** Changed exactly five standalone `.font(.headline)` call sites to
+  `.font(AppTheme.Typography.cardTitle)`; no other font calls changed.
+- **Files touched:** ios/SmallTalkCoach/CoachingView.swift; WORKER_LOG.md
+- **Result / verification:** `cd ios && xcodegen generate` and `git diff --check` passed;
+  the standalone-headline scan returned no remaining matches. iPhone 16 `xcodebuild build`
+  and `xcodebuild test` were attempted, but CoreSimulatorService refused connections and
+  exposed no runtimes, so neither command could run against a simulator and no XCTest cases ran.
+- **Open issues:** Run the iPhone 16 build and full XCTest suite on a host with a working simulator runtime.

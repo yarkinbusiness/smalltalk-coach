@@ -349,7 +349,7 @@ struct CoachingReportView: View {
             Section {
                 ReportCard(accent: .orange, emphasized: true) {
                     Label("Takeaway", systemImage: "lightbulb.fill")
-                        .font(.headline)
+                        .font(AppTheme.Typography.cardTitle)
                         .accessibilityFocused($isTakeawayFocused)
                     Text(report.diagnosis.transferableTakeaway)
                         .font(.body.weight(.medium))
@@ -362,7 +362,7 @@ struct CoachingReportView: View {
             Section {
                 ReportCard(accent: .teal) {
                     Label("How to respond", systemImage: "arrowshape.turn.up.right")
-                        .font(.headline)
+                        .font(AppTheme.Typography.cardTitle)
                     Text(report.diagnosis.responseCoaching.guidance)
                     Text("Examples to adapt — not scripts")
                         .font(.caption.weight(.semibold))
@@ -379,7 +379,7 @@ struct CoachingReportView: View {
             Section {
                 ReportCard(accent: .blue) {
                     Label("What they're really saying", systemImage: "message")
-                        .font(.headline)
+                        .font(AppTheme.Typography.cardTitle)
                     ReportInterpretationRow(label: "Tone", text: report.diagnosis.incomingInterpretation.tone)
                     ReportInterpretationRow(label: "Intent", text: report.diagnosis.incomingInterpretation.intent)
                     ReportInterpretationRow(label: "Your response", text: report.diagnosis.incomingInterpretation.responseGoals)
@@ -419,7 +419,7 @@ struct CoachingReportView: View {
                 NavigationLink { LessonDetailView(lessonID: report.recommendation.lesson.id) } label: {
                     VStack(alignment: .leading, spacing: 7) {
                         HStack {
-                            Text(report.recommendation.lesson.title).font(.headline)
+                            Text(report.recommendation.lesson.title).font(AppTheme.Typography.cardTitle)
                             Spacer()
                             Text(report.recommendation.lesson.recommendationKind == "review" ? "Review" : "New")
                                 .font(.caption.weight(.semibold)).padding(.horizontal, 8).padding(.vertical, 4)
@@ -631,7 +631,7 @@ private struct CoachingHistoryView: View {
                         ForEach(viewModel.reports) { summary in
                             NavigationLink { CoachingReportDetailView(reportID: summary.id) } label: {
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text("Focus: \(summary.weakestDimension.capitalized)").font(.headline)
+                                    Text("Focus: \(summary.weakestDimension.capitalized)").font(AppTheme.Typography.cardTitle)
                                     Text("Recommended: \(summary.lessonID) · \(summary.createdAt)").font(.caption).foregroundStyle(.secondary)
                                 }
                             }
