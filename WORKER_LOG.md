@@ -734,3 +734,11 @@ Entry format (keep an entry under ~15 lines):
 - **Files touched:** ios/SmallTalkCoach/LessonProgressHeader.swift; ios/SmallTalkCoach/LessonDetailView.swift; WORKER_LOG.md
 - **Result / verification:** `xcrun swiftc -parse` passed for both Swift files; `git diff --check` passed. Scoped scan found the branded background only in the header's two previews.
 - **Open issues:** none
+
+## 2026-07-21 16:34 UTC — Deeper redesign #4a: SkillMetricBar historical trend visualization
+- **Model:** gpt-5.6-terra
+- **Status:** partial
+- **What was done:** Added tokenized, preview-covered SkillMetricBar bars with minimum visible height and latest-score emphasis. Replaced profile history text with the dimension-colored chart while preserving its exact grouped VoiceOver wording and all adjacent profile content.
+- **Files touched:** ios/SmallTalkCoach/SkillMetricBar.swift; ios/SmallTalkCoach/ProfileView.swift; WORKER_LOG.md
+- **Result / verification:** `cd ios && xcodegen generate`, `xcrun swiftc -parse` for both changed Swift files, and `git diff --check` passed. iPhone 16 build/test were attempted, but CoreSimulatorService provided no iOS runtimes; the SDK build reached asset compilation and stopped for that same runtime absence, so no XCTest suite ran.
+- **Open issues:** Run the iPhone 16 build/test suite and visually inspect the light and dark previews on a host with a working simulator runtime.

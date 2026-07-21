@@ -200,9 +200,7 @@ struct ProfileView: View {
         if let latest = display.dimension.scores.last {
             Text("Latest: \(latest.score)/5")
                 .font(.body.weight(.semibold))
-            Text("History: \(display.dimension.scores.map { String($0.score) }.joined(separator: " → "))")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+            SkillMetricBar(scores: display.dimension.scores, color: dimensionColor(for: display.key))
                 .accessibilityLabel("\(display.displayName) history: \(display.dimension.scores.map { String($0.score) }.joined(separator: ", "))")
         } else {
             Text("Not yet scored — scores come from conversations where you wrote a reply.")
@@ -213,6 +211,16 @@ struct ProfileView: View {
             Text("Flagged weakest in \(display.dimension.flaggedCount) reports")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
+        }
+    }
+
+    private func dimensionColor(for key: String) -> Color {
+        switch key {
+        case "warmth": AppTheme.Colors.skillWarmth
+        case "curiosity": AppTheme.Colors.skillCuriosity
+        case "reciprocity": AppTheme.Colors.skillReciprocity
+        case "flow": AppTheme.Colors.skillFlow
+        default: AppTheme.Colors.primary
         }
     }
 }

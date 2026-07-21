@@ -315,6 +315,50 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-21 (cycle 56 — Deeper Redesign #4a: SkillMetricBar historical
+  trend visualization; ONE ROUND, accepted as specified):** Worker:
+  `gpt-5.6-terra`. New `ios/SmallTalkCoach/SkillMetricBar.swift`: a
+  hand-rolled bar chart (no `Charts` framework, no dependency — matches
+  this week's established pattern of small native `AppTheme`-tokened
+  primitives) replacing `ProfileView.dimensionContent`'s literal
+  `"History: 3 → 4 → 2"` arrow-joined text. One bar per `ProfileScore`,
+  height proportional to `score/5` via `GeometryReader`, most recent bar
+  at full color opacity vs. ~0.45 for older ones, minimum visible height
+  floor so even a lone score of 1 renders as a real (if short) bar rather
+  than vanishing. Dimension color correctly mapped
+  (`display.key` → `AppTheme.Colors.skillWarmth/skillCuriosity/
+  skillReciprocity/skillFlow`, the existing Okabe-Ito colorblind-safe
+  palette from cycle 47) via a small local `dimensionColor(for:)` switch.
+  Accessibility: chart collapses to one VoiceOver element
+  (`.accessibilityElement(children: .ignore)`), with the *exact* prior
+  wording (`"\(displayName) history: \(comma-joined scores)"`) reattached
+  at the call site — worker's choice to set the label externally (via
+  `.accessibilityLabel` chained onto the component) rather than
+  internally is a legitimate, equally-correct alternative to a
+  component-owned label parameter, and the wording is verified unchanged.
+  "Latest: X/5", "Flagged weakest…", and the empty-state branch all
+  correctly left untouched. Three preview cases (improving multi-score,
+  flat multi-score, single-score edge case) spanning light and dark —
+  exceeds the two cases asked for.
+  **Brain verification:** full source review found no bugs. `xcodegen
+  generate` + `xcodebuild build`/`test` — 76 passed, 3 pre-existing
+  skips, 0 failures. No real user on this simulator currently has scored
+  profile data to verify against live backend data (the persisted
+  UserDefaults domain wasn't even populated at check time — a simulator-
+  state quirk, not a product issue), so visual verification used a
+  targeted diagnostic harness embedding `SkillMetricBar` inside a real
+  `List`/`Section` (matching its actual production embedding context,
+  not just the component's own plain-`VStack` previews) with synthetic
+  multi-score and single-score data, light and dark: confirmed
+  `GeometryReader`-based proportional sizing works correctly inside a
+  real List row (no layout ambiguity — this was the main technical risk
+  worth checking beyond the previews), heights scale visibly and
+  correctly with score, emphasis and colors render as intended. **Next:**
+  Deeper Redesign #4b — the other half of item 4, narrative report reveal
+  motion (staggered card appearance in `CoachingReportView`) — then
+  re-check whether #1/#5 have been unblocked by the founder before
+  deciding what comes after.
+
 - **2026-07-21 (cycle 55 — Deeper Redesign #3a: step-based lesson flow +
   LessonProgressHeader; TWO ROUNDS, accepted):** Worker: `gpt-5.6-terra`.
   The largest single-file redesign in the plan. `LessonDetailView`'s
