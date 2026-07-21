@@ -315,6 +315,22 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-21 (no cycle dispatched — quick win #8 closed as already
+  done):** Re-read `UI_IMPROVEMENT_PLAN.md`'s "8. Empty-state copy pass
+  for coaching history" against the current
+  `CoachingHistoryView.coachingHistoryEmptyState` (shipped cycle 51,
+  quick win #5a). #8's entire stated acceptance criterion — "show one
+  sample report card and 'Analyze your first conversation'" replacing
+  the bare `ContentUnavailableView` — is already fully delivered
+  verbatim: the sample "Focus: Curiosity" report-row mockup and the
+  "Analyze your first conversation" button both exist today, screenshot-
+  verified in cycle 51. #8's own "current state" description (the bare
+  `ContentUnavailableView`) is stale, describing pre-#5a code. No worker
+  dispatched — nothing left to build. **All 8 quick wins are now
+  complete** (1–4, 5a, 5b, 6, 7 shipped across cycles 47–54; 8 subsumed
+  by 5a). **Next:** deeper redesigns, starting with #1 — split navigation
+  into Today / Learn / Coach.
+
 - **2026-07-21 (cycle 54 — UI quick win #7: defer the notification-
   permission ask; ONE ROUND, accepted as specified):** Worker:
   `gpt-5.6-terra`. Onboarding shortened from 4 steps
