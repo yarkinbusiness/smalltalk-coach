@@ -523,3 +523,14 @@ Entry format (keep an entry under ~15 lines):
 - **Result / verification:** `backend/.venv/bin/python -m pytest backend/tests -q`: 112 passed, 1 skipped,
   1 warning; `git diff --check` passed.
 - **Open issues:** none
+
+## 2026-07-21 12:39 UTC — T-J iOS bearer-token configuration and request header
+- **Model:** gpt-5
+- **Status:** partial
+- **What was done:** Added persisted optional API-token override and injects its bearer value once in
+  `sendData`, covering all endpoints. Added captured-request tests for absent, set, cleared, and two-route headers.
+  Confirmed a 401 maps through `APIClientError` to the existing generic coaching error path without a crash.
+- **Files touched:** ios/SmallTalkCoach/APIClient.swift; ios/SmallTalkCoachTests/SmallTalkCoachTests.swift; WORKER_LOG.md
+- **Result / verification:** `cd ios && xcodegen generate` passed; generic Simulator `xcodebuild build-for-testing`
+  passed (app and test bundle compiled/linked); `git diff --check` passed before this append.
+- **Open issues:** iPhone 16 XCTest could not execute because CoreSimulatorService refused connections and reported no runtimes.

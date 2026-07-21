@@ -41,6 +41,7 @@ protocol CoachingAPI {
 
 struct APIConfiguration {
     static let baseURLOverrideKey = "smalltalkCoach.apiBaseURL"
+    static let apiTokenOverrideKey = "smalltalkCoach.apiToken"
     static let defaultBaseURL = URL(string: "http://127.0.0.1:8000")!
 
     private let defaults: UserDefaults
@@ -59,11 +60,25 @@ struct APIConfiguration {
         return url
     }
 
+    var apiToken: String? {
+        guard let token = defaults.string(forKey: Self.apiTokenOverrideKey),
+              !token.isEmpty else { return nil }
+        return token
+    }
+
     func setBaseURLOverride(_ value: String?) {
         if let value, !value.isEmpty {
             defaults.set(value, forKey: Self.baseURLOverrideKey)
         } else {
             defaults.removeObject(forKey: Self.baseURLOverrideKey)
+        }
+    }
+
+    func setAPITokenOverride(_ value: String?) {
+        if let value, !value.isEmpty {
+            defaults.set(value, forKey: Self.apiTokenOverrideKey)
+        } else {
+            defaults.removeObject(forKey: Self.apiTokenOverrideKey)
         }
     }
 }
@@ -286,6 +301,10 @@ struct APIClient: LessonAPI, StreakAPI, ReviewAPI, ProfileAPI, ReflectionAPI, On
     }
 
     private func sendData(_ request: URLRequest) async throws -> Data {
+        var request = request
+        if let token = configuration.apiToken {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
         let (data, response) = try await session.data(for: request)
         guard let response = response as? HTTPURLResponse else {
             throw APIClientError.invalidResponse

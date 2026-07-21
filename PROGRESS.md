@@ -50,7 +50,8 @@ deterministic — no new API calls) and the existing loop protocol.
      "2026-07-21 — T-G Shuffle Criterion Deviation Recorded"; mechanical
      audit test added cycle 36, caught+fixed L01). True runtime
      permutation = backlog item **T-G2**, sequenced after T-J.
-- **P2 (activation + v1 Must-Haves):**
+- **P2 (activation + v1 Must-Haves): T-H and T-I done; T-J code done,
+  one owed action remains (below).**
   8. ~~**T-H** — onboarding + baseline (BRIEF Flow A), hosts notification
      opt-in~~ — done (cycle 35; also completes T-D's deferred
      "opt-in during onboarding" placement).
@@ -59,8 +60,16 @@ deterministic — no new API calls) and the existing loop protocol.
      founder decisions recorded in `docs/planning/DECISIONS.md`). One
      audit follow-up → cycle 40: screenshot-mode consent copy must name
      the image sent to Anthropic.
-  10. **T-J** — backend auth (shared-secret bearer), rate limiting on
-      coaching endpoints, test-key rotation, deploy readiness.
+  10. ~~**T-J** — backend auth (shared-secret bearer), rate limiting on
+      coaching endpoints, deploy readiness~~ — code done (cycles 41–42).
+      **One item this task cannot close by code: rotating the
+      `ANTHROPIC_API_KEY` test key**, owed since the cycle-19 live
+      smoke (test keys transited chat at founder's explicit
+      acceptance). This requires the Anthropic console (no brain
+      access) and an edit to `~/.env` (Bash cannot read that file by
+      design). Founder action, whenever convenient: generate a new key
+      → replace the value in `~/.env` → revoke the old one. Does not
+      block anything else in the loop.
 - **P3 (founder-gated decisions):**
   11. **T-K** — paywall experiment scaffolding (StoreKit 2, flag off) —
       gated on founder pricing + free-tier decision.
@@ -229,6 +238,31 @@ items assume. -->
    4 workers → synthesized report) against real CMA.
 
 ## Cycle log
+
+- **2026-07-21 (cycle 42 — T-J iOS half: API token config + bearer
+  header; T-J CODE COMPLETE):** Worker: `gpt-5.6-terra`, one round,
+  honest partial (sandbox blocks simulator; brain ran tests).
+  `APIConfiguration` gains `apiToken`/`setAPITokenOverride`, mirroring
+  the existing (already-shipped, still-unused-by-any-UI)
+  `baseURLOverride` pattern exactly — same UserDefaults mechanism, same
+  nil-by-default shape. Header injected at the single `sendData(_:)`
+  choke point every API call already funnels through — zero per-method
+  changes, so it covers every current and future endpoint
+  automatically. Default (no override) sends no Authorization header,
+  matching the backend's default-open state with zero config needed.
+  4 new tests reusing the existing URLProtocol request-interception
+  mechanism. Brain verification: **67 XCTests, 0 failures** (own run,
+  3 new — spec asked for 4 scenarios, worker delivered 3 test functions
+  covering them, one combining two assertions); build succeeded; live
+  simulator launch against the real (unconfigured, open) backend —
+  Home/Today/reflection data loaded from an actual network call,
+  confirming the no-token path still works end to end — ACCEPTED.
+  **T-J's code scope (opt-in auth + coaching rate limit + iOS token
+  plumbing) is now fully shipped.** The only remaining T-J item is the
+  owed Anthropic test-key rotation, which is a founder action outside
+  the loop's reach (see backlog note above) — not a blocker for
+  anything else. **Next:** T-G2 (deterministic runtime answer
+  permutation, sequenced after T-J per the cycle-36 decision record).
 
 - **2026-07-21 (cycle 41 — T-J backend half: bearer auth + coaching rate
   limit):** Worker: `gpt-5.6-terra`, one round. `SMALLTALK_API_TOKEN`

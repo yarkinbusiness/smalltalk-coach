@@ -89,6 +89,66 @@ final class SmallTalkCoachTests: XCTestCase {
         defaults.removePersistentDomain(forName: suiteName)
     }
 
+    func testAPIClientSendsNoAuthorizationHeaderWithoutTokenOverride() async throws {
+        let suiteName = "APIClientAuthorization.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        RequestCapturingURLProtocol.reset()
+
+        let client = apiClient(defaults: defaults)
+        _ = try await client.curriculum()
+
+        XCTAssertNil(try XCTUnwrap(RequestCapturingURLProtocol.requests.first).value(forHTTPHeaderField: "Authorization"))
+    }
+
+    func testAPIClientSendsTokenHeaderForMultipleEndpointCalls() async throws {
+        let suiteName = "APIClientAuthorization.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let configuration = APIConfiguration(defaults: defaults)
+        configuration.setAPITokenOverride("abc123")
+        RequestCapturingURLProtocol.reset()
+
+        let client = apiClient(defaults: defaults)
+        _ = try await client.curriculum()
+        _ = try await client.streak(timezoneIdentifier: "Europe/Istanbul")
+
+        XCTAssertEqual(RequestCapturingURLProtocol.requests.count, 2)
+        XCTAssertEqual(
+            RequestCapturingURLProtocol.requests.map { $0.value(forHTTPHeaderField: "Authorization") },
+            ["Bearer abc123", "Bearer abc123"]
+        )
+    }
+
+    func testClearingAPITokenOverrideRemovesHeaderOnNextRequest() async throws {
+        let suiteName = "APIClientAuthorization.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let configuration = APIConfiguration(defaults: defaults)
+        configuration.setAPITokenOverride("abc123")
+        RequestCapturingURLProtocol.reset()
+
+        let client = apiClient(defaults: defaults)
+        _ = try await client.curriculum()
+        configuration.setAPITokenOverride(nil)
+        _ = try await client.streak(timezoneIdentifier: "Europe/Istanbul")
+
+        XCTAssertEqual(
+            RequestCapturingURLProtocol.requests.map { $0.value(forHTTPHeaderField: "Authorization") },
+            ["Bearer abc123", nil]
+        )
+    }
+
+    private func apiClient(defaults: UserDefaults) -> APIClient {
+        let sessionConfiguration = URLSessionConfiguration.ephemeral
+        sessionConfiguration.protocolClasses = [RequestCapturingURLProtocol.self]
+        return APIClient(
+            session: URLSession(configuration: sessionConfiguration),
+            configuration: APIConfiguration(defaults: defaults),
+            userIdentityStore: UserIdentityStore(defaults: defaults, key: "testUserID")
+        )
+    }
+
     func testOnboardingModelsDecodeBackendContract() throws {
         let fixture = """
         {
@@ -1357,6 +1417,58 @@ final class SmallTalkCoachTests: XCTestCase {
         viewModel.consentGiven = true
         return viewModel
     }
+}
+
+private final class RequestCapturingURLProtocol: URLProtocol {
+    private static let lock = NSLock()
+    private static var storedRequests: [URLRequest] = []
+
+    static var requests: [URLRequest] {
+        lock.lock()
+        defer { lock.unlock() }
+        return storedRequests
+    }
+
+    static func reset() {
+        lock.lock()
+        storedRequests = []
+        lock.unlock()
+    }
+
+    override class func canInit(with request: URLRequest) -> Bool {
+        true
+    }
+
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest {
+        request
+    }
+
+    override func startLoading() {
+        Self.lock.lock()
+        Self.storedRequests.append(request)
+        Self.lock.unlock()
+
+        let body: Data
+        if request.url?.path.hasSuffix("/streak") == true {
+            body = Data("""
+            {"streak_days":0,"active_today":false,"freezes":0,"today":{"kind":"all_complete","lesson_id":null,"title":null,"unit_id":null}}
+            """.utf8)
+        } else {
+            body = Data("{\"units\":[]}".utf8)
+        }
+
+        let response = HTTPURLResponse(
+            url: request.url!,
+            statusCode: 200,
+            httpVersion: nil,
+            headerFields: ["Content-Type": "application/json"]
+        )!
+        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+        client?.urlProtocol(self, didLoad: body)
+        client?.urlProtocolDidFinishLoading(self)
+    }
+
+    override func stopLoading() {}
 }
 
 private final class StubLessonAPI: LessonAPI, ReviewAPI {
