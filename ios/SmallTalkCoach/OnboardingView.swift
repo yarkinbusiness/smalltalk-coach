@@ -146,19 +146,21 @@ struct OnboardingView: View {
                 }
 
                 if viewModel.step == .baseline {
-                    Button(viewModel.isSubmitting ? "Getting started…" : "Get started") {
+                    PrimaryActionButton(
+                        title: "Get started",
+                        state: viewModel.isSubmitting ? .loading : .idle
+                    ) {
                         Task {
                             onFinished(await viewModel.submit())
                         }
                     }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(viewModel.isSubmitting)
                 } else {
-                    Button("Continue") {
+                    PrimaryActionButton(
+                        title: "Continue",
+                        state: viewModel.canAdvance ? .idle : .disabled
+                    ) {
                         viewModel.advance()
                     }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(!viewModel.canAdvance)
                 }
             }
             .padding(24)
@@ -181,7 +183,7 @@ struct OnboardingView: View {
         case .goal:
             VStack(alignment: .leading, spacing: 16) {
                 Text("Welcome")
-                    .font(.largeTitle.bold())
+                    .font(AppTheme.Typography.display)
                 Text("Let’s shape a gentle place to begin. What would feel most useful right now?")
                     .foregroundStyle(.secondary)
                 ForEach(OnboardingGoal.allCases) { goal in
@@ -193,7 +195,7 @@ struct OnboardingView: View {
         case .context:
             VStack(alignment: .leading, spacing: 16) {
                 Text("Where do you practice most?")
-                    .font(.title2.bold())
+                    .font(AppTheme.Typography.title)
                 Text("This helps us keep examples relevant. You can change direction anytime.")
                     .foregroundStyle(.secondary)
                 ForEach(OnboardingContext.allCases) { context in
@@ -205,7 +207,7 @@ struct OnboardingView: View {
         case .baseline:
             VStack(alignment: .leading, spacing: 16) {
                 Text("A quick starting point")
-                    .font(.title2.bold())
+                    .font(AppTheme.Typography.title)
                 Text("There’s no right score. Choose what feels true today.")
                     .foregroundStyle(.secondary)
                 rating("Showing warmth when you talk", value: viewModel.warmth, dimension: "warmth")
@@ -226,9 +228,9 @@ struct OnboardingView: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            .cardStyle(selected ? .highlighted : .interactive)
         }
-        .buttonStyle(.bordered)
-        .tint(selected ? .blue : .secondary)
+        .buttonStyle(.plain)
     }
 
     private func rating(_ prompt: String, value: Int, dimension: String) -> some View {

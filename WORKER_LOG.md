@@ -818,3 +818,11 @@ Entry format (keep an entry under ~15 lines):
 - **Files touched:** ios/SmallTalkCoach/LessonDetailView.swift; WORKER_LOG.md
 - **Result / verification:** `xcrun swiftc -parse SmallTalkCoach/LessonDetailView.swift` and `git diff --check` passed.
 - **Open issues:** none
+
+## 2026-07-21 18:07 UTC — Bring OnboardingView onto the design-token system
+- **Model:** gpt-5
+- **Status:** partial
+- **What was done:** Migrated the three onboarding headings to AppTheme typography, choice labels to selected/highlighted or unselected/interactive CardStyle cards, and the primary actions to PrimaryActionButton with their existing loading/disabled states.
+- **Files touched:** ios/SmallTalkCoach/OnboardingView.swift; WORKER_LOG.md
+- **Result / verification:** `xcrun swiftc -parse SmallTalkCoach/OnboardingView.swift`, `cd ios && xcodegen generate`, and `git diff --check` passed. iPhone 16 `xcodebuild build` and `xcodebuild test` were attempted, but CoreSimulatorService refused connections and exposed no iOS runtimes before app compilation or XCTest execution.
+- **Open issues:** Run the iPhone 16 build/test suite and visually inspect onboarding on a host with a working simulator runtime.

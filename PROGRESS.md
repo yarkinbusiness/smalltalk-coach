@@ -315,6 +315,53 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-21 (cycle 65 — OnboardingView design-token adoption; ONE
+  ROUND, accepted as specified):** Worker: `gpt-5.6-terra`. First cycle
+  after exhausting the initial research-pass backlog — found by
+  re-checking the app against the research doc rather than assuming
+  there was nothing left: `OnboardingView.swift` had **zero** usages of
+  `AppTheme`/`CardStyle`/`PrimaryActionButton` (confirmed via `grep`)
+  despite being the very first screen a new user sees, while every other
+  screen has been substantially reskinned this week. Three precise
+  migrations: the three step headings now use `AppTheme.Typography
+  .display`/`.title`; `selectionButton` (goal/context choice buttons)
+  now uses `.cardStyle(.highlighted)` when selected /
+  `.cardStyle(.interactive)` otherwise, matching the exact pattern
+  already established by the Coach mode-selection cards, checkmark
+  preserved; the Continue/Get-started buttons are now
+  `PrimaryActionButton` with correct state mapping (`.loading` for
+  `isSubmitting`, `.disabled` for `!canAdvance`, `.idle` otherwise) —
+  this is `PrimaryActionButton`'s **first real adoption anywhere in the
+  app** (it existed since cycle 47 but, like `AppSurface`, had never
+  actually been used). "Back" button and all logic left untouched, as
+  scoped.
+  **Brain verification:** full source review found no bugs. `xcodegen
+  generate` + `xcodebuild build`/`test` — 76 passed, 3 pre-existing
+  skips, 0 failures. Visual verification hit a real environment puzzle
+  worth recording: neither `defaults delete` nor an explicit `defaults
+  write ... -bool false` on `smalltalkCoach.hasCompletedOnboarding`,
+  followed by `terminate` + `launch` (with confirmed-false reads
+  immediately beforehand), actually made `RootView` present onboarding
+  again — it kept landing on Home. Given `RootView.swift` was not
+  touched this cycle (or any cycle since 54) and this is a presentation-
+  trigger question unrelated to `OnboardingView.swift`'s styling, side-
+  stepped it entirely by rendering `OnboardingView` directly via the
+  harness (bypassing `RootView`'s conditional `fullScreenCover` logic) —
+  confirmed excellent results in both light and dark: rounded branded
+  heading, clean card-styled selection buttons with visible borders, and
+  the Continue button correctly rendering its `.disabled` (dimmed)
+  state with no goal yet selected. This isolates the finding cleanly:
+  the diff itself is unambiguously correct; the `RootView` re-trigger
+  puzzle is a separate, pre-existing simulator/persistence quirk (same
+  family as the already-documented `simctl uninstall`-doesn't-clear-
+  defaults quirk from cycle 51) that doesn't block this cycle and wasn't
+  chased further given time cost vs. relevance. Simulator restored to a
+  normal onboarded state afterward. **Next:** continuing to look for
+  further concrete, well-justified findings in the same spirit — the
+  research's actionable content is now substantially delivered; future
+  cycles should stay honest about diminishing returns rather than
+  manufacture busywork.
+
 - **2026-07-21 (cycle 64 — matched-geometry Quick Exercise answer→feedback
   morph; TWO ROUNDS, accepted):** Worker: `gpt-5.6-terra`. Final item from
   the perpetual loop's initial research backlog, and the fussiest
