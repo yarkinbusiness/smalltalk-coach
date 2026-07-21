@@ -1,6 +1,19 @@
 # Progress & backlog
 
-**2026-07-20 (later — latest): LOOP ACTIVE — v2 execution begun (founder
+**2026-07-21 (latest): LOOP ACTIVE — UI Improvement Plan execution
+begun (founder-approved).** The v3 roadmap (T-K, T-L, and the follow-up
+privacy-policy fix) is fully shipped — see the cycle log below. The
+founder then commissioned UI/UX research (`docs/research/`, condensed
+into `docs/planning/UI_IMPROVEMENT_PLAN.md`) and approved it in full.
+The loop is now executing that plan's backlog in its exact written
+order — quick wins first, then deeper redesigns — under the same locked
+model rules and mandatory-verification protocol as before. Two items in
+the plan (paywall-sequencing trigger logic; the Coach-tab / free-draft-
+grading IA placement question) are explicitly founder-deferred — flag
+and stop when reached rather than deciding unilaterally. Cycle numbering
+continues from 46.
+
+**2026-07-20 (later): LOOP ACTIVE — v2 execution begun (founder
 instruction).** The loop is executing the v2 backlog below tier by tier
 (P0 → P1 → P2) under the locked model rules (brain: Claude Fable 5;
 workers: `gpt-5.6-terra` via `worker.sh` — DECISIONS: "2026-07-18 —
