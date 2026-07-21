@@ -315,6 +315,48 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-21 (no cycle dispatched — FOUNDER FLAG, two deeper-redesign
+  items blocked, not deciding unilaterally):** Started reviewing
+  `UI_IMPROVEMENT_PLAN.md`'s "Deeper redesigns" tier now that all 8 quick
+  wins are done. Two items directly hit the founder's own standing
+  deferral ("Defer the paywall-sequencing and Coach-tab structural
+  decisions; flag them when you reach them instead of deciding myself,"
+  approval message, this UI-plan execution):
+  - **#1, Split navigation into Today/Learn/Coach:** the plan doc's own
+    text (written before this deferral was reiterated) already flags a
+    real open question inside this item — the research defines the new
+    "Coach" tab as including free-draft grading, but that feature's
+    actual UI entry point today lives inside `LessonDetailView` (reached
+    via Learn, not Coach). Deciding whether to surface a Coach-tab link
+    to it, or accept it stays contextually inside a lesson, IS the
+    Coach-tab structural decision the founder reserved. Blocked.
+  - **#2, Visual learning path:** structurally depends on #1's new
+    `LearnView.swift` existing first. Blocked transitively.
+  - **#5, Sequence the paywall after value, not before:** literally
+    titled "paywall-sequencing" work. (The item's own text argues it
+    "does not reopen" the T-K pricing/flag decision and needs no founder
+    input to *plan* — that reasoning predates the founder's later,
+    broader "defer... flag when you reach them" instruction, which names
+    "paywall-sequencing" specifically and wins here. Deferring rather
+    than relying on my own earlier annotation.) Blocked.
+  - **#6, completion/streak/milestone motion:** partially depends on #1
+    for its "new LearnView.swift" unit-completion piece only; the
+    `TodayCard`/`LessonDetailView` streak-flame and lesson-completion
+    motion pieces don't depend on #1. Will scope narrowly to the
+    unblocked pieces when reached.
+  - **#7, preview/snapshot matrix:** not an independently-dispatchable
+    item — an ambient discipline to apply while rebuilding the other
+    components, per its own text.
+  - **#8, five usability sessions:** not a code task at all; requires the
+    founder to actually recruit and run sessions with real users. Left on
+    the backlog, not actionable by this loop.
+  **Not stopping the whole loop over this** — proceeding with the
+  unblocked items in written order: **#3 (step-based lesson flow) next**,
+  then **#4 (narrative report reveal + trend visualization)**. Both are
+  fully self-contained, don't touch the tab structure, and were already
+  read/verified in full when the plan was written. Will re-check whether
+  #1/#5 have been unblocked before reaching #6.
+
 - **2026-07-21 (no cycle dispatched — quick win #8 closed as already
   done):** Re-read `UI_IMPROVEMENT_PLAN.md`'s "8. Empty-state copy pass
   for coaching history" against the current
