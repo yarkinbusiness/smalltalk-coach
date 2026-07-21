@@ -315,6 +315,70 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-21 (PERPETUAL LOOP BEGINS — health check + fresh research
+  pass, per the founder's standing directive):** `UI_IMPROVEMENT_PLAN.md`
+  is now exhausted except for founder-gated items (#1, #2, #5, #6's
+  `LearnView` piece) — see cycle 58's entry. Per the standing directive,
+  transitioning into the perpetual research→implement→verify→log mode
+  rather than stopping.
+  **Step 1, health check:** backend `/health` → `{"status":"ok",
+  "lessons_loaded":12,"coaching_enabled":true}`. Real app rebuilt,
+  installed, launched: Home tab confirmed (streak, lesson list, live
+  data — cycle 58's own final screenshot already covered this fresh).
+  AI Coaching tab freshly re-checked via harness: mode-selection screen
+  renders cleanly. No build or runtime failures found; nothing to fix.
+  **Step 2, research:** re-read `docs/research/smalltalk-coach-research.pdf`
+  in full (not from memory) and cross-checked every section against
+  current screens and `UI_IMPROVEMENT_PLAN.md`'s coverage. Found real,
+  concrete, **unblocked** gaps the original plan didn't fully capture:
+  1. **"Continue the coaching loop" on Home** — the research's Today-
+     screen spec explicitly calls for "last insight and recommended next
+     action" on Today; nothing on `HomeView`/`TodayCard` surfaces the
+     most recent coaching report at all today. Likely the single
+     highest-product-value item on this list — it's the actual close of
+     the app's stated core loop ("bring a real conversation → understand
+     → get a response strategy → practice → improve the *next* real
+     conversation" — Executive Verdict). Needs `TodayViewModel` to fetch
+     recent coaching history (endpoint already exists) — biggest of this
+     batch, needs its own careful scoping pass before dispatch.
+  2. **VoiceOver focus management** — "Move VoiceOver focus to new
+     feedback/report headings" (Accessibility section) was never
+     addressed by any cycle; `MotionPolicy`/Reduce-Motion work is about
+     animation gating, not focus. Concrete, well-specified, unblocked.
+     **Picked as the next cycle** — small, mechanical, high accessibility
+     value, low visual risk.
+  3. **Design-token adoption gap in `CoachingView.swift`** — `AppTheme
+     .Typography` exists (cycle 47) but much of `CoachingView.swift`
+     (written before/around the tokens landed, touched incrementally
+     since) still uses raw `.font(.headline)`/`.font(.subheadline)`
+     instead of the named roles the research calls for ("System
+     typography with named roles"). An audit-and-migrate pass, not new
+     UI.
+  4. **Matched-geometry answer-feedback morph** — "Morph a selected
+     answer into feedback with matched geometry" (Motion system) —
+     `ChoiceButton`'s correct/incorrect states currently just swap
+     color/icon, no `matchedGeometryEffect`. Specific, named, unblocked,
+     but a fussier SwiftUI technique — worth scoping carefully when
+     picked up, not first.
+  5. **Daily progress indicator** — the research's own `DailyProgressRing`
+     component and "daily progress strip: 0/1 action or a small minute
+     goal" bullet — nothing like this exists on `TodayCard` today.
+  6. **Differentiate Without Color audit** — explicitly named in the
+     research's accessibility section, never explicitly checked by any
+     cycle (Dynamic Type got a spot-check in cycle 53; this didn't).
+  Still open from earlier cycles, not forgotten: `AppSurface`/branded
+  background never applied to any real screen (flagged cycle 51);
+  `CoachToast` isn't a standalone reusable component (the copy
+  confirmation is baked directly into `ExampleResponseSuggestion`) —
+  low priority, functionally equivalent today.
+  **This list is the loop's running backlog** — each future cycle picks
+  the next item (roughly in the order above, adjusted for what's
+  actually well-scoped when reached) rather than re-deriving findings
+  from scratch every time. **Next:** VoiceOver focus management
+  (`CoachingReportView` → focus the Takeaway heading on report
+  appearance; `LessonDetailView` → focus the new step's heading on
+  step change).
+
 - **2026-07-21 (cycle 58 — Deeper Redesign #6 (partial): streak + lesson
   completion motion; ONE ROUND, accepted as specified):** Worker:
   `gpt-5.6-terra`. Scoped to the two pieces of this plan item not blocked
