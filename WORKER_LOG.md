@@ -485,3 +485,18 @@ Entry format (keep an entry under ~15 lines):
   `xcodebuild build-for-testing` passed; `git diff --check` passed. Named iPhone 16 / iOS 18.2
   build and XCTest were attempted but CoreSimulatorService refused connections before execution.
 - **Open issues:** Run XCTest and repeated fresh-install relaunch verification on a host with a working simulator service.
+
+## 2026-07-21 — T-I privacy policy, Terms of Service, and App Store privacy mapping
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Added plain-language privacy and terms documents for the current anonymous-device
+  data model, retention/deletion controls, Anthropic sharing, and conversation-participant caution.
+  Added an App Store privacy-label mapping and audited the actual pre-submit consent copy. The audit
+  records the high-priority screenshot disclosure gap without changing app code.
+- **Files touched:** docs/legal/PRIVACY_POLICY.md; docs/legal/TERMS_OF_SERVICE.md;
+  docs/legal/APP_STORE_PRIVACY.md; backend/README.md; WORKER_LOG.md
+- **Result / verification:** Reviewed `ios/SmallTalkCoach/CoachingView.swift` and relevant backend
+  storage/coaching code; `backend/.venv/bin/python -m pytest backend/tests -q`: 102 passed, 1 skipped,
+  1 warning in 3.25s; `git diff --check` passed before this append.
+- **Open issues:** Before App Store submission, update screenshot-mode consent copy to explicitly say
+  that the screenshot image and extracted conversation text are sent to Anthropic, then re-audit it.

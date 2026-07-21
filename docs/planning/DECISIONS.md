@@ -157,6 +157,29 @@ Use this file to preserve important product decisions and prevent the same quest
   of full conversations differently, or the takeaway/examples encourage
   copy-paste dependency (then rebalance with the Learning Boundary).
 
+### 2026-07-21 — Data Retention & Deletion Policy; Controller Named (Founder)
+
+- **Status:** Confirmed (founder decision, recorded from the T-I gate)
+- **Decision:** Coaching data (reports, transcripts, reflections) is
+  retained **until the user deletes it** — no automatic expiry in v1.
+  Deletion controls: per-report delete and account-wide "Delete all
+  coaching data" (which keeps lesson progress and streaks, stated in the
+  confirmation copy). Raw screenshot bytes are never stored (deleted
+  after extraction — implementation-verified). Data controller for the
+  privacy policy: **Yarkin Yavuz**, contact **yarkin.business@gmail.com**
+  (swappable for a legal entity later). Documents:
+  `docs/legal/PRIVACY_POLICY.md`, `TERMS_OF_SERVICE.md`,
+  `APP_STORE_PRIVACY.md` (cycle 39).
+- **Why:** Matches what is actually implemented (honest policy, zero new
+  code); founder chose it over 12-month/90-day auto-expiry options.
+- **Consequence:** Closes the Open Decision "Screenshot storage,
+  deletion, and personalization policy". One audit follow-up recorded:
+  screenshot-mode consent copy must explicitly name the image being sent
+  to Anthropic (APP_STORE_PRIVACY.md §follow-up; fixed in cycle 40).
+- **Revisit trigger:** Entity registration (update controller); paid tier
+  launch (ToS subscription section); or a privacy review recommending
+  auto-expiry.
+
 ## Decision Template
 
 ### YYYY-MM-DD — Short Decision Name
@@ -189,4 +212,5 @@ Record evidence separately from opinions.
 - The exact boundary between direct reply help and guided learning.
 - What progress signal users will believe and value.
 - Free experience, paid trigger, trial structure, and starting price test.
-- Screenshot storage, deletion, and personalization policy.
+- ~~Screenshot storage, deletion, and personalization policy~~ — resolved
+  2026-07-21 (retention/deletion entry above).

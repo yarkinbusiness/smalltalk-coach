@@ -54,9 +54,11 @@ deterministic — no new API calls) and the existing loop protocol.
   8. ~~**T-H** — onboarding + baseline (BRIEF Flow A), hosts notification
      opt-in~~ — done (cycle 35; also completes T-D's deferred
      "opt-in during onboarding" placement).
-  9. **T-I** — privacy policy/ToS, account-wide coaching-data deletion,
-     App Store third-party-AI disclosure + Privacy Nutrition Label
-     mapping.
+  9. ~~**T-I** — privacy policy/ToS, account-wide deletion, App Store
+     disclosure + Nutrition Label mapping~~ — done (cycles 37–39;
+     founder decisions recorded in `docs/planning/DECISIONS.md`). One
+     audit follow-up → cycle 40: screenshot-mode consent copy must name
+     the image sent to Anthropic.
   10. **T-J** — backend auth (shared-secret bearer), rate limiting on
       coaching endpoints, test-key rotation, deploy readiness.
 - **P3 (founder-gated decisions):**
@@ -227,6 +229,27 @@ items assume. -->
    4 workers → synthesized report) against real CMA.
 
 ## Cycle log
+
+- **2026-07-21 (cycle 39 — T-I docs half; T-I COMPLETE):** Worker:
+  `gpt-5.6-terra`, one round, docs-only. Shipped `docs/legal/`:
+  PRIVACY_POLICY.md (controller Yarkin Yavuz /
+  yarkin.business@gmail.com; keep-until-deleted retention; honest
+  inventory — anonymous UUID, no accounts, raw screenshots never
+  stored, reflection notes never modeled/logged; other-person consent
+  caution), TERMS_OF_SERVICE.md (not-therapy, acceptable use,
+  AI-imperfection disclaimer, subscription placeholder), and
+  APP_STORE_PRIVACY.md (conservative Nutrition Label mapping — data
+  LINKED via persistent device UUID, tracking: none — plus a
+  third-party-AI disclosure audit quoting the real consent copy).
+  Brain verification: quoted copy confirmed verbatim in
+  CoachingView.swift:123; claims spot-checked against backend code;
+  **102 passed, 1 skipped** untouched — ACCEPTED. Founder decisions
+  recorded in `docs/planning/DECISIONS.md` (retention/deletion +
+  controller; Open Decision closed). **The audit found a real
+  compliance gap:** screenshot-mode consent says "conversation text"
+  only — the image itself isn't disclosed. That's a correctness item
+  under the Nov 2025 rule → **cycle 40 (copy fix) jumps ahead of
+  T-J.**
 
 - **2026-07-21 (cycle 38 — micro-fix: onboarding cover presentation):**
   Fixes the cycle-35 latent bug caught by cycle 37's launch check.
