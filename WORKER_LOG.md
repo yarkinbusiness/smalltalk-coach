@@ -650,3 +650,11 @@ Entry format (keep an entry under ~15 lines):
 - **Files touched:** none beyond this log entry
 - **Result / verification:** ACCEPTED as specified — zero rejections needed despite the unusual killed-worker-process provenance.
 - **Open issues:** none
+
+## 2026-07-21 14:48 UTC — UI quick win #4: reorder coaching report
+- **Model:** gpt-5.6-terra
+- **Status:** partial
+- **What was done:** Moved the existing Takeaway and How to respond sections before interpretation, and moved the unchanged score section after strengths/improvements.
+- **Files touched:** ios/SmallTalkCoach/CoachingView.swift; WORKER_LOG.md
+- **Result / verification:** `cd ios && xcodegen generate` and `xcrun swiftc -parse SmallTalkCoach/CoachingView.swift` passed; `git diff --check` passed. iPhone 16 `xcodebuild build` and `xcodebuild test` were attempted but CoreSimulatorService refused connections and exposed no runtimes, so neither build nor XCTest execution completed.
+- **Open issues:** Run the iPhone 16 build and full XCTest suite on a host with a working simulator service.

@@ -322,20 +322,35 @@ struct CoachingReportView: View {
             }
 
             Section {
+                ReportCard(accent: .orange, emphasized: true) {
+                    Label("Takeaway", systemImage: "lightbulb.fill")
+                        .font(.headline)
+                    Text(report.diagnosis.transferableTakeaway)
+                        .font(.body.weight(.medium))
+                }
+            }
+
+            Section {
+                ReportCard(accent: .teal) {
+                    Label("How to respond", systemImage: "arrowshape.turn.up.right")
+                        .font(.headline)
+                    Text(report.diagnosis.responseCoaching.guidance)
+                    Text("Examples to adapt — not scripts")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                    ForEach(report.diagnosis.responseCoaching.exampleResponses, id: \.self) { response in
+                        ExampleResponseSuggestion(text: response)
+                    }
+                }
+            }
+
+            Section {
                 ReportCard(accent: .blue) {
                     Label("What they're really saying", systemImage: "message")
                         .font(.headline)
                     ReportInterpretationRow(label: "Tone", text: report.diagnosis.incomingInterpretation.tone)
                     ReportInterpretationRow(label: "Intent", text: report.diagnosis.incomingInterpretation.intent)
                     ReportInterpretationRow(label: "Your response", text: report.diagnosis.incomingInterpretation.responseGoals)
-                }
-            }
-
-            if display.shouldShowScores, let scoredDimensions = report.diagnosis.dimensions {
-                Section("Your reply, scored") {
-                    ForEach(dimensions, id: \.self) { name in
-                        if let dimension = scoredDimensions[name] { DimensionScoreRow(name: name, score: dimension.score) }
-                    }
                 }
             }
 
@@ -356,26 +371,11 @@ struct CoachingReportView: View {
                 }
             }
 
-            Section {
-                ReportCard(accent: .teal) {
-                    Label("How to respond", systemImage: "arrowshape.turn.up.right")
-                        .font(.headline)
-                    Text(report.diagnosis.responseCoaching.guidance)
-                    Text("Examples to adapt — not scripts")
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                    ForEach(report.diagnosis.responseCoaching.exampleResponses, id: \.self) { response in
-                        ExampleResponseSuggestion(text: response)
+            if display.shouldShowScores, let scoredDimensions = report.diagnosis.dimensions {
+                Section("Your reply, scored") {
+                    ForEach(dimensions, id: \.self) { name in
+                        if let dimension = scoredDimensions[name] { DimensionScoreRow(name: name, score: dimension.score) }
                     }
-                }
-            }
-
-            Section {
-                ReportCard(accent: .orange, emphasized: true) {
-                    Label("Takeaway", systemImage: "lightbulb.fill")
-                        .font(.headline)
-                    Text(report.diagnosis.transferableTakeaway)
-                        .font(.body.weight(.medium))
                 }
             }
 

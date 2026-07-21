@@ -290,6 +290,45 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-21 (cycle 50 — UI quick win #4: reorder the coaching report;
+  ONE ROUND, accepted as specified):** Worker: `gpt-5.6-terra`. Pure
+  `Section` reorder inside `CoachingReportView` — no internals touched,
+  verified by tracing the diff line-by-line: intro (unchanged) →
+  Takeaway (moved up from position 7) → How to respond (moved up from
+  position 6) → interpretation (moved down from position 2) →
+  strengths → improvements (both unchanged relative position) → scores
+  (moved down from position 3, now second-to-last before practice/
+  lesson) → practice action → recommended lesson. Exact match to spec.
+  Brain verification: full test suite re-run clean on the diff alone
+  (76 passed, 3 pre-existing skips, 0 failures, matching baseline) run
+  *before* adding any diagnostic scaffolding, to keep that signal
+  uncontaminated. For the visual check, built a temporary diagnostic
+  harness that calls the real `APIClient().diagnose(...)` against the
+  live local backend and feeds the actual `CoachingReport` response
+  into `CoachingReportView` directly — reusing production code instead
+  of hand-constructing a mock report. A `with_user_reply` test (real
+  "Me:" reply included, expected to exercise the now-relocated scores
+  section) hit the same pre-existing diagnosis-validation bug flagged
+  during last week's live E2E verification session (focus_dimension
+  frequently doesn't match the weakest score, exhausting all retries) —
+  confirmed unrelated to this cycle (that bug lives entirely in
+  `backend/app/diagnosis.py`, untouched here, and the failure mode is
+  identical to what was already documented). Fell back to a
+  `stimulus_only` request (no scores expected), which succeeded and
+  showed the report opening with Takeaway then How to respond exactly
+  as reordered — live confirmation of the first two moved sections.
+  The scores section's new position is accepted on the strength of the
+  line-by-line diff trace alone, not a live screenshot, because the
+  only way to exercise it today runs into the separate, already-known,
+  not-yet-fixed backend bug. Documented honestly rather than either
+  blocking this UI cycle on an unrelated backend fix or silently
+  claiming visual verification that didn't happen. **Standing
+  reminder, restated:** that diagnosis bug is still unfixed and still
+  the founder's call — offered during the live E2E session, not yet
+  answered. **Next:** quick win #5 — skeleton loading states, richer
+  empty states, copy toast, and success haptics across `HomeView`,
+  `CoachingView`'s history, `ProfileView`, and `LessonDetailView`.
+
 - **2026-07-21 (cycle 49 — UI quick win #3: explicit Coach mode cards;
   ACCEPTED, unusual provenance):** Worker: `gpt-5.6-terra`. The worker's
   own dispatch process was externally killed mid-run (status: "killed" —
