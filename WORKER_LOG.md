@@ -750,3 +750,11 @@ Entry format (keep an entry under ~15 lines):
 - **Files touched:** ios/SmallTalkCoach/CoachingView.swift; WORKER_LOG.md
 - **Result / verification:** `cd ios && xcodegen generate`, `xcrun swiftc -parse SmallTalkCoach/CoachingView.swift`, and `git diff --check` passed. iPhone 16 `xcodebuild build` and `xcodebuild test` were attempted, but CoreSimulatorService refused connections and reported no available simulator runtimes before app compilation or XCTest execution.
 - **Open issues:** Run the iPhone 16 build/test suite and visually verify the standard-motion stagger and immediate Reduce Motion presentation on a host with a working simulator runtime.
+
+## 2026-07-21 16:55 UTC — Deeper redesign #6 (partial): streak and lesson completion motion
+- **Model:** gpt-5.6-terra
+- **Status:** partial
+- **What was done:** Added a one-shot false→true streak flame pulse and a one-shot opacity/scale entrance for the completion label. Both use the celebration token through `MotionPolicy`; Reduce Motion leaves both effects immediate.
+- **Files touched:** ios/SmallTalkCoach/TodayCard.swift; ios/SmallTalkCoach/LessonDetailView.swift; WORKER_LOG.md
+- **Result / verification:** Used the manual flame fallback, not `.symbolEffect`: the installed iOS 26.5 SDK exposes the API, but the fallback gives explicit `MotionPolicy` Reduce Motion control. `xcrun swiftc -parse` (both files), `cd ios && xcodegen generate`, and `git diff --check` passed. iPhone 16 `xcodebuild build` and `test` were attempted, but CoreSimulatorService exposed no runtimes; the local signing-disabled build stopped in asset compilation for that same reason, so no XCTest cases ran.
+- **Open issues:** Run the iPhone 16 build/test suite and visually verify the standard and Reduce Motion states on a host with a working simulator runtime.

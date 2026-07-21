@@ -315,6 +315,60 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-21 (cycle 58 — Deeper Redesign #6 (partial): streak + lesson
+  completion motion; ONE ROUND, accepted as specified):** Worker:
+  `gpt-5.6-terra`. Scoped to the two pieces of this plan item not blocked
+  by #1 (`TodayCard`, `LessonDetailView`) — the third piece (unit
+  completion in the not-yet-built `LearnView.swift`) explicitly deferred.
+  **`TodayCard`:** the streak flame now does a brief, restrained one-shot
+  scale pulse (1.0→1.1→1.0, `AppTheme.Motion.celebrate.speed(2)` ≈ 0.5s
+  each leg) exactly when `streak.activeToday` transitions `false → true`
+  — gated via `.onChange(of: streak.activeToday) { old, new in guard
+  !old, new, !reduceMotion else { return } ... }`, so it correctly does
+  *not* fire on ordinary re-renders or on a cold load where
+  `activeToday` is already `true` from a previous session. Worker chose
+  the manual `MotionPolicy`-driven fallback over native
+  `.symbolEffect(.bounce)` (confirmed available on the installed SDK)
+  specifically for guaranteed, auditable Reduce Motion control — a
+  reasonable, cautious call matching the spec's own stated preference
+  when in doubt.
+  **`LessonDetailView`:** the small green completion `Label` (unchanged
+  copy/logic) now gets a one-shot fade + slight-scale entrance
+  (`.transition(.opacity.combined(with: .scale(scale: 0.92, anchor:
+  .bottom)))`) via a new `showsCompletionCelebration` flag, set from
+  `.onChange(of: viewModel.completionState)` — critically gated on a new
+  `CompletionState.isCompleted` check on the *old* state, so it only
+  fires on a genuine transition *into* `.completed`, not on every
+  re-render while already completed (a real edge case the worker caught
+  beyond the letter of the spec). The pre-existing `onCompleted(
+  unlockedNext)` callback — functionally important, used by parent
+  screens — stays correctly ungated by the new motion-only flag, called
+  unconditionally exactly as before. Verified no flash-of-empty-content
+  risk: the flag-set and the state-change land in the same synchronous
+  SwiftUI update (no `await` between them), matching the same
+  `if flag { content.transition(...) }` pattern already proven
+  elsewhere in this file (`.id(currentStep)` from cycle 55).
+  **Brain verification:** full source review found no bugs; the only
+  arguable nitpick (the flame pulse's ~1.0s round trip sits close to,
+  though still under, the 1.2s ceiling) isn't worth a round trip.
+  `xcodegen generate` + `xcodebuild build`/`test` — 76 passed, 3
+  pre-existing skips, 0 failures. **Visual check:** same tooling
+  limitation as cycles 53/57 (transient one-shot motion isn't provable
+  via a static screenshot) — relied on code review plus a real cold-
+  launch screenshot, which happened to land in exactly the useful edge
+  case (this simulator's persisted state already shows a 1-day streak
+  with `activeToday: true` from earlier live-API testing this session):
+  confirmed the flame renders cleanly at normal scale with no stuck
+  mid-animation artifact on ordinary load, directly confirming the
+  "don't replay on load" guard works. **Deeper Redesign #6 is now
+  complete except for its `LearnView`-dependent unit-completion piece,
+  still blocked on #1.** **Next:** re-check founder status on #1/#5; if
+  still unanswered, #7 (preview/snapshot matrix) is ambient discipline
+  already being applied cycle-by-cycle rather than an independently
+  dispatchable task, and #8 (usability sessions) isn't a code task — so
+  the deeper-redesigns tier's unblocked work is now exhausted pending the
+  founder's call on #1/#5.
+
 - **2026-07-21 (cycle 57 — Deeper Redesign #4b: staggered report-card
   reveal; ONE ROUND, accepted as specified):** Worker: `gpt-5.6-terra`.
   `CoachingReportView`'s three top `ReportCard`s (Takeaway, How to

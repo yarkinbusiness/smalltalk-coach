@@ -3,6 +3,7 @@ import SwiftUI
 struct LessonDetailView: View {
     @StateObject private var viewModel: LessonDetailViewModel
     @State private var currentStep: LessonStep = .idea
+    @State private var showsCompletionCelebration = false
     private let onCompleted: (String?) -> Void
 
     init(
@@ -49,8 +50,11 @@ struct LessonDetailView: View {
         .task {
             await viewModel.loadIfNeeded()
         }
-        .onChange(of: viewModel.completionState) { _, state in
+        .onChange(of: viewModel.completionState) { oldState, state in
             if case .completed(let unlockedNext) = state {
+                if !oldState.isCompleted {
+                    showsCompletionCelebration = true
+                }
                 onCompleted(unlockedNext)
             }
         }
@@ -273,41 +277,47 @@ struct LessonDetailView: View {
             }
         }
 
-        switch viewModel.completionState {
-        case .completed(let unlockedNext):
-            Label(
-                viewModel.mode == .review
-                    ? "Review complete"
-                    : (unlockedNext.map { "Lesson unlocked: \($0)" } ?? "You completed the learning path."),
-                systemImage: "checkmark.seal.fill"
-            )
-            .font(.headline)
-            .foregroundStyle(.green)
-        case .failed(let message):
-            VStack(alignment: .leading, spacing: 8) {
-                Text(message)
-                    .font(.subheadline)
-                    .foregroundStyle(.red)
-                Button("Retry") {
+        Group {
+            switch viewModel.completionState {
+            case .completed(let unlockedNext):
+                if showsCompletionCelebration {
+                    Label(
+                        viewModel.mode == .review
+                            ? "Review complete"
+                            : (unlockedNext.map { "Lesson unlocked: \($0)" } ?? "You completed the learning path."),
+                        systemImage: "checkmark.seal.fill"
+                    )
+                    .font(.headline)
+                    .foregroundStyle(.green)
+                    .transition(.opacity.combined(with: .scale(scale: 0.92, anchor: .bottom)))
+                }
+            case .failed(let message):
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(message)
+                        .font(.subheadline)
+                        .foregroundStyle(.red)
+                    Button("Retry") {
+                        Task { await viewModel.submit() }
+                    }
+                    .buttonStyle(.bordered)
+                }
+            default:
+                Button {
                     Task { await viewModel.submit() }
+                } label: {
+                    if viewModel.completionState == .submitting {
+                        ProgressView()
+                            .frame(maxWidth: .infinity)
+                    } else {
+                        Text(viewModel.mode == .review ? "Complete review" : "Complete lesson")
+                            .frame(maxWidth: .infinity)
+                    }
                 }
-                .buttonStyle(.bordered)
+                .buttonStyle(.borderedProminent)
+                .disabled(!viewModel.canSubmit || viewModel.completionState == .submitting)
             }
-        default:
-            Button {
-                Task { await viewModel.submit() }
-            } label: {
-                if viewModel.completionState == .submitting {
-                    ProgressView()
-                        .frame(maxWidth: .infinity)
-                } else {
-                    Text(viewModel.mode == .review ? "Complete review" : "Complete lesson")
-                        .frame(maxWidth: .infinity)
-                }
-            }
-            .buttonStyle(.borderedProminent)
-            .disabled(!viewModel.canSubmit || viewModel.completionState == .submitting)
         }
+        .motionAwareAnimation(AppTheme.Motion.celebrate, value: showsCompletionCelebration)
     }
 
     private func exerciseOptionState(_ optionIndex: Int, lesson: Lesson) -> ChoiceButtonState {
@@ -316,6 +326,16 @@ struct LessonDetailView: View {
             return selected == lesson.exercise.correctOptionIndex ? .correct : .incorrect
         }
         return .neutral
+    }
+}
+
+private extension LessonDetailViewModel.CompletionState {
+    var isCompleted: Bool {
+        if case .completed = self {
+            true
+        } else {
+            false
+        }
     }
 }
 

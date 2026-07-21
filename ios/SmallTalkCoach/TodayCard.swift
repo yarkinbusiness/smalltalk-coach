@@ -168,6 +168,8 @@ struct TodayCard: View {
     @ObservedObject private var viewModel: TodayViewModel
     @StateObject private var reminderViewModel: ReminderSettingsViewModel
     @State private var showsReminderSheet = false
+    @State private var isFlamePulsing = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     private let onCompleted: () -> Void
 
     init(
@@ -232,6 +234,18 @@ struct TodayCard: View {
             HStack(spacing: AppTheme.Spacing.rowSpacing) {
                 Image(systemName: "flame.fill")
                     .foregroundStyle(AppTheme.Colors.warmAccent)
+                    .scaleEffect(isFlamePulsing ? 1.1 : 1)
+                    .motionAwareAnimation(AppTheme.Motion.celebrate.speed(2), value: isFlamePulsing)
+                    .onChange(of: streak.activeToday) { oldValue, newValue in
+                        guard !oldValue, newValue, !reduceMotion else { return }
+
+                        isFlamePulsing = true
+                        Task {
+                            try? await Task.sleep(for: .milliseconds(500))
+                            guard !Task.isCancelled else { return }
+                            isFlamePulsing = false
+                        }
+                    }
                 Text(streak.streakDays > 0 ? "\(streak.streakDays)-day streak" : "Start your streak today")
                     .font(AppTheme.Typography.cardTitle)
                 if streak.freezes > 0 {
