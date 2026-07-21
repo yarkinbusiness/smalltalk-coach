@@ -2,12 +2,13 @@ import SwiftUI
 
 struct RootView: View {
     @StateObject private var onboardingState = OnboardingStateStore()
+    @StateObject private var purchaseManager = PurchaseManager()
     @State private var showsOnboarding = false
     @State private var showsOnboardingSubmissionNote = false
 
     var body: some View {
         TabView {
-            HomeView()
+            HomeView(purchaseManager: purchaseManager)
                 .tabItem {
                     Label("Home", systemImage: "house")
                 }

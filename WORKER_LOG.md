@@ -544,3 +544,39 @@ Entry format (keep an entry under ~15 lines):
   backend/tests/test_api.py; backend/README.md; WORKER_LOG.md
 - **Result / verification:** `backend/.venv/bin/python -m pytest backend/tests -q`: 117 passed, 1 skipped, 1 warning in 2.46s; `git diff --check` passed.
 - **Open issues:** none
+
+## 2026-07-21 10:29 UTC — T-K StoreKit 2 paywall infrastructure
+- **Model:** gpt-5.6-terra
+- **Status:** partial
+- **What was done:** Added local StoreKit subscription configuration, verified purchase/restore/current-entitlement infrastructure, continuous transaction observation, and a founder-controlled default-off paywall gate for Units 2–4. Added StoreKitTest purchase/load/restore coverage plus pure cancellation and gating tests; cancellation uses the pure state mapping because deterministic StoreKitTest cancellation simulation is awkward.
+- **Files touched:** ios/SmallTalkCoach/SmallTalkCoach.storekit; ios/project.yml; ios/SmallTalkCoach/{FeatureFlags,PurchaseManager,PaywallView,RootView,HomeView}.swift; ios/SmallTalkCoachTests/SmallTalkCoachTests.swift; WORKER_LOG.md
+- **Result / verification:** `cd ios && xcodegen generate` and generic-simulator `xcodebuild build-for-testing` passed; generated app bundle contains `SmallTalkCoach.storekit`; `jq empty` and `git diff --check` passed. iPhone 16 `xcodebuild test` was attempted but CoreSimulatorService refused connections and no device set was available, so XCTest did not execute.
+- **Open issues:** Run the full XCTest/StoreKitTest suite on a host with a working iPhone 16 simulator service.
+
+## 2026-07-21 10:37 UTC — T-K StoreKit test-action configuration wiring
+- **Model:** gpt-5.6-terra
+- **Status:** partial
+- **What was done:** Added the local StoreKit configuration path to the explicit `SmallTalkCoach` scheme's Test action; the existing Run action is unchanged.
+- **Files touched:** ios/project.yml; WORKER_LOG.md
+- **Result / verification:** `cd ios && xcodegen generate` passed; `xcodegen dump --type json` confirms the resolved Test action contains `SmallTalkCoach/SmallTalkCoach.storekit`; `git diff --check` passed. iPhone 16 `xcodebuild test` could not begin because CoreSimulatorService refused connections and reported no runtimes.
+- **Open issues:** With installed XcodeGen 2.45.4, the generated shared `.xcscheme` showed the StoreKit reference only under Launch despite the resolved Test spec retaining it; confirm TestAction emission and run the StoreKitTest suite on a host with a working simulator service.
+
+## 2026-07-21 10:46 UTC — T-K StoreKit test-bundle resource wiring
+- **Model:** gpt-5.6-terra
+- **Status:** partial
+- **What was done:** Removed the unsupported Test-action StoreKit setting and added the local StoreKit configuration as an explicit `SmallTalkCoachTests` resource.
+- **Files touched:** ios/project.yml; WORKER_LOG.md
+- **Result / verification:** `cd ios && xcodegen generate` passed. `xcodebuild build-for-testing -sdk iphonesimulator -derivedDataPath /private/tmp/... CODE_SIGNING_ALLOWED=NO` passed, and the built test bundle contains `SmallTalkCoach.storekit`. iPhone 16 `xcodebuild test` could not execute because CoreSimulatorService refused connections and reported no runtimes; `git diff --check` passed.
+- **Open issues:** Run the full XCTest/StoreKitTest suite on a host with a working iPhone 16 simulator service.
+
+## 2026-07-21 10:53 UTC — Document CLI StoreKitTest limitation with honest skips
+- **Model:** gpt-5.6-terra
+- **Status:** partial
+- **What was done:** Added documented `XCTSkip` calls as the first statement in exactly the
+  three SKTestSession purchase/restore tests, preserving their existing assertions, plus the
+  XPC/interactive-runner explanation in the test file and iOS README.
+- **Files touched:** ios/SmallTalkCoachTests/SmallTalkCoachTests.swift; ios/README.md; WORKER_LOG.md
+- **Result / verification:** `cd ios && xcodegen generate` and generic-simulator `xcodebuild
+  build-for-testing` succeeded. Named iPhone 16 / iOS 18.2 `xcodebuild test` was attempted,
+  but CoreSimulatorService refused the connection before XCTest execution; `git diff --check` passed before this append.
+- **Open issues:** Run the three StoreKit purchase-flow tests manually through Xcode's Test navigator before a release; this sandbox cannot run the simulator suite.

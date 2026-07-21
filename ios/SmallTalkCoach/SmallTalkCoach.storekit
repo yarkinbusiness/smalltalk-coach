@@ -1,0 +1,62 @@
+{
+  "identifier" : "E57A1A53-07E0-4B46-A6FA-FF6D91E85D25",
+  "nonRenewingSubscription" : [
+
+  ],
+  "products" : [
+    {
+      "displayPrice" : "9.99",
+      "familyShareable" : false,
+      "internalID" : "0F60CA28-176A-4B67-8493-38AE45C22C3F",
+      "localizations" : [
+        {
+          "description" : "Monthly access to SmallTalk Coach Premium.",
+          "displayName" : "Premium Monthly",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.smalltalkcoach.app.premium.monthly",
+      "recurringSubscriptionPeriod" : "P1M",
+      "referenceName" : "Premium Monthly",
+      "subscriptionGroupID" : "A0E1BDEC-0B17-4E1F-901F-FD2FF1920D62",
+      "type" : "Auto-Renewable Subscription"
+    },
+    {
+      "displayPrice" : "59.99",
+      "familyShareable" : false,
+      "internalID" : "EDB72A6F-1EFA-4DD5-BB68-3921C2076C61",
+      "localizations" : [
+        {
+          "description" : "Yearly access to SmallTalk Coach Premium.",
+          "displayName" : "Premium Yearly",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.smalltalkcoach.app.premium.yearly",
+      "recurringSubscriptionPeriod" : "P1Y",
+      "referenceName" : "Premium Yearly",
+      "subscriptionGroupID" : "A0E1BDEC-0B17-4E1F-901F-FD2FF1920D62",
+      "type" : "Auto-Renewable Subscription"
+    }
+  ],
+  "settings" : {
+    "_applicationInternalID" : "E5F840B9-68C0-4DF5-B69F-3FD8789E743C"
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "A0E1BDEC-0B17-4E1F-901F-FD2FF1920D62",
+      "localizations" : [
+        {
+          "description" : "Premium subscription options.",
+          "displayName" : "Premium",
+          "locale" : "en_US"
+        }
+      ],
+      "name" : "Premium"
+    }
+  ],
+  "version" : {
+    "major" : 4,
+    "minor" : 0
+  }
+}

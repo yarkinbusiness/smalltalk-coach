@@ -6,6 +6,19 @@ settings:
     IPHONEOS_DEPLOYMENT_TARGET: '17.0'
     SWIFT_VERSION: '5.0'
     GENERATE_INFOPLIST_FILE: YES
+schemes:
+  SmallTalkCoach:
+    build:
+      targets:
+        SmallTalkCoach: all
+        SmallTalkCoachTests: [test]
+    run:
+      config: Debug
+      storeKitConfiguration: SmallTalkCoach/SmallTalkCoach.storekit
+    test:
+      config: Debug
+      targets:
+        - SmallTalkCoachTests
 targets:
   SmallTalkCoach:
     type: application
@@ -24,6 +37,8 @@ targets:
     sources:
       - path: SmallTalkCoachTests
       - path: ../content/lessons/l01-first-hello.json
+        buildPhase: resources
+      - path: SmallTalkCoach/SmallTalkCoach.storekit
         buildPhase: resources
     dependencies:
       - target: SmallTalkCoach

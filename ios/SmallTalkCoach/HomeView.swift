@@ -7,6 +7,12 @@ struct HomeView: View {
     @StateObject private var todayViewModel = TodayViewModel(onboardingClient: APIClient())
     @StateObject private var profileViewModel = ProfileViewModel()
     @StateObject private var reflectionPromptViewModel = ReflectionPromptViewModel()
+    @ObservedObject private var purchaseManager: PurchaseManager
+    @State private var paywallLesson: CurriculumLesson?
+
+    init(purchaseManager: PurchaseManager) {
+        self.purchaseManager = purchaseManager
+    }
 
     var body: some View {
         NavigationStack {
@@ -61,6 +67,9 @@ struct HomeView: View {
                     }
                 }
         }
+        .sheet(item: $paywallLesson) { _ in
+            PaywallView(purchaseManager: purchaseManager)
+        }
     }
 
     @ViewBuilder
@@ -96,7 +105,13 @@ struct HomeView: View {
                 ForEach(curriculum.units) { unit in
                     Section("Unit \(unit.unit)") {
                         ForEach(unit.lessons) { lesson in
-                            if lesson.isNavigable {
+                            if isPremiumGated(lesson) {
+                                Button {
+                                    paywallLesson = lesson
+                                } label: {
+                                    PremiumLessonRow(lesson: lesson)
+                                }
+                            } else if lesson.isNavigable {
                                 NavigationLink {
                                     LessonDetailView(lessonID: lesson.id) { _ in
                                         Task { await refreshHome() }
@@ -131,6 +146,14 @@ struct HomeView: View {
         await viewModel.load()
         await todayViewModel.load()
         await profileViewModel.load()
+    }
+
+    private func isPremiumGated(_ lesson: CurriculumLesson) -> Bool {
+        purchaseManager.hasLoadedEntitlements && LessonPaywallAccess.isGated(
+            paywallEnabled: FeatureFlags.paywallEnabled,
+            unit: lesson.unit,
+            isPremium: purchaseManager.isPremium
+        )
     }
 }
 
@@ -200,6 +223,33 @@ private struct LessonRow: View {
         case .unlocked: .blue
         case .locked: .secondary
         }
+    }
+}
+
+private struct PremiumLessonRow: View {
+    let lesson: CurriculumLesson
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Text("\(lesson.sequence)")
+                .font(.headline.monospacedDigit())
+                .foregroundStyle(.secondary)
+                .frame(width: 24, alignment: .leading)
+
+            Text(lesson.title)
+                .foregroundStyle(.primary)
+
+            Spacer()
+
+            Text("Premium")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.purple)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(.purple.opacity(0.14), in: Capsule())
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Lesson \(lesson.sequence), \(lesson.title), Premium")
     }
 }
 
