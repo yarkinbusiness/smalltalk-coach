@@ -1,23 +1,19 @@
 # SmallTalkCoach — Vision & Roadmap
 
-This file exists because the product vision got substantially clarified on
-2026-07-12, after Phase 0 (below) was already built. It's the durable
-record of *what this app is actually supposed to become*, so that neither
-this conversation nor any other session/loop working on this repo loses
-the thread. `ARCHITECTURE.md` stays the technical reference (how the
-backend/CMA/iOS pieces fit together); this file is the product reference
-(what we're building and why).
+This is the durable product reference for *what SmallTalkCoach is building
+and why*. `ARCHITECTURE.md` is the companion technical reference for the
+implemented system. Detailed contracts remain in `docs/planning/`, with
+`docs/planning/COACHING_PIPELINE_V1.md` defining the coaching loop.
 
-**Status updated 2026-07-20:** the vision below stands, but implementation
-state has changed twice since this file was written: (1) the Phase 0
-implementation described in "What's already built" was removed from
-`master` in the 2026-07-18 Full Restart (archived at tag
-`phase0-archive`; see root `DECISIONS.md`); (2) v1 was then rebuilt fresh
-and shipped 2026-07-18/19 (PROGRESS.md cycles 4–23) to the design in
-`docs/planning/COACHING_PIPELINE_V1.md`, under the 2026-07-19 Haiku-only
-model lock. Current roadmap: PROGRESS.md "v2 backlog" +
-`docs/planning/ROADMAP_REVIEW_2026-07-20.md`. Each Phase 2 item below is
-annotated with its 2026-07-20 status.
+**Current status (2026-07-21): v1 is implemented and v2 execution is active.**
+The running v1 is a SwiftUI iOS app backed by FastAPI and SQLite. Its AI
+Coaching flow accepts pasted conversation text or a chat screenshot, asks the
+user to identify their own side when needed, requires consent before sending
+content to Anthropic, uses Claude Haiku 4.5 for transcript extraction and
+structured coaching, then deterministically routes the result to a lesson.
+There is no CMA coordinator or worker fan-out in v1. See `PROGRESS.md` and
+`DECISIONS.md` for the live build state and decisions; the current roadmap is
+the `PROGRESS.md` v2 backlog.
 
 ## The actual vision, in one paragraph
 
@@ -48,31 +44,64 @@ one output, not the whole product. The suggested-reply feature is the
 Real conversation happens
         │
         ▼
-User screenshots it, imports into the app
+User pastes text or imports a screenshot
         │
         ▼
-Vision-capable model reads the screenshot → clean transcript
+User marks their own side when attribution is needed and gives consent
         │
         ▼
-Same 4-dimension grading engine already built (warmth/curiosity/
-reciprocity/flow) diagnoses it — same engine that grades roleplay today
+Claude Haiku 4.5 normalizes screenshot content into a clean transcript;
+pasted text is normalized locally
         │
         ▼
-Output is now TWO things, not one:
-  1. A coaching report (as today)
-  2. A lesson recommendation ("this is your reciprocity dimension
-     again → go do the reciprocity lesson") + an optional suggested
-     reply for the actual message
+Claude Haiku 4.5 returns one structured diagnosis. If the user has replied,
+the diagnosis scores warmth/curiosity/reciprocity/flow; otherwise it teaches
+the user how to construct a response without scoring the other person
         │
         ▼
-User does the recommended lesson/roleplay drill (existing practice mode)
+Backend validates the result and deterministically selects the lesson that
+addresses the focus or weakest dimension
         │
         ▼
-Diagnosis feeds a long-term per-user profile → next diagnosis is sharper,
-next recommendation is more targeted
+User receives interpretation, response coaching, examples, a transferable
+takeaway, a small practice action, and the recommended lesson
 ```
 
-## Decisions made in the 2026-07-12 planning discussion
+This is a **single-model, Haiku-only, no-CMA pipeline**. Pasted text needs one
+bounded Haiku diagnosis call. A screenshot needs one bounded Haiku vision
+extraction call followed by the same bounded Haiku diagnosis call. Lesson
+routing, validation, persistence, streaks, reviews, and profile aggregation
+remain deterministic backend responsibilities.
+
+## Current v1 product decisions
+
+- **Two top-level surfaces:** Home is the structured learning path and daily
+  habit surface; AI Coaching analyzes real conversations and returns the user
+  to a relevant lesson.
+- **Two supported coaching inputs:** pasted text and one chat screenshot.
+- **User-controlled attribution:** the user marks their side for screenshots;
+  the system does not infer identity from names, avatars, gender, or tone.
+- **Explicit consent:** coaching content is sent to Anthropic only after the
+  user consents to third-party AI processing.
+- **Haiku-only model lock:** v1 uses `claude-haiku-4-5`; no coordinator model,
+  worker model, CMA agent, session, environment, or model-memory layer is
+  required.
+- **Teach the user to fish:** coaching interprets the incoming message, teaches
+  response construction, gives short examples and a transferable takeaway,
+  and does not score the other person.
+- **Deterministic lesson routing:** the backend, not the model, chooses the
+  lesson from the curriculum routing table.
+- **Real implementation baseline:** FastAPI + SQLite on port 8000 with
+  `GET /health`, and a SwiftUI app verified on the iPhone 16 simulator running
+  iOS 18.2.
+
+# Historical — 2026-07-12 planning assumptions (superseded)
+
+The remaining sections preserve the original five-scenario/CMA-era product
+planning for decision history. They do **not** describe the implemented v1.
+Where annotations exist, they record how those assumptions were resolved.
+
+## Original decisions discussed on 2026-07-12
 
 - **Real-conversation input: screenshot only**, for the first version.
   - Rejected: live audio recording of real conversations — real legal

@@ -1,34 +1,117 @@
 # SmallTalkCoach — Architecture
 
-> **2026-07-18 — implementation removed, document retained as design
-> reference.** The Phase 0 code this document describes (`backend/`,
-> `ios/`) was removed from `master` under the founder-approved full
-> restart (see `DECISIONS.md` → "2026-07-18 — Full Restart"). The
-> complete tree is archived at tag `phase0-archive`. Nothing described
-> below is currently running or present in the repo; this document is
-> kept as the v1 design reference for the rebuild.
->
-> **2026-07-20 — rebuilt v1 status.** V1 has since been rebuilt and
-> shipped, but not to this document's design. The implemented design of
-> record is `docs/planning/COACHING_PIPELINE_V1.md`: plain Messages API,
-> one structured `claude-haiku-4-5` diagnosis call, deterministic
-> weakest-dimension routing, and an asynchronous screenshot path; no CMA
-> (deferred per its §7). The Haiku-only lock (root `DECISIONS.md`,
-> 2026-07-19) supersedes the `COORDINATOR_MODEL`/`WORKER_MODEL` tiering
-> below. This document remains a design reference for a possible future
-> CMA upgrade only; for the running system read
-> `COACHING_PIPELINE_V1.md`, `CONTENT_MODEL_V1.md`, and
-> `LESSON_PATH_V1.md`.
+**Implemented v1 status (2026-07-21):** this document now leads with the
+architecture that exists on `master`. The detailed coaching contract is
+`docs/planning/COACHING_PIPELINE_V1.md`; curriculum contracts are
+`docs/planning/CONTENT_MODEL_V1.md` and `docs/planning/LESSON_PATH_V1.md`.
+`PROGRESS.md` and `DECISIONS.md` are authoritative for live status and locked
+decisions.
 
-**Product direction updated 2026-07-16 (v1 scope).** This document reflects
-a revised product structure agreed after the practice-mode foundation
-(Phase 0) was already built: the app is now organized around **two
-surfaces**, a structured learning path (primary) and an AI coaching utility
-(secondary). The live role-played practice chat (`partner_agent`), which
-the previous version of this document treated as the whole app, is demoted
-to an optional feature inside the coaching surface. `VISION.md` is the
-product-level reference for why; this document is the technical reference
-for how. See "Revision history" at the bottom for what changed.
+## Implemented v1 at a glance
+
+- **Backend:** FastAPI served locally on port 8000, with SQLite persistence
+  and `GET /health` for service/configuration status.
+- **iOS client:** SwiftUI, using `http://127.0.0.1:8000` by default, verified
+  on an iPhone 16 simulator running iOS 18.2.
+- **Product surfaces:** Home provides the curriculum, daily habit, skill
+  profile, reflection, and review loop; AI Coaching accepts real-conversation
+  text or screenshots and returns coaching plus a lesson recommendation.
+- **Model boundary:** Claude Haiku 4.5 through the plain Anthropic Messages
+  API. V1 provisions no CMA agents, workers, coordinator, session,
+  environment, sandbox, or memory store.
+- **Storage boundary:** normalized transcripts, validated reports, curriculum
+  progress, streak/review data, profile aggregates, and reflections are stored
+  in SQLite. Raw screenshot bytes and image metadata are not persisted.
+
+## Implemented coaching pipeline, v1
+
+The coaching flow is implemented under `/coaching` and tracked by
+`docs/planning/COACHING_PIPELINE_V1.md`:
+
+```text
+User pastes conversation text or uploads one chat screenshot
+        │
+        ▼
+User identifies their own side when needed
+        │
+        ▼
+User explicitly consents to third-party AI processing
+        │
+        ▼
+Input normalization
+  - text: normalized locally
+  - screenshot: one bounded Haiku vision-extraction call
+        │
+        ▼
+One bounded Haiku structured-diagnosis call
+  - with_user_reply: score warmth/curiosity/reciprocity/flow
+  - stimulus_only: teach response construction without scoring the sender
+        │
+        ▼
+Strict backend validation and safety handling
+        │
+        ▼
+Deterministic routing selects the relevant curriculum lesson
+        │
+        ▼
+SQLite persistence and response assembly
+        │
+        ▼
+iOS renders interpretation, guidance, examples, transferable takeaway,
+practice action, and lesson recommendation
+```
+
+This is a **single-model, Haiku-only, no-CMA design**. Pasted text uses one
+model call for diagnosis. Screenshots use two bounded calls to the same Haiku
+model family: vision extraction, then diagnosis. The model never chooses a
+lesson, writes directly to storage, or owns user progress.
+
+### Request behavior
+
+- `POST /coaching/diagnoses` accepts exactly one source: pasted text or a PNG,
+  JPEG, or WebP screenshot.
+- Text diagnosis is synchronous and returns the completed report after one
+  bounded diagnosis call.
+- Screenshot diagnosis is asynchronous: the API returns a job for polling
+  while vision extraction and diagnosis run outside the request lifecycle.
+- Consent failure, invalid attribution, unreadable input, malformed model
+  output, and safety escalation fail closed; partial coaching is not stored.
+- Reports can be read and deleted individually. Raw screenshots are disposed
+  after processing and are never written to SQLite.
+
+### Responsibility boundaries
+
+- **SwiftUI app:** input selection, screenshot-side marking, consent UI,
+  request/polling state, report rendering, lesson navigation, and local
+  notification scheduling.
+- **FastAPI application:** input validation, job lifecycle, model adapters,
+  schema validation, safety behavior, deterministic lesson routing, API
+  response assembly, and persistence orchestration.
+- **Claude Haiku 4.5:** screenshot-to-transcript extraction and structured
+  coaching only.
+- **SQLite:** curriculum completion, coaching reports, streak/review state,
+  profile aggregates, and reflections.
+- **Static JSON content:** lesson definitions, ordering, prerequisites, and
+  dimension-to-lesson routing.
+
+## Local runtime and verification baseline
+
+Run the backend from the repository root with:
+
+```sh
+backend/.venv/bin/python -m uvicorn backend.app.main:app --reload --port 8000
+```
+
+The iOS app defaults to `http://127.0.0.1:8000`. Its documented simulator
+target is `platform=iOS Simulator,name=iPhone 16,OS=18.2`.
+
+# Historical — superseded five-scenario/four-worker CMA design
+
+Everything below this heading preserves the pre-restart architecture and the
+2026-07-16 CMA-based v1 proposal for decision history. It does **not** describe
+the implemented v1. The Phase 0 tree was removed in the 2026-07-18 Full
+Restart and remains available at tag `phase0-archive`; the CMA design is only
+a possible future upgrade path.
 
 ## Product shape, v1
 
