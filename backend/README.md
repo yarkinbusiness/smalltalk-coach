@@ -27,4 +27,8 @@ and review submissions, the coaching routes, `GET /users/{user_id}/streak?tz=<IA
 `POST`/`GET /users/{user_id}/onboarding`. `DELETE /users/{user_id}/coaching-data`
 removes coaching reports (including transcripts) and reflections while keeping lesson progress.
 
+Completion-check choice options are served in a deterministic per-user, per-attempt shuffled
+order rather than their stored JSON order. Grading always uses the same served order, so each
+submitted option index is evaluated against the option the learner actually saw.
+
 Privacy Policy, Terms of Service, and App Store privacy mapping: [`docs/legal/`](../docs/legal/).

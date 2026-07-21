@@ -8,6 +8,7 @@ import hmac
 import logging
 import os
 from pathlib import Path
+import random
 from typing import Any, AsyncIterator, Annotated, Callable
 import uuid
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -85,6 +86,34 @@ def _grade_completion(lesson: dict[str, Any], answers: dict[str, object]) -> dic
         elif answer != part["correct_option_index"]:
             feedback[str(part_index)] = options[answer]["feedback"]
     return feedback
+
+
+def _shuffled_lesson_content(
+    lesson: dict[str, Any], user_id: str, lesson_id: str, attempt_index: int,
+) -> dict[str, Any]:
+    """Return a copy of lesson content with completion-check choice options
+    deterministically permuted per (user, lesson, attempt_index, part_index).
+    NEVER mutates the shared curriculum content loaded once at app startup —
+    every returned structure (lesson, completion_check, parts, each shuffled
+    part) is fresh rather than a mutated reference into app.state.curriculum.
+    """
+    shuffled_parts = []
+    for part_index, part in enumerate(lesson["completion_check"]["parts"]):
+        if part["kind"] != "choice":
+            shuffled_parts.append(part)
+            continue
+        options = part["options"]
+        order = list(range(len(options)))
+        random.Random(f"{user_id}:{lesson_id}:{attempt_index}:{part_index}").shuffle(order)
+        shuffled_parts.append({
+            **part,
+            "options": [options[i] for i in order],
+            "correct_option_index": order.index(part["correct_option_index"]),
+        })
+    return {
+        **lesson,
+        "completion_check": {**lesson["completion_check"], "parts": shuffled_parts},
+    }
 
 
 def _timezone_or_422(tz: str) -> ZoneInfo:
@@ -446,13 +475,16 @@ def create_app(
         curriculum = curriculum_for(request)
         if lesson_id not in curriculum.lessons_by_id:
             raise HTTPException(status_code=404, detail="lesson_not_found")
-        completed = progress_store_for(request).completed_lesson_ids(user_id)
+        store = progress_store_for(request)
+        completed = store.completed_lesson_ids(user_id)
         unlocked_id = _unlocked_lesson_id(curriculum, completed)
         if _lesson_state(lesson_id, completed, unlocked_id) == "locked":
             raise HTTPException(status_code=423, detail="locked")
         if lesson_id not in curriculum.content:
             raise HTTPException(status_code=404, detail="content_pending")
-        return curriculum.content[lesson_id]
+        return _shuffled_lesson_content(
+            curriculum.content[lesson_id], user_id, lesson_id, store.review_count(user_id, lesson_id)
+        )
 
     @app.post("/lessons/{lesson_id}/complete")
     def complete_lesson(
@@ -472,7 +504,15 @@ def create_app(
         if lesson_id not in curriculum.content:
             raise HTTPException(status_code=404, detail="content_pending")
 
-        feedback = _grade_completion(curriculum.content[lesson_id], body.answers)
+        feedback = _grade_completion(
+            _shuffled_lesson_content(
+                curriculum.content[lesson_id],
+                user_id,
+                lesson_id,
+                store.review_count(user_id, lesson_id),
+            ),
+            body.answers,
+        )
         if feedback:
             return {"completed": False, "feedback": feedback}
 
@@ -500,7 +540,15 @@ def create_app(
         if lesson_id not in curriculum.content:
             raise HTTPException(status_code=404, detail="content_pending")
 
-        feedback = _grade_completion(curriculum.content[lesson_id], body.answers)
+        feedback = _grade_completion(
+            _shuffled_lesson_content(
+                curriculum.content[lesson_id],
+                user_id,
+                lesson_id,
+                store.review_count(user_id, lesson_id),
+            ),
+            body.answers,
+        )
         if feedback:
             return {"completed": False, "feedback": feedback}
 

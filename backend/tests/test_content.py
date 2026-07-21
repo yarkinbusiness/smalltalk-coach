@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import deepcopy
 import json
 from pathlib import Path
 from typing import Any, Callable
@@ -8,7 +9,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from backend.app.content import ContentValidationError, load_curriculum
-from backend.app.main import create_app
+from backend.app.main import _shuffled_lesson_content, create_app
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -58,6 +59,82 @@ def test_real_lessons_vary_correct_choice_answer_positions() -> None:
             assert len(correct_option_indices) >= 2, (
                 f"{lesson_id} has every correct choice answer at one position"
             )
+
+
+def test_shuffled_lesson_content_is_deterministic() -> None:
+    curriculum = load_curriculum(MANIFEST_PATH, LESSONS_DIR)
+    lesson_id = "l04-answer-and-return"
+    lesson = curriculum.content[lesson_id]
+
+    first = _shuffled_lesson_content(lesson, "maya", lesson_id, 2)
+    second = _shuffled_lesson_content(lesson, "maya", lesson_id, 2)
+
+    assert json.dumps(first, sort_keys=True) == json.dumps(second, sort_keys=True)
+
+
+def test_shuffled_lesson_content_varies_across_attempts() -> None:
+    curriculum = load_curriculum(MANIFEST_PATH, LESSONS_DIR)
+    lesson_id = "l04-answer-and-return"
+    lesson = curriculum.content[lesson_id]
+    shuffled = [
+        _shuffled_lesson_content(lesson, "maya", lesson_id, attempt_index)
+        for attempt_index in range(5)
+    ]
+
+    choice_orders = [
+        [
+            (part["options"], part["correct_option_index"])
+            for part in item["completion_check"]["parts"]
+            if part["kind"] == "choice"
+        ]
+        for item in shuffled
+    ]
+    assert any(order != choice_orders[0] for order in choice_orders[1:])
+
+
+def test_shuffled_lesson_content_never_mutates_loaded_curriculum() -> None:
+    curriculum = load_curriculum(MANIFEST_PATH, LESSONS_DIR)
+    lesson_id = "l04-answer-and-return"
+    lesson = curriculum.content[lesson_id]
+    snapshot = deepcopy(lesson)
+
+    for user_id in ("maya", "noah", "ava"):
+        for attempt_index in range(5):
+            shuffled = _shuffled_lesson_content(lesson, user_id, lesson_id, attempt_index)
+            assert shuffled is not lesson
+            assert shuffled["completion_check"] is not lesson["completion_check"]
+            assert shuffled["completion_check"]["parts"] is not lesson["completion_check"]["parts"]
+            for original_part, shuffled_part in zip(
+                lesson["completion_check"]["parts"],
+                shuffled["completion_check"]["parts"],
+                strict=True,
+            ):
+                if original_part["kind"] == "choice":
+                    assert shuffled_part is not original_part
+
+    assert curriculum.content[lesson_id] == snapshot
+
+
+def test_shuffled_lesson_content_keeps_option_text_and_feedback_paired() -> None:
+    curriculum = load_curriculum(MANIFEST_PATH, LESSONS_DIR)
+    lesson_id = "l04-answer-and-return"
+    lesson = curriculum.content[lesson_id]
+    shuffled = _shuffled_lesson_content(lesson, "maya", lesson_id, 3)
+
+    for original_part, shuffled_part in zip(
+        lesson["completion_check"]["parts"], shuffled["completion_check"]["parts"], strict=True
+    ):
+        if original_part["kind"] != "choice":
+            continue
+        original_pairs = {
+            (option["text"], option["feedback"])
+            for option in original_part["options"]
+        }
+        shuffled_pairs = {
+            (option["text"], option["feedback"])
+            for option in shuffled_part["options"]
+        }
+        assert shuffled_pairs == original_pairs
 
 
 Mutation = Callable[[dict[str, Any]], None]

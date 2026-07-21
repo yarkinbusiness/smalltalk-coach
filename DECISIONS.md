@@ -183,6 +183,40 @@ Read by the brain and by every Codex worker at cycle start (see
   retention tier); or any P1 task turns out to require model calls after
   all (then it needs a costed founder decision first, per the Haiku lock).
 
+### 2026-07-21 — T-G2 Resolved: Deterministic Runtime Answer Permutation Shipped
+
+- **Status:** Confirmed (executes T-G2, backlogged by the entry directly
+  below this one)
+- **Decision:** Completion-check choice options are now served in a
+  deterministic per-`(user_id, lesson_id, review_count, part_index)`
+  seeded permutation (`random.Random(seed).shuffle`, stdlib, not
+  security-sensitive) via one shared helper
+  (`_shuffled_lesson_content` in `backend/app/main.py`) called
+  identically by `GET /lessons/{id}` (serve) and both
+  `POST /lessons/{id}/complete` / `.../review` (grade) — a single choke
+  point makes served/graded inconsistency structurally impossible. The
+  `exercise` block (client-side-only self-check, never submitted to the
+  server) is intentionally out of scope. Confirmed to need zero iOS
+  changes: the client already submits "array index of whatever was
+  displayed," with no notion of an original order.
+- **Why:** Closes the original T-G "option-order shuffling for reused
+  checks" criterion properly, superseding the cycle-33 static-content
+  workaround for the repeat-review case it was meant to cover.
+- **Evidence:** Automated: determinism, non-degeneracy across attempt
+  indices, no-mutation-of-shared-curriculum-state, and option
+  text/feedback pairing all unit-tested; live GET→submit-correct→
+  GET-again→submit-new-correct round trip run independently by the
+  brain against a real server across multiple users and 3 real review
+  cycles on `l02-use-the-setting`, confirming genuine reordering between
+  rounds (parts 1 and 2 both changed) with grading always matching
+  whatever was actually served.
+- **Consequence:** The cycle-33 static reordering (L01, L02) remains in
+  place as content-level hygiene (harmless, now redundant for the
+  shuffle concern specifically) but is no longer load-bearing for it.
+- **Revisit trigger:** None expected; if `_shuffled_lesson_content`'s
+  seed inputs ever change shape, its two call-site families (serve,
+  grade) must be updated together.
+
 ### 2026-07-21 — T-G Shuffle Criterion Deviation Recorded
 
 - **Status:** Confirmed (brain decision under the founder's audit-response

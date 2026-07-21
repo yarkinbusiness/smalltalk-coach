@@ -534,3 +534,13 @@ Entry format (keep an entry under ~15 lines):
 - **Result / verification:** `cd ios && xcodegen generate` passed; generic Simulator `xcodebuild build-for-testing`
   passed (app and test bundle compiled/linked); `git diff --check` passed before this append.
 - **Open issues:** iPhone 16 XCTest could not execute because CoreSimulatorService refused connections and reported no runtimes.
+
+## 2026-07-21 09:52 UTC — T-G2 deterministic runtime answer-option permutation
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Added deterministic per-user, lesson, review-attempt choice permutation at lesson serving and both grading paths, without mutating startup-loaded curriculum content.
+  Added pure and endpoint tests for determinism, variation, copied state, option-feedback pairing, and served-order grading.
+- **Files touched:** backend/app/store.py; backend/app/main.py; backend/tests/test_content.py;
+  backend/tests/test_api.py; backend/README.md; WORKER_LOG.md
+- **Result / verification:** `backend/.venv/bin/python -m pytest backend/tests -q`: 117 passed, 1 skipped, 1 warning in 2.46s; `git diff --check` passed.
+- **Open issues:** none

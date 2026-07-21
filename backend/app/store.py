@@ -180,6 +180,15 @@ class ProgressStore:
                 )
         return created_at
 
+    def review_count(self, user_id: str, lesson_id: str) -> int:
+        """Count of recorded reviews, used to vary served/graded option order."""
+        with closing(self._connect()) as connection:
+            row = connection.execute(
+                "SELECT COUNT(*) FROM review_completions WHERE user_id = ? AND lesson_id = ?",
+                (user_id, lesson_id),
+            ).fetchone()
+        return row[0]
+
     def review_timestamps(self, user_id: str) -> list[tuple[str, str]]:
         """Return raw review timestamps for deterministic scheduling."""
         with closing(self._connect()) as connection:

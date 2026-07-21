@@ -44,12 +44,11 @@ deterministic — no new API calls) and the existing loop protocol.
   5. ~~**T-E** — skill profile v1~~ — done (profile endpoint + Home
      surface).
   6. ~~**T-F** — reflection loop~~ — done (Flow D end to end).
-  7. ~~**T-G** — review/spaced repetition~~ — done **with one recorded
-     deviation**: static content-level answer variation instead of the
-     written "option-order shuffling" criterion (root `DECISIONS.md` →
-     "2026-07-21 — T-G Shuffle Criterion Deviation Recorded"; mechanical
-     audit test added cycle 36, caught+fixed L01). True runtime
-     permutation = backlog item **T-G2**, sequenced after T-J.
+  7. ~~**T-G** — review/spaced repetition~~ — done; the recorded
+     deviation (static content-level variation instead of runtime
+     shuffling, root `DECISIONS.md` → "2026-07-21 — T-G Shuffle
+     Criterion Deviation Recorded") is now itself resolved — see T-G2
+     below.
 - **P2 (activation + v1 Must-Haves): T-H and T-I done; T-J code done,
   one owed action remains (below).**
   8. ~~**T-H** — onboarding + baseline (BRIEF Flow A), hosts notification
@@ -75,6 +74,9 @@ deterministic — no new API calls) and the existing loop protocol.
       gated on founder pricing + free-tier decision.
   12. **T-L** — free-draft grading costed proposal (docs-only) — gated
       on founder budget approval.
+- ~~**T-G2** — deterministic runtime answer-option permutation~~ — done
+  (cycle 43; root `DECISIONS.md` → "2026-07-21 — T-G2 Resolved").
+  Backend-only, zero iOS changes needed.
 - **Standing founder-gated item:** vision-quality eval on real consented
   screenshots (runs via the T-B harness once the founder provides them).
 
@@ -238,6 +240,43 @@ items assume. -->
    4 workers → synthesized report) against real CMA.
 
 ## Cycle log
+
+- **2026-07-21 (cycle 43 — T-G2: deterministic runtime answer
+  permutation; v2 backlog's actionable items now exhausted):** Worker:
+  `gpt-5.6-terra`, one round. New `_shuffled_lesson_content()` (backend
+  only, `random.Random(f"{user}:{lesson}:{attempt}:{part}").shuffle`,
+  builds entirely fresh dicts/lists — never mutates
+  `app.state.curriculum`) called identically by `GET /lessons/{id}` and
+  both completion endpoints, keyed on the new `store.review_count()`;
+  confirmed pre-implementation that iOS needs zero changes since the
+  client already submits array-position-of-what-was-shown with no
+  notion of an original order. Scope: `completion_check.parts` choice
+  items only (`exercise` is client-side-only self-check, out of scope
+  by design). 5 new tests: determinism, non-degeneracy across attempt
+  indices, no-shared-state-mutation (identity-checked), option
+  text/feedback pairing preserved, and an endpoint-level property test
+  proving served-correct-index always grades correct and
+  served-wrong-index always grades wrong with matching feedback across
+  3 users × 4 attempt indices spanning both complete and review paths.
+  Brain verification (elevated rigor — grading correctness is the
+  highest-severity failure class in this codebase): **117 passed, 1
+  skipped** (own run); every new test individually re-run and
+  confirmed passing in isolation; **independent live manual round-trip
+  on a real running server** (not reusing any test scaffinding) —
+  hand-read served orders via curl for two fresh users on l01, showed
+  genuinely different orderings with correct grading for both; drove
+  l02 through 3 real review cycles, confirming options actually
+  reordered between rounds (parts 1 and 2 both changed) and grading
+  matched the freshly-served order every time; mandatory simulator
+  launch clean — ACCEPTED. Decision recorded (root `DECISIONS.md` →
+  "2026-07-21 — T-G2 Resolved"). **This exhausts every actionable item
+  in the v2 backlog.** Remaining open items are all founder-gated and
+  correctly parked: real-screenshot vision eval (needs consented
+  screenshots), T-K paywall (needs pricing/free-tier decision), T-L
+  free-draft grading (needs a budget ceiling decision), and the owed
+  Anthropic test-key rotation (needs founder console access — not a
+  loop blocker). **Next:** none scheduled; awaiting founder direction
+  or new backlog input.
 
 - **2026-07-21 (cycle 42 — T-J iOS half: API token config + bearer
   header; T-J CODE COMPLETE):** Worker: `gpt-5.6-terra`, one round,

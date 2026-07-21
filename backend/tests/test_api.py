@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import deepcopy
 from pathlib import Path
 from shutil import copyfile
 
@@ -37,6 +38,19 @@ def _correct_choice_answers(lesson: dict[str, object]) -> dict[str, int]:
         for index, part in enumerate(lesson["completion_check"]["parts"])
         if part["kind"] == "choice"
     }
+
+
+def _wrong_choice_answers_and_feedback(lesson: dict[str, object]) -> tuple[dict[str, int], dict[str, str]]:
+    answers: dict[str, int] = {}
+    feedback: dict[str, str] = {}
+    for index, part in enumerate(lesson["completion_check"]["parts"]):
+        if part["kind"] != "choice":
+            continue
+        correct_index = part["correct_option_index"]
+        wrong_index = next(option_index for option_index in range(len(part["options"])) if option_index != correct_index)
+        answers[str(index)] = wrong_index
+        feedback[str(index)] = part["options"][wrong_index]["feedback"]
+    return answers, feedback
 
 
 def test_health_and_initial_curriculum(tmp_path: Path) -> None:
@@ -148,7 +162,8 @@ def test_content_pending_when_next_unlocked_lesson_is_not_authored(tmp_path: Pat
 
 def test_completion_unlocks_l02_and_is_idempotent(tmp_path: Path) -> None:
     with _client(tmp_path) as client:
-        correct = {"user_id": "maya", "answers": {"0": 0}}
+        lesson = client.get("/lessons/l01-first-hello", params={"user_id": "maya"}).json()
+        correct = {"user_id": "maya", "answers": _correct_choice_answers(lesson)}
         first = client.post("/lessons/l01-first-hello/complete", json=correct)
         second = client.post("/lessons/l01-first-hello/complete", json=correct)
         curriculum = client.get("/curriculum", params={"user_id": "maya"}).json()
@@ -178,3 +193,36 @@ def test_wrong_answer_returns_feedback_without_unlocking(tmp_path: Path) -> None
     states = _states(curriculum)
     assert states["l01-first-hello"] == "unlocked"
     assert states["l02-use-the-setting"] == "locked"
+
+
+def test_served_choice_order_is_used_for_completion_and_review_grading(tmp_path: Path) -> None:
+    lesson_id = "l01-first-hello"
+    with _client(tmp_path) as client:
+        store = client.app.state.progress_store
+        curriculum_snapshot = deepcopy(client.app.state.curriculum.content[lesson_id])
+        for user_id in ("maya", "noah", "ava"):
+            for attempt_index in range(4):
+                if attempt_index == 1:
+                    store.record_review(user_id, lesson_id)
+                assert store.review_count(user_id, lesson_id) == attempt_index
+
+                served = client.get(f"/lessons/{lesson_id}", params={"user_id": user_id})
+                assert served.status_code == 200
+                lesson = served.json()
+                wrong_answers, expected_feedback = _wrong_choice_answers_and_feedback(lesson)
+                correct_answers = _correct_choice_answers(lesson)
+                endpoint = "complete" if attempt_index == 0 else "review"
+
+                wrong = client.post(
+                    f"/lessons/{lesson_id}/{endpoint}",
+                    json={"user_id": user_id, "answers": wrong_answers},
+                )
+                assert wrong.json() == {"completed": False, "feedback": expected_feedback}
+
+                correct = client.post(
+                    f"/lessons/{lesson_id}/{endpoint}",
+                    json={"user_id": user_id, "answers": correct_answers},
+                )
+                assert correct.json()["completed"] is True
+
+        assert client.app.state.curriculum.content[lesson_id] == curriculum_snapshot
