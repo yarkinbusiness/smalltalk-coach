@@ -12,7 +12,10 @@ struct SkeletonBlock: View {
         block
             .opacity(opacity)
             .animation(
-                reduceMotion ? nil : .easeInOut(duration: 1.15).repeatForever(autoreverses: true),
+                MotionPolicy.animation(
+                    .easeInOut(duration: 1.15).repeatForever(autoreverses: true),
+                    reduceMotion: reduceMotion
+                ),
                 value: isPulsing
             )
             .onAppear {

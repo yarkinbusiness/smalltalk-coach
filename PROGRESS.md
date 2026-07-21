@@ -315,6 +315,71 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-21 (cycle 53 — UI quick win #6: MotionPolicy + Dynamic Type
+  spot-check; ONE ROUND, accepted as specified):** Worker: `gpt-5.6-terra`.
+  New `ios/SmallTalkCoach/MotionPolicy.swift`: a pure
+  `MotionPolicy.animation(_:reduceMotion:) -> Animation?` helper, and a
+  `motionAwareAnimation(_:value:)` View modifier (reads
+  `@Environment(\.accessibilityReduceMotion)` centrally, so call sites
+  that only need "animate this unless reduced" no longer need their own
+  environment read). Both existing hand-rolled call sites now route
+  through it: `SkeletonBlock`'s pulse `.animation(...)` call uses
+  `MotionPolicy.animation(...)` directly (keeps its own `@Environment`
+  read — still needed for `opacity`/`onAppear`/`onChange`, so this is a
+  consistency win not a full rewrite); `ExampleResponseSuggestion`'s
+  `setCopied` dropped its manual `if reduceMotion {...} else {
+  withAnimation {...} }` branch entirely in favor of
+  `.motionAwareAnimation(AppTheme.Motion.quick, value: isCopied)` on the
+  view, simplifying `setCopied` to a single line (its now-unused
+  `@Environment` property was correctly removed, not left dangling).
+  **A real, previously-ungated gap closed:** `CardStyle`'s `.interactive`
+  press feedback (`.scaleEffect`/`.brightness` on press) had zero Reduce
+  Motion accommodation before this cycle. Now: `.scaleEffect` is pinned
+  to `1` (no spatial squish at all) whenever Reduce Motion is on —
+  exactly the "travel/scale" effect the research calls out — `.brightness`
+  is kept unconditionally (a subtle tint change, not spatial, judged fine
+  either way), and the animation call itself now routes through
+  `.motionAwareAnimation`, so under Reduce Motion the remaining
+  brightness-only feedback applies as an immediate state change rather
+  than animated, matching the research's "or immediate state changes"
+  wording precisely. Dynamic Type spot-check (bounded, per spec) across
+  the seven files touched by quick wins #1–#5b: worker reported no clear
+  clipping risk found, no files needed changing — **independently
+  verified**, not taken on faith: `grep` for `.lineLimit(` and any fixed
+  `.frame(height:...)`/`.frame(width:...height:...)` across all seven
+  files returned zero matches for either pattern.
+  **SDK note, consistent with cycle 51's finding:** the worker
+  independently hit the same read-only `accessibilityReduceMotion`
+  preview-override constraint (Xcode 26.6/iOS 26.5 SDK) — and this time,
+  critically, did **not** reach for the private `_accessibilityReduceMotion`
+  SPI workaround that had to be rejected twice last cycle. Instead
+  `MotionPolicy.swift`'s two previews demonstrate the pure helper
+  function directly with an explicit `reduceMotion: Bool` preview
+  parameter rather than trying to force the real environment key —
+  compiles clean on public API only. Trade-off, disclosed rather than
+  hidden: this means the previews prove the helper's nil/non-nil logic
+  correctly, but don't exercise the modifier's actual environment-read
+  path end-to-end in Xcode's canvas — judged acceptable given
+  environment-*reading* (as opposed to the write/override side that
+  actually failed) is long-established, reliable SwiftUI behavior used
+  correctly at every real call site.
+  **Brain verification:** full source review of all four parts found no
+  bugs. `xcodegen generate` + `xcodebuild build`/`test` — 76 passed, 3
+  pre-existing skips, 0 failures, matching baseline. **Honest scoping
+  note:** this cycle's actual behavior change is animation-gating logic
+  (`Animation` vs. `nil`), which a static screenshot cannot distinguish —
+  both an animated and an instant transition settle at the identical
+  final visual state, and the affected components' settled appearance was
+  already screenshot-verified in cycles 51–52. Did the mandatory real
+  simulator launch check instead (required every cycle regardless): app
+  launched clean, Home tab rendered correctly with live streak/lesson
+  data, no crash, no visual regression (incidentally also confirmed the
+  pre-existing "How did it go?" reflection prompt — v2-backlog Flow D,
+  unrelated to this cycle — correctly triggering from this session's own
+  repeated test launches). **Next:** quick win #7 — move the
+  notification-permission prompt later in onboarding
+  (`OnboardingView.swift`).
+
 - **2026-07-21 (cycle 52 — UI quick win #5b: copy-to-clipboard + toast +
   haptic; ONE ROUND, accepted as specified):** Worker: `gpt-5.6-terra`.
   `ExampleResponseSuggestion` (in `CoachingView.swift`, previously plain

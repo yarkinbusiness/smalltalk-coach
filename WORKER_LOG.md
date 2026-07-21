@@ -701,3 +701,12 @@ Entry format (keep an entry under ~15 lines):
   reached asset compilation but failed because CoreSimulatorService exposes no iOS runtimes; iPhone 16 tests
   could not execute because no simulator destination is available.
 - **Open issues:** Run the full iPhone 16 build/test and verify the real clipboard, haptic, and local confirmation on a host with a working simulator runtime.
+
+## 2026-07-21 15:52 UTC — UI quick win #6: MotionPolicy + Dynamic Type spot-check
+- **Model:** gpt-5
+- **Status:** partial
+- **What was done:** Added centralized MotionPolicy helper/modifier; routed SkeletonBlock and copied-state motion through it; made interactive CardStyle press scaling Reduce-Motion-safe with immediate feedback.
+  Added animated/reduced-motion policy previews. The SDK exposes `accessibilityReduceMotion` as read-only, so the reduced preview exercises the helper directly instead of using the requested non-compiling public environment override.
+- **Files touched:** ios/SmallTalkCoach/{MotionPolicy,SkeletonBlock,CoachingView,CardStyle}.swift; WORKER_LOG.md. Part 4: checked TodayCard, PrimaryActionButton, CardStyle previews, CoachingView, HomeView, ProfileView, and LessonDetailView; changed none because no clear clipping risk was found.
+- **Result / verification:** iPhone Simulator SDK type-check passed for MotionPolicy excluding sandbox-blocked Preview macro expansion; all four Swift files parse; `cd ios && xcodegen generate` and `git diff --check` passed. iPhone 16 `xcodebuild build`/`test` were attempted but CoreSimulatorService refused connections and no runtimes were available, so XCTest did not run.
+- **Open issues:** Run full iPhone 16 build/test and visually inspect previews on a host with a working simulator runtime; the requested `.environment(\.accessibilityReduceMotion, true)` preview setter remains unavailable in this installed SDK.

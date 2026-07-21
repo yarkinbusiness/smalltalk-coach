@@ -9,6 +9,7 @@ struct CardStyle: ViewModifier {
     }
 
     let variant: Variant
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @GestureState private var isPressed = false
 
     func body(content: Content) -> some View {
@@ -20,9 +21,9 @@ struct CardStyle: ViewModifier {
                     .strokeBorder(border, lineWidth: borderWidth)
             }
             .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.card, style: .continuous))
-            .scaleEffect(variant == .interactive && isPressed ? 0.98 : 1)
+            .scaleEffect(variant == .interactive && isPressed && !reduceMotion ? 0.98 : 1)
             .brightness(variant == .interactive && isPressed ? -0.03 : 0)
-            .animation(AppTheme.Motion.quick, value: isPressed)
+            .motionAwareAnimation(AppTheme.Motion.quick, value: isPressed)
             .simultaneousGesture(pressGesture)
     }
 

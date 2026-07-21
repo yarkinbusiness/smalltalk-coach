@@ -435,7 +435,6 @@ private struct ReportInterpretationRow: View {
 private struct ExampleResponseSuggestion: View {
     let text: String
 
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isCopied = false
     @State private var copyCount = 0
     @State private var resetTask: Task<Void, Never>?
@@ -468,6 +467,7 @@ private struct ExampleResponseSuggestion: View {
         .background(.teal.opacity(0.10), in: RoundedRectangle(cornerRadius: 14))
         .accessibilityLabel("Example response to adapt: \(text)")
         .sensoryFeedback(.success, trigger: copyCount)
+        .motionAwareAnimation(AppTheme.Motion.quick, value: isCopied)
     }
 
     private func copyText() {
@@ -485,13 +485,7 @@ private struct ExampleResponseSuggestion: View {
     }
 
     private func setCopied(_ copied: Bool) {
-        if reduceMotion {
-            isCopied = copied
-        } else {
-            withAnimation(AppTheme.Motion.quick) {
-                isCopied = copied
-            }
-        }
+        isCopied = copied
     }
 }
 
