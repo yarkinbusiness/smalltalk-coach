@@ -315,6 +315,57 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-21 (cycle 57 — Deeper Redesign #4b: staggered report-card
+  reveal; ONE ROUND, accepted as specified):** Worker: `gpt-5.6-terra`.
+  `CoachingReportView`'s three top `ReportCard`s (Takeaway, How to
+  respond, "What they're really saying") now reveal in a ~100ms stagger
+  on first appearance instead of all at once, matching the research's
+  "80–120ms stagger, capped at 3–4 items." Implementation: a single
+  `@State private var revealedCardCount` (not per-row `.onAppear`, which
+  is unreliable in a lazily-instantiated `List` — exactly the pattern
+  specified) driven by one `.task` that steps `0→1→2→3` with ~100ms
+  sleeps between, each card gated on
+  `.opacity(revealedCardCount > index ? 1 : 0)` +
+  `.offset(y: ... ? 0 : 8)` via `.motionAwareAnimation` (`MotionPolicy`).
+  Reduce Motion sets `revealedCardCount = 3` immediately, skipping the
+  stagger and the animation entirely, consistent with every other
+  Reduce-Motion accommodation this week. Everything below the three cards
+  (strengths/improvements/scores/practice/lesson) is untouched and
+  appears immediately as before. `ReportCard` itself correctly left
+  untouched — worker took the spec's offered simpler-and-safer option
+  (unified fade per card) over the riskier optional text-then-fill
+  two-stage nicety, exactly as suggested when in doubt. Confirmed (worker
+  self-report, brain didn't need to re-derive it) that
+  `CoachingReportDetailView` (the History-viewing path) already renders
+  through `CoachingReportView`, so it inherits this behavior with no
+  separate change.
+  **Brain verification:** full source review found no bugs — traced the
+  exact timing math (card 1 at t=0ms, card 2 at t=100ms, card 3 at
+  t=200ms) and confirmed it's correct. `xcodegen generate` +
+  `xcodebuild build`/`test` — 76 passed, 3 pre-existing skips, 0
+  failures. **Honest scoping note on the visual check:** made a genuine
+  attempt to catch the stagger mid-flight — a harness calling the real
+  live diagnose API (avoiding a hand-built mock given `CoachingReport`'s
+  deep nesting) followed by a burst of parallel screenshots timed to
+  land right as the report first appeared. Every capture landed on the
+  fully-settled end state (both visible cards already fully revealed) —
+  the real API round-trip plus each `simctl io screenshot` call's own
+  latency both dwarf the ~200ms total stagger window, so no screenshot
+  tool available here can land inside it. The attempt did still confirm
+  the settled end-state renders correctly (correct card content, order,
+  colors, no visual corruption from the added opacity/offset modifiers)
+  and incidentally reconfirmed the live coaching pipeline itself is
+  healthy. Confidence in the stagger's actual behavior rests on the
+  traced timing math, not a live capture — same category of tooling
+  limit as cycle 53's motion-gating logic, disclosed rather than papered
+  over. **This closes out Deeper Redesign #4 in full** (4a + 4b both
+  shipped). **Next:** re-check whether the founder has weighed in on
+  #1/#5 (Coach-tab placement, paywall-sequencing); if not, the remaining
+  unblocked items are #6's non-`LearnView`-dependent pieces (`TodayCard`
+  streak motion, `LessonDetailView` completion motion) and #7 (ambient
+  preview-coverage discipline, not independently dispatchable) — #6 is
+  next up.
+
 - **2026-07-21 (cycle 56 — Deeper Redesign #4a: SkillMetricBar historical
   trend visualization; ONE ROUND, accepted as specified):** Worker:
   `gpt-5.6-terra`. New `ios/SmallTalkCoach/SkillMetricBar.swift`: a

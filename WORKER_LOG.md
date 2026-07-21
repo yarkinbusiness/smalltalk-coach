@@ -742,3 +742,11 @@ Entry format (keep an entry under ~15 lines):
 - **Files touched:** ios/SmallTalkCoach/SkillMetricBar.swift; ios/SmallTalkCoach/ProfileView.swift; WORKER_LOG.md
 - **Result / verification:** `cd ios && xcodegen generate`, `xcrun swiftc -parse` for both changed Swift files, and `git diff --check` passed. iPhone 16 build/test were attempted, but CoreSimulatorService provided no iOS runtimes; the SDK build reached asset compilation and stopped for that same runtime absence, so no XCTest suite ran.
 - **Open issues:** Run the iPhone 16 build/test suite and visually inspect the light and dark previews on a host with a working simulator runtime.
+
+## 2026-07-21 16:44 UTC — Deeper redesign #4b: staggered coaching-report card reveal
+- **Model:** gpt-5.6-terra
+- **Status:** partial
+- **What was done:** Added view-level revealed-card state and Reduce Motion handling to `CoachingReportView`. The existing Takeaway, How to respond, and interpretation ReportCards now fade and settle upward in their unchanged order at 100 ms intervals; all later plain List sections remain unmodified. Confirmed `CoachingReportDetailView` renders through `CoachingReportView`, so History inherits this behavior without a separate implementation.
+- **Files touched:** ios/SmallTalkCoach/CoachingView.swift; WORKER_LOG.md
+- **Result / verification:** `cd ios && xcodegen generate`, `xcrun swiftc -parse SmallTalkCoach/CoachingView.swift`, and `git diff --check` passed. iPhone 16 `xcodebuild build` and `xcodebuild test` were attempted, but CoreSimulatorService refused connections and reported no available simulator runtimes before app compilation or XCTest execution.
+- **Open issues:** Run the iPhone 16 build/test suite and visually verify the standard-motion stagger and immediate Reduce Motion presentation on a host with a working simulator runtime.

@@ -333,6 +333,8 @@ private struct SafetyGuidanceView: View {
 struct CoachingReportView: View {
     let report: CoachingReport
     private let dimensions = ["warmth", "curiosity", "reciprocity", "flow"]
+    @State private var revealedCardCount = 0
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         let display = CoachingReportDisplayModel(report: report)
@@ -350,6 +352,9 @@ struct CoachingReportView: View {
                     Text(report.diagnosis.transferableTakeaway)
                         .font(.body.weight(.medium))
                 }
+                .opacity(revealedCardCount > 0 ? 1 : 0)
+                .offset(y: revealedCardCount > 0 ? 0 : 8)
+                .motionAwareAnimation(AppTheme.Motion.standard, value: revealedCardCount)
             }
 
             Section {
@@ -364,6 +369,9 @@ struct CoachingReportView: View {
                         ExampleResponseSuggestion(text: response)
                     }
                 }
+                .opacity(revealedCardCount > 1 ? 1 : 0)
+                .offset(y: revealedCardCount > 1 ? 0 : 8)
+                .motionAwareAnimation(AppTheme.Motion.standard, value: revealedCardCount)
             }
 
             Section {
@@ -374,6 +382,9 @@ struct CoachingReportView: View {
                     ReportInterpretationRow(label: "Intent", text: report.diagnosis.incomingInterpretation.intent)
                     ReportInterpretationRow(label: "Your response", text: report.diagnosis.incomingInterpretation.responseGoals)
                 }
+                .opacity(revealedCardCount > 2 ? 1 : 0)
+                .offset(y: revealedCardCount > 2 ? 0 : 8)
+                .motionAwareAnimation(AppTheme.Motion.standard, value: revealedCardCount)
             }
 
             if display.shouldShowStrengths {
@@ -414,6 +425,22 @@ struct CoachingReportView: View {
                         }
                         Text(report.recommendation.lesson.concept).font(.subheadline).foregroundStyle(.secondary)
                     }
+                }
+            }
+        }
+        .task {
+            if reduceMotion {
+                revealedCardCount = 3
+                return
+            }
+
+            revealedCardCount = 0
+            for count in 1...3 {
+                guard !Task.isCancelled else { return }
+                revealedCardCount = count
+
+                if count < 3 {
+                    try? await Task.sleep(for: .milliseconds(100))
                 }
             }
         }
