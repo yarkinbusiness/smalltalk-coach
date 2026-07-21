@@ -230,6 +230,30 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-21 (cycle 41 — T-J backend half: bearer auth + coaching rate
+  limit):** Worker: `gpt-5.6-terra`, one round. `SMALLTALK_API_TOKEN`
+  read once per `create_app()`: unset → auth OFF (today's behavior,
+  zero config break, one startup WARNING logged), set → single HTTP
+  middleware guards every route except `/health` with
+  `hmac.compare_digest` constant-time comparison, 401
+  `{"detail": "unauthorized"}` on missing/wrong/malformed header, no
+  route logic executed on rejection; `/health` gains additive
+  `auth_enabled`. Coaching rate limit: thread-safe in-memory
+  `_RateLimiter` (same `Lock`-guarded pattern as `jobs.py`) applied only
+  to `POST /coaching/diagnoses` (the sole budget-spending endpoint),
+  per-`user_id` fixed window, configurable via
+  `SMALLTALK_COACHING_RATE_LIMIT` / `_WINDOW_SECONDS` (safe env
+  fallback), 429 `{"detail": "rate_limited"}` + `Retry-After`, failed
+  diagnoses still count, isolated per app instance, every other
+  coaching route unaffected even when exhausted. 10 new tests
+  (deterministic via frozen-clock monkeypatching, no real sleeps).
+  Brain verification: **112 passed, 1 skipped** (own run); live probes
+  on a real uvicorn process — unset-token 200s, set-token 401×3 +
+  200 + health-always-200 — all matched exactly; mandatory simulator
+  launch clean against the restored open-dev backend (iOS has no token
+  yet — that's cycle 42) — ACCEPTED. **Next:** cycle 42, T-J iOS half
+  (base URL + token from build config, header on every request).
+
 - **2026-07-21 (cycle 40 — micro-fix: mode-aware screenshot consent
   disclosure; App Store Nov-2025 gap closed):** Worker: `gpt-5.6-terra`,
   one round, honest partial (sandbox blocks simulator; brain ran

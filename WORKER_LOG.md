@@ -512,3 +512,14 @@ Entry format (keep an entry under ~15 lines):
   succeeded. Named iPhone 16 build and XCTest could not run because CoreSimulatorService has no available runtimes;
   `git diff --check` passed.
 - **Open issues:** Run XCTest and the live Source-picker disclosure check on a host with a working iPhone 16 simulator.
+
+## 2026-07-21 09:32 UTC — T-J backend bearer auth and coaching rate limit
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Added opt-in, constant-time bearer auth for every non-health route and health auth status.
+  Added app-isolated per-user fixed-window diagnosis limiting with safe environment fallbacks and Retry-After.
+- **Files touched:** backend/app/main.py; backend/app/coaching.py; backend/tests/test_auth.py;
+  backend/tests/test_rate_limit.py; backend/tests/test_api.py; backend/README.md; WORKER_LOG.md
+- **Result / verification:** `backend/.venv/bin/python -m pytest backend/tests -q`: 112 passed, 1 skipped,
+  1 warning; `git diff --check` passed.
+- **Open issues:** none

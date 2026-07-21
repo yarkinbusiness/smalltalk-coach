@@ -12,9 +12,12 @@ Run the tests:
 backend/.venv/bin/python -m pytest backend/tests -q
 ```
 
-The v1 API has no authentication: callers supply a non-empty `user_id`. This
-is a known hardening gap and must be replaced before exposing the service to
-untrusted clients.
+Authentication is opt-in for local development. Set `SMALLTALK_API_TOKEN` to
+require `Authorization: Bearer <token>` on every route except `GET /health`;
+when it is unset (the default), the API remains unauthenticated and must not
+be exposed to untrusted clients. `SMALLTALK_COACHING_RATE_LIMIT` (default
+`10`) and `SMALLTALK_COACHING_RATE_WINDOW_SECONDS` (default `60`) set the
+per-user fixed-window limit for `POST /coaching/diagnoses`.
 
 Endpoints include `GET /curriculum?user_id=...`, lesson reads, completions,
 and review submissions, the coaching routes, `GET /users/{user_id}/streak?tz=<IANA timezone>`,

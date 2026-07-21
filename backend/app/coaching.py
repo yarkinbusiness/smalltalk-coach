@@ -6,6 +6,10 @@ import base64
 import binascii
 import json
 import logging
+import math
+import os
+from datetime import UTC, datetime, timedelta
+from threading import Lock
 import uuid
 from typing import Any, Callable
 
@@ -29,6 +33,55 @@ LOGGER = logging.getLogger(__name__)
 router = APIRouter(prefix="/coaching", tags=["coaching"])
 _IMAGE_MEDIA_TYPES = frozenset({"image/png", "image/jpeg", "image/webp"})
 _MAX_IMAGE_BYTES = 10 * 1024 * 1024
+_DEFAULT_RATE_LIMIT = 10
+_DEFAULT_RATE_WINDOW_SECONDS = 60
+
+
+def _positive_int_env(name: str, default: int) -> int:
+    """Read bounded configuration when a fresh app is created."""
+    try:
+        value = int(os.environ.get(name, default))
+    except (TypeError, ValueError):
+        return default
+    return value if value > 0 else default
+
+
+class _RateLimiter:
+    """Thread-safe fixed-window request counts, isolated to one app instance."""
+
+    def __init__(self, limit: int, window_seconds: int) -> None:
+        self.limit = limit
+        self.window_seconds = window_seconds
+        self._windows: dict[str, tuple[datetime, int]] = {}
+        self._lock = Lock()
+
+    def allow(self, user_id: str, now: datetime) -> bool:
+        with self._lock:
+            window_start, count = self._windows.get(user_id, (now, 0))
+            if now - window_start >= timedelta(seconds=self.window_seconds):
+                window_start, count = now, 0
+            if count >= self.limit:
+                self._windows[user_id] = (window_start, count)
+                return False
+            self._windows[user_id] = (window_start, count + 1)
+            return True
+
+    def retry_after(self, user_id: str, now: datetime) -> int:
+        with self._lock:
+            window = self._windows.get(user_id)
+            if window is None:
+                return 1
+            remaining = self.window_seconds - (now - window[0]).total_seconds()
+            return max(1, math.ceil(remaining))
+
+
+def _rate_limiter() -> _RateLimiter:
+    return _RateLimiter(
+        _positive_int_env("SMALLTALK_COACHING_RATE_LIMIT", _DEFAULT_RATE_LIMIT),
+        _positive_int_env(
+            "SMALLTALK_COACHING_RATE_WINDOW_SECONDS", _DEFAULT_RATE_WINDOW_SECONDS
+        ),
+    )
 
 
 def _invalid_request() -> HTTPException:
@@ -43,6 +96,18 @@ def _require_user_id(user_id: object) -> str:
 
 def _adapter_for(request: Request) -> DiagnosisAdapter:
     return request.app.state.diagnosis_adapter
+
+
+def _require_rate_limit(request: Request, user_id: str) -> None:
+    now = datetime.now(UTC)
+    limiter: _RateLimiter = request.app.state.coaching_rate_limiter
+    if limiter.allow(user_id, now):
+        return
+    raise HTTPException(
+        status_code=429,
+        detail="rate_limited",
+        headers={"Retry-After": str(limiter.retry_after(user_id, now))},
+    )
 
 
 def _forbidden_terms(request: Request) -> set[str]:
@@ -189,6 +254,7 @@ def create_diagnosis(body: dict[str, Any], request: Request, background_tasks: B
         raise _invalid_request()
     if source["kind"] == "screenshot":
         media_type, image_base64, user_message_side = _validate_image(source)
+        _require_rate_limit(request, user_id)
         job = request.app.state.coaching_jobs.create(user_id)
         background_tasks.add_task(
             _run_screenshot_job, request.app, job["id"], user_id, media_type, image_base64, user_message_side,
@@ -203,6 +269,7 @@ def create_diagnosis(body: dict[str, Any], request: Request, background_tasks: B
         transcript = normalize_text(source["text"])
     except (KeyError, UnreadableTranscriptError):
         raise HTTPException(status_code=422, detail="unreadable_transcript") from None
+    _require_rate_limit(request, user_id)
     try:
         diagnosis = diagnose(_adapter_for(request), transcript, _forbidden_terms(request))
     except CoachingRefusedError:
@@ -269,4 +336,5 @@ def setup_coaching(app: Any, adapter_factory: Callable[[], DiagnosisAdapter] | N
     app.state.diagnosis_adapter = (adapter_factory or AnthropicDiagnosisAdapter)()
     app.state.vision_adapter = AnthropicVisionAdapter()
     app.state.coaching_jobs = CoachingJobStore()
+    app.state.coaching_rate_limiter = _rate_limiter()
     app.include_router(router)

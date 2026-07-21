@@ -4,13 +4,16 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 from datetime import UTC, datetime
+import hmac
+import logging
 import os
 from pathlib import Path
-from typing import Any, AsyncIterator, Annotated
+from typing import Any, AsyncIterator, Annotated, Callable
 import uuid
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import FastAPI, HTTPException, Query, Request
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from .content import Curriculum, load_curriculum
@@ -20,6 +23,9 @@ from .profile import build_profile
 from .review import build_review_queue
 from .streak import compute_streak, parse_activity_timestamp
 from .store import ProgressStore
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class CompletionRequest(BaseModel):
@@ -183,6 +189,11 @@ def create_app(
     selected_manifest = manifest_path or repo_root / "content" / "lesson_path.json"
     selected_lessons_dir = lessons_dir or repo_root / "content" / "lessons"
     selected_database = database_path or repo_root / "backend" / "data" / "progress.db"
+    api_token = os.environ.get("SMALLTALK_API_TOKEN")
+    if api_token is None:
+        LOGGER.warning(
+            "SMALLTALK_API_TOKEN not set — running without authentication; do not expose this server."
+        )
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -192,6 +203,21 @@ def create_app(
 
     app = FastAPI(title="Smalltalk Coach", lifespan=lifespan)
     setup_coaching(app, (lambda: diagnosis_adapter) if diagnosis_adapter is not None else None)
+
+    @app.middleware("http")
+    async def require_bearer_auth(request: Request, call_next: Callable) -> Any:
+        if api_token is None or request.url.path == "/health":
+            return await call_next(request)
+        authorization = request.headers.get("Authorization")
+        scheme, separator, supplied_token = (authorization or "").partition(" ")
+        if (
+            separator != " "
+            or scheme != "Bearer"
+            or not supplied_token
+            or not hmac.compare_digest(supplied_token.encode(), api_token.encode())
+        ):
+            return JSONResponse(status_code=401, content={"detail": "unauthorized"})
+        return await call_next(request)
 
     def curriculum_for(request: Request) -> Curriculum:
         return request.app.state.curriculum
@@ -206,6 +232,7 @@ def create_app(
             "status": "ok",
             "lessons_loaded": len(curriculum.content),
             "coaching_enabled": "ANTHROPIC_API_KEY" in os.environ,
+            "auth_enabled": api_token is not None,
         }
 
     @app.get("/curriculum")
