@@ -185,7 +185,7 @@ struct TodayCard: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: AppTheme.Spacing.rowSpacing) {
             HStack(alignment: .firstTextBaseline) {
                 streakLine
                 Spacer()
@@ -201,8 +201,12 @@ struct TodayCard: View {
 
             if let emphasis = viewModel.onboarding?.emphasis {
                 Text("Your focus: \(emphasis.dimension.capitalized) — \(emphasis.title) will matter most")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(AppTheme.Typography.helper)
+                    .foregroundStyle(AppTheme.Colors.primary.opacity(0.72))
+            } else {
+                Text("A few minutes of real practice, one small step at a time.")
+                    .font(AppTheme.Typography.helper)
+                    .foregroundStyle(AppTheme.Colors.primary.opacity(0.72))
             }
 
             if case .loading = viewModel.phase, viewModel.streak == nil {
@@ -211,12 +215,12 @@ struct TodayCard: View {
             }
             if case .failed(let message) = viewModel.phase {
                 Text(message)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .font(AppTheme.Typography.helper)
+                    .foregroundStyle(AppTheme.Colors.primary.opacity(0.72))
                     .accessibilityLabel("Today update unavailable: \(message)")
             }
         }
-        .padding(.vertical, 4)
+        .cardStyle(.highlighted)
         .sheet(isPresented: $showsReminderSheet) {
             ReminderSheet(viewModel: reminderViewModel)
         }
@@ -225,19 +229,19 @@ struct TodayCard: View {
     @ViewBuilder
     private var streakLine: some View {
         if let streak = viewModel.streak {
-            HStack(spacing: 8) {
+            HStack(spacing: AppTheme.Spacing.rowSpacing) {
                 Image(systemName: "flame.fill")
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(AppTheme.Colors.warmAccent)
                 Text(streak.streakDays > 0 ? "\(streak.streakDays)-day streak" : "Start your streak today")
-                    .font(.headline)
+                    .font(AppTheme.Typography.cardTitle)
                 if streak.freezes > 0 {
                     Label("\(streak.freezes)", systemImage: "snowflake")
-                        .font(.subheadline)
-                        .foregroundStyle(.cyan)
+                        .font(AppTheme.Typography.helper)
+                        .foregroundStyle(AppTheme.Colors.primary)
                 }
                 if streak.activeToday {
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
+                        .foregroundStyle(AppTheme.Colors.success)
                         .accessibilityLabel("Done for today")
                 }
             }
@@ -245,7 +249,7 @@ struct TodayCard: View {
             .accessibilityLabel(streakAccessibilityLabel(streak))
         } else {
             Label("Today", systemImage: "calendar")
-                .font(.headline)
+                .font(AppTheme.Typography.cardTitle)
         }
     }
 
@@ -259,29 +263,54 @@ struct TodayCard: View {
                         onCompleted()
                     }
                 } label: {
-                    Label("Today: \(title)", systemImage: "book")
+                    targetActionLabel(
+                        title: "Today: \(title)",
+                        systemImage: "book",
+                        duration: "~3 min"
+                    )
                 }
                 .accessibilityElement(children: .combine)
-                .accessibilityLabel("Today’s lesson: \(title)")
+                .accessibilityLabel("Today’s lesson: \(title), about 3 minutes")
             case .review(let lessonID, let title):
                 NavigationLink {
                     LessonDetailView(lessonID: lessonID, mode: .review) { _ in
                         onCompleted()
                     }
                 } label: {
-                    Label("Review: \(title)", systemImage: "arrow.counterclockwise")
+                    targetActionLabel(
+                        title: "Review: \(title)",
+                        systemImage: "arrow.counterclockwise",
+                        duration: "~2 min"
+                    )
                 }
                 .accessibilityElement(children: .combine)
-                .accessibilityLabel("Today’s review: \(title)")
+                .accessibilityLabel("Today’s review: \(title), about 2 minutes")
             case .allComplete:
                 Text("All lessons complete — bring a real conversation to Coaching.")
-                    .foregroundStyle(.secondary)
+                    .font(AppTheme.Typography.helper)
+                    .foregroundStyle(AppTheme.Colors.primary.opacity(0.72))
                     .accessibilityLabel("All lessons complete. Bring a real conversation to Coaching.")
             }
         } else {
             Text("Your next practice will appear here.")
-                .foregroundStyle(.secondary)
+                .font(AppTheme.Typography.helper)
+                .foregroundStyle(AppTheme.Colors.primary.opacity(0.72))
         }
+    }
+
+    private func targetActionLabel(title: String, systemImage: String, duration: String) -> some View {
+        VStack(alignment: .leading, spacing: AppTheme.Spacing.rowSpacing) {
+            Label(title, systemImage: systemImage)
+                .font(AppTheme.Typography.cardTitle)
+            Text(duration)
+                .font(AppTheme.Typography.helper)
+                .foregroundStyle(.white.opacity(0.76))
+        }
+        .foregroundStyle(.white)
+        .frame(maxWidth: .infinity, minHeight: AppTheme.Spacing.minimumTapTarget, alignment: .leading)
+        .padding(.horizontal, AppTheme.Spacing.cardPadding)
+        .background(AppTheme.Colors.primary)
+        .clipShape(RoundedRectangle(cornerRadius: AppTheme.Radius.control, style: .continuous))
     }
 
     static func targetState(for target: TodayTarget) -> TodayCardTargetState {
@@ -309,6 +338,123 @@ struct TodayCard: View {
         }
         return label
     }
+}
+
+#Preview("Today card — Lesson with focus") {
+    TodayCardPreview(
+        streak: StreakResponse(
+            streakDays: 5,
+            activeToday: false,
+            freezes: 1,
+            today: TodayTarget(kind: "lesson", lessonID: "l02-use-the-setting", title: "Use the setting", unitID: "u1")
+        ),
+        onboarding: OnboardingResponse(
+            goal: .meetPeopleAtWork,
+            context: .office,
+            baseline: OnboardingBaseline(warmth: 2, curiosity: 3, reciprocity: 2, flow: 2),
+            emphasis: OnboardingEmphasis(dimension: "curiosity", lessonID: "l02-use-the-setting", title: "Use the setting")
+        )
+    )
+}
+
+#Preview("Today card — Lesson fallback") {
+    TodayCardPreview(
+        streak: StreakResponse(
+            streakDays: 0,
+            activeToday: false,
+            freezes: 0,
+            today: TodayTarget(kind: "lesson", lessonID: "l01-first-hello", title: "First hello", unitID: "u1")
+        )
+    )
+}
+
+#Preview("Today card — Review") {
+    TodayCardPreview(
+        streak: StreakResponse(
+            streakDays: 12,
+            activeToday: true,
+            freezes: 2,
+            today: TodayTarget(kind: "review", lessonID: "l04-answer-and-return", title: "Answer, then return", unitID: "u2")
+        )
+    )
+}
+
+#Preview("Today card — All complete, Dark") {
+    TodayCardPreview(
+        streak: StreakResponse(
+            streakDays: 28,
+            activeToday: true,
+            freezes: 1,
+            today: TodayTarget(kind: "all_complete", lessonID: nil, title: nil, unitID: nil)
+        )
+    )
+    .preferredColorScheme(.dark)
+}
+
+private struct TodayCardPreview: View {
+    @StateObject private var viewModel: TodayViewModel
+
+    init(streak: StreakResponse, onboarding: OnboardingResponse? = nil) {
+        let client = TodayCardPreviewClient(streak: streak, onboarding: onboarding)
+        _viewModel = StateObject(wrappedValue: TodayViewModel(
+            client: client,
+            reviewClient: client,
+            onboardingClient: client,
+            reminderScheduler: TodayCardPreviewReminderScheduler()
+        ))
+    }
+
+    var body: some View {
+        NavigationStack {
+            TodayCard(viewModel: viewModel) {}
+                .padding(AppTheme.Spacing.cardPadding)
+                .appSurface()
+        }
+        .task {
+            await viewModel.load()
+        }
+    }
+}
+
+private final class TodayCardPreviewClient: StreakAPI, ReviewAPI, OnboardingAPI {
+    private let previewStreak: StreakResponse
+    private let previewOnboarding: OnboardingResponse?
+
+    init(streak: StreakResponse, onboarding: OnboardingResponse?) {
+        previewStreak = streak
+        previewOnboarding = onboarding
+    }
+
+    func streak(timezoneIdentifier: String) async throws -> StreakResponse {
+        previewStreak
+    }
+
+    func reviewQueue(timezoneIdentifier: String) async throws -> ReviewQueueResponse {
+        ReviewQueueResponse(due: [])
+    }
+
+    func reviewLesson(id: String, answers: [String: Int]) async throws -> CompletionResponse {
+        throw TodayCardPreviewError.unavailable
+    }
+
+    func submitOnboarding(_ request: OnboardingRequest) async throws -> OnboardingCreated {
+        throw TodayCardPreviewError.unavailable
+    }
+
+    func onboarding() async throws -> OnboardingResponse? {
+        previewOnboarding
+    }
+}
+
+private final class TodayCardPreviewReminderScheduler: ReminderScheduling {
+    func authorizationStatus() async -> ReminderAuthorizationStatus { .authorized }
+    func requestAuthorization() async -> Bool { true }
+    func scheduleDaily(hour: Int, minute: Int) async {}
+    func cancel() async {}
+}
+
+private enum TodayCardPreviewError: Error {
+    case unavailable
 }
 
 private struct ReminderSheet: View {

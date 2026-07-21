@@ -625,3 +625,11 @@ Entry format (keep an entry under ~15 lines):
 - **Files touched:** ios/SmallTalkCoach/CardStyle.swift; WORKER_LOG.md
 - **Result / verification:** Asset-RGB/source-over math gives #EFEDF1 in light mode (default black contrast 18.03:1) and #1A1928 in dark mode (default white contrast 17.27:1). `cd ios && xcodegen generate` and `git diff --check` passed. Simulator-SDK `xcodebuild build` failed at asset compilation because CoreSimulatorService exposes no simulator runtimes.
 - **Open issues:** Real iPhone 16 build and both-appearance screenshot verification require a host with a working simulator runtime.
+
+## 2026-07-21 14:21 UTC — UI quick win #2: elevated Daily Mission card
+- **Model:** gpt-5.6-terra
+- **Status:** partial
+- **What was done:** Applied the highlighted card and typography tokens to TodayCard; added full-width lesson/review CTAs with approximate durations, personalized-or-fallback purpose copy, and four state previews. Cleared only the Today List row's competing background/separator chrome.
+- **Files touched:** ios/SmallTalkCoach/TodayCard.swift; ios/SmallTalkCoach/HomeView.swift; WORKER_LOG.md
+- **Result / verification:** `cd ios && xcodegen generate`, `xcrun swiftc -parse SmallTalkCoach/TodayCard.swift`, and `git diff --check` passed. `xcodebuild build` and full `xcodebuild test` were attempted with workspace-local derived data but stopped in asset compilation: CoreSimulatorService reported no available iOS simulator runtimes; no XCTest cases executed.
+- **Open issues:** Run the iPhone 16 build, full XCTest suite, and light/dark Home screenshot check on a host with a working simulator runtime. The `~3 min`/`~2 min` labels are intentionally type-based approximations; add a real per-lesson duration field only through a future content-model change if greater precision is needed.

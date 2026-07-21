@@ -80,6 +80,8 @@ struct HomeView: View {
                     TodayCard(viewModel: todayViewModel) {
                         Task { await refreshHome() }
                     }
+                    .listRowBackground(Color.clear)
+                    .listRowSeparator(.hidden)
                 }
 
                 Section("Your skills") {

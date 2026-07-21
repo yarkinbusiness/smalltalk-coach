@@ -290,6 +290,52 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-21 (cycle 48 — UI quick win #2: branded Today header +
+  elevated Daily Mission card; ONE ROUND, accepted as specified):**
+  Worker: `gpt-5.6-terra`. First cycle to actually apply quick-win-#1's
+  tokens to a real, already-shipped screen. `TodayCard.swift`: wrapped in
+  `.cardStyle(.highlighted)`, full `AppTheme.Typography`/`.Spacing`
+  adoption, the lesson/review `NavigationLink` restyled as a full-width
+  primary CTA (brand-indigo background, white text, correctly *not*
+  forced through `PrimaryActionButton` — that component's closure/state
+  shape doesn't fit a navigation link, and the spec said not to bend it).
+  A real content-model gap surfaced during the plan review carried
+  through correctly: there is no duration field anywhere in
+  `CONTENT_MODEL_V1.md` or the lesson JSON (verified by grep before
+  writing the spec), so rather than fabricate per-lesson precision the
+  card shows a rough, honestly-`~`-prefixed type estimate ("~3 min"
+  lesson / "~2 min" review) — flagged in both the spec and the worker's
+  own log as a placeholder pending a real content-model decision, not a
+  finished measurement. The "why it matters" line — previously shown
+  only when onboarding-personalization data existed, silently blank for
+  anyone who skipped onboarding — now always renders: the personalized
+  line when available, an honest generic fallback otherwise.
+  `HomeView.swift`'s only change was `.listRowBackground(Color.clear)` +
+  `.listRowSeparator(.hidden)` on the Today row so the new elevated card
+  doesn't sit inside conflicting default List chrome — no section/
+  navigation restructuring, exactly as scoped. Brain verification:
+  grepped the diff for stray `Color.primary`/system-color usage (the
+  exact bug class from cycle 47) — clean, none found. Full test suite
+  re-run independently: 76 passed, 3 pre-existing skips, 0 failures,
+  matching baseline. Real simulator screenshots (not a diagnostic
+  harness this time — `RootView` itself now renders the change) in both
+  light and dark mode: elevated card reads clearly distinct from the
+  plain "Your skills"/unit-list rows below it, CTA button fully legible
+  in both appearances, dark-mode indigo correctly uses the asset
+  catalog's dark variant. Even the pre-existing reminder-bell icon
+  picked up the new brand indigo automatically via the `AccentColor`
+  asset set in cycle 47 — an unplanned, welcome consistency win from
+  having the token system in place before touching real screens. One
+  unrelated finding during verification, not a regression: a stale
+  "How did it go?" reflection sheet appeared on first screenshot,
+  traced to leftover `PendingReflectionStore` (`UserDefaults`-backed)
+  state from earlier sessions' testing on the same simulator, not
+  anything this cycle touched — resolved by a clean uninstall/reinstall,
+  which is now the standing practice for future screenshot checks in
+  this plan's remaining cycles. ACCEPTED as specified — zero rounds of
+  rejection. **Next:** quick win #3 — explicit Coach mode cards ("Help
+  me reply" / "Review my reply") in `CoachingView.swift`.
+
 - **2026-07-21 (cycle 47 — UI quick win #1: design tokens foundation;
   TWO ROUNDS, accepted after fix):** Worker: `gpt-5.6-terra`. Round 1
   added `AppTheme` (colors/spacing/radii/typography/motion tokens),
