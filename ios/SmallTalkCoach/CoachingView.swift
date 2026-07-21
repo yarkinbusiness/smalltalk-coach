@@ -1,5 +1,6 @@
 import SwiftUI
 import PhotosUI
+import UIKit
 
 enum CoachingDisclosureCopy {
     static func lines(for mode: CoachingCompositionMode) -> [String] {
@@ -434,16 +435,63 @@ private struct ReportInterpretationRow: View {
 private struct ExampleResponseSuggestion: View {
     let text: String
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var isCopied = false
+    @State private var copyCount = 0
+    @State private var resetTask: Task<Void, Never>?
+
     var body: some View {
         HStack(alignment: .top, spacing: 8) {
             Image(systemName: "quote.opening")
                 .font(.caption.weight(.bold))
                 .foregroundStyle(.teal)
             Text(text).italic()
+            Spacer(minLength: 0)
+            Button(action: copyText) {
+                HStack(spacing: 4) {
+                    Image(systemName: isCopied ? "checkmark" : "doc.on.doc")
+                        .font(.caption.weight(.bold))
+                    if isCopied {
+                        Text("Copied")
+                            .font(.caption.weight(.semibold))
+                            .transition(.opacity.combined(with: .move(edge: .trailing)))
+                    }
+                }
+                .foregroundStyle(.teal)
+                .frame(minWidth: AppTheme.Spacing.minimumTapTarget, minHeight: AppTheme.Spacing.minimumTapTarget)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(isCopied ? "Copied" : "Copy this example response")
+            .accessibilityHint(isCopied ? "Example response copied to clipboard" : "Copies this example response to the clipboard")
         }
         .padding(12)
         .background(.teal.opacity(0.10), in: RoundedRectangle(cornerRadius: 14))
         .accessibilityLabel("Example response to adapt: \(text)")
+        .sensoryFeedback(.success, trigger: copyCount)
+    }
+
+    private func copyText() {
+        UIPasteboard.general.string = text
+        UIAccessibility.post(notification: .announcement, argument: "Copied")
+        copyCount += 1
+        resetTask?.cancel()
+        setCopied(true)
+
+        resetTask = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(1.5))
+            guard !Task.isCancelled else { return }
+            setCopied(false)
+        }
+    }
+
+    private func setCopied(_ copied: Bool) {
+        if reduceMotion {
+            isCopied = copied
+        } else {
+            withAnimation(AppTheme.Motion.quick) {
+                isCopied = copied
+            }
+        }
     }
 }
 

@@ -290,6 +290,54 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-21 (cycle 52 — UI quick win #5b: copy-to-clipboard + toast +
+  haptic; ONE ROUND, accepted as specified):** Worker: `gpt-5.6-terra`.
+  `ExampleResponseSuggestion` (in `CoachingView.swift`, previously plain
+  quoted text with no copy action) gained a trailing icon button
+  (`doc.on.doc`, teal, `AppTheme.Spacing.minimumTapTarget`-sized hit
+  area). Tapping it: copies the exact source `text` via
+  `UIPasteboard.general.string`; fires `.sensoryFeedback(.success,
+  trigger: copyCount)` (`copyCount` increments on every tap rather than
+  toggling a `Bool`, so the haptic correctly re-fires even on rapid
+  repeat taps — better than the letter of the spec, which just asked for
+  "some Equatable state that flips"); swaps the icon to a checkmark with
+  a "Copied" label for ~1.5s via a cancellable `Task` (cancels any
+  in-flight revert before starting a new one, avoiding a race where a
+  stale revert could fire after a newer tap); and posts a live
+  `UIAccessibility.post(.announcement, "Copied")` in addition to
+  updating the button's own `.accessibilityLabel`/`.accessibilityHint` —
+  exceeds the spec, which only asked for the label update. Reduce Motion
+  respected via the same `@Environment(\.accessibilityReduceMotion)`
+  read established in `SkeletonBlock.swift`: animated with
+  `AppTheme.Motion.quick` when off, state changes instantly with no
+  transition when on. No new dependency added (per spec — built native
+  rather than adopting `exyte/PopupView`, consistent with the
+  `SkeletonBlock`-over-`SwiftUI-Shimmer` precedent from the previous
+  cycle). Existing outer `.accessibilityLabel("Example response to
+  adapt: …")`, padding, background, and corner radius all left
+  untouched as required.
+  **Brain verification:** full source review found no bugs. `xcodegen
+  generate` + `xcodebuild build`/`test` on iPhone 16/iOS 18.2 — 76
+  passed, 3 pre-existing skips, 0 failures, matching baseline, and this
+  time the build compiled clean on the first pass (no SDK surprises like
+  cycle 51's). Visual check via a temporary diagnostic-harness swap
+  (`SmallTalkCoachApp.swift` repointed, `ExampleResponseSuggestion`'s
+  `private` briefly relaxed to reach it directly, both fully reverted
+  after): idle-state button renders correctly in light and dark — clean
+  teal icon, no crowding from the 44pt tap target inside the card's 12pt
+  padding, consistent with the existing quote icon's styling. **Honest
+  scoping note:** the live tap → copy → checkmark/"Copied" → revert
+  interaction cycle itself was not exercised end to end — same
+  structural limitation noted all session (no Accessibility permission
+  for scripted simulator taps, and standing up a throwaway XCUITest
+  target just for this one low-risk check wasn't judged worth the added
+  infrastructure). Confidence instead rests on the idle-state visual
+  confirmation plus a line-by-line review of the tap handler, state
+  machine, and cancellation logic, all of which are straightforward and
+  use standard, SDK-verified-compiling APIs (unlike cycle 51's private-API
+  near-miss, nothing here is exotic). **Next:** quick win #6 — Reduce
+  Motion + XXL Dynamic Type scaffolding (`MotionPolicy`).
+
 - **2026-07-21 (cycle 51 — UI quick win #5a: skeleton loading states +
   richer coaching-history empty state; THREE ROUNDS, accepted):** Worker:
   `gpt-5.6-terra`. New `SkeletonBlock` primitive (subtle

@@ -688,3 +688,16 @@ Entry format (keep an entry under ~15 lines):
 - **Result / verification:** Confirmed no `_accessibilityReduceMotion` reference remains in SkeletonBlock;
   `git diff --check` passed.
 - **Open issues:** none
+
+## 2026-07-21 18:38 UTC — UI quick win #5b: local response copy confirmation
+- **Model:** gpt-5.6-terra
+- **Status:** partial
+- **What was done:** Added an in-row teal copy control to each example response. It copies the exact text,
+  provides native success haptics and a VoiceOver announcement, then shows a local Copied/checkmark state
+  for 1.5 seconds with Reduce Motion-aware animation.
+- **Files touched:** ios/SmallTalkCoach/CoachingView.swift; WORKER_LOG.md
+- **Result / verification:** `cd ios && xcodegen generate`, `xcrun swiftc -parse`, an isolated iOS 17 SDK
+  type-check of the exact haptic/task/accessibility APIs, and `git diff --check` passed. `xcodebuild build`
+  reached asset compilation but failed because CoreSimulatorService exposes no iOS runtimes; iPhone 16 tests
+  could not execute because no simulator destination is available.
+- **Open issues:** Run the full iPhone 16 build/test and verify the real clipboard, haptic, and local confirmation on a host with a working simulator runtime.
