@@ -334,6 +334,7 @@ struct CoachingReportView: View {
     let report: CoachingReport
     private let dimensions = ["warmth", "curiosity", "reciprocity", "flow"]
     @State private var revealedCardCount = 0
+    @AccessibilityFocusState private var isTakeawayFocused: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -349,6 +350,7 @@ struct CoachingReportView: View {
                 ReportCard(accent: .orange, emphasized: true) {
                     Label("Takeaway", systemImage: "lightbulb.fill")
                         .font(.headline)
+                        .accessibilityFocused($isTakeawayFocused)
                     Text(report.diagnosis.transferableTakeaway)
                         .font(.body.weight(.medium))
                 }
@@ -429,6 +431,8 @@ struct CoachingReportView: View {
             }
         }
         .task {
+            isTakeawayFocused = true
+
             if reduceMotion {
                 revealedCardCount = 3
                 return

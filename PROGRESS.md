@@ -315,6 +315,40 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-21 (cycle 59 — VoiceOver focus management; ONE ROUND,
+  accepted as specified):** Worker: `gpt-5.6-terra`. First cycle of the
+  perpetual loop's self-directed backlog (see the research-pass entry
+  below). `CoachingReportView`: new `@AccessibilityFocusState private var
+  isTakeawayFocused`, applied to the Takeaway heading `Label`, set `true`
+  at the very start of the existing reveal `.task` — correctly placed
+  *before* the `if reduceMotion { ...; return }` branch, so focus moves
+  regardless of Reduce Motion (focus and animation are orthogonal
+  concerns; this was worth checking specifically and it's right).
+  `LessonDetailView`: new `@AccessibilityFocusState private var
+  isStepHeadingFocused`, applied externally to the `LessonProgressHeader(...)`
+  call site (matching the established external-modifier precedent from
+  `SkillMetricBar`'s accessibility label in cycle 56) rather than
+  modifying `LessonProgressHeader.swift` itself — confirmed untouched.
+  Set on every `currentStep` change via `.onChange` (fires both
+  directions) and on initial appearance via `.onAppear`. Confirmed no
+  redundant double-fire on first load: `.onChange` doesn't fire for a
+  view's initial state, only `.onAppear` fires once, so the two triggers
+  don't stack on mount.
+  **Brain verification:** full source review found no bugs. This change
+  has zero visual footprint by design (VoiceOver focus isn't visible on
+  screen), so the code trace was the primary verification, not a
+  screenshot — same honest-scoping approach as haptics (cycle 52) and
+  motion-gating (cycle 53), applied here because it's structurally true
+  rather than a tooling limitation this time. `xcodegen generate` +
+  `xcodebuild build`/`test` — 76 passed, 3 pre-existing skips, 0
+  failures. Real launch verified clean (mandatory every cycle
+  regardless): no crash, no visual regression, matching expectations for
+  an accessibility-only change. **Next:** pick the next item from the
+  research-pass backlog below — likely design-token adoption in
+  `CoachingView.swift` (small, mechanical, closes a real gap) before the
+  bigger "continue the coaching loop" Home surface (needs its own
+  scoping pass first).
+
 - **2026-07-21 (PERPETUAL LOOP BEGINS — health check + fresh research
   pass, per the founder's standing directive):** `UI_IMPROVEMENT_PLAN.md`
   is now exhausted except for founder-gated items (#1, #2, #5, #6's

@@ -4,6 +4,7 @@ struct LessonDetailView: View {
     @StateObject private var viewModel: LessonDetailViewModel
     @State private var currentStep: LessonStep = .idea
     @State private var showsCompletionCelebration = false
+    @AccessibilityFocusState private var isStepHeadingFocused: Bool
     private let onCompleted: (String?) -> Void
 
     init(
@@ -58,6 +59,9 @@ struct LessonDetailView: View {
                 onCompleted(unlockedNext)
             }
         }
+        .onChange(of: currentStep) { _, _ in
+            isStepHeadingFocused = true
+        }
     }
 
     private var lessonLoadingSkeleton: some View {
@@ -91,6 +95,7 @@ struct LessonDetailView: View {
                 stepTitle: currentStep.title,
                 isReview: viewModel.mode == .review
             )
+            .accessibilityFocused($isStepHeadingFocused)
 
             ScrollView {
                 currentStepContent(lesson)
@@ -102,6 +107,9 @@ struct LessonDetailView: View {
             .motionAwareAnimation(AppTheme.Motion.standard, value: currentStep)
 
             stepNavigation
+        }
+        .onAppear {
+            isStepHeadingFocused = true
         }
     }
 

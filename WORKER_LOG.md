@@ -758,3 +758,11 @@ Entry format (keep an entry under ~15 lines):
 - **Files touched:** ios/SmallTalkCoach/TodayCard.swift; ios/SmallTalkCoach/LessonDetailView.swift; WORKER_LOG.md
 - **Result / verification:** Used the manual flame fallback, not `.symbolEffect`: the installed iOS 26.5 SDK exposes the API, but the fallback gives explicit `MotionPolicy` Reduce Motion control. `xcrun swiftc -parse` (both files), `cd ios && xcodegen generate`, and `git diff --check` passed. iPhone 16 `xcodebuild build` and `test` were attempted, but CoreSimulatorService exposed no runtimes; the local signing-disabled build stopped in asset compilation for that same reason, so no XCTest cases ran.
 - **Open issues:** Run the iPhone 16 build/test suite and visually verify the standard and Reduce Motion states on a host with a working simulator runtime.
+
+## 2026-07-21 17:07 UTC — VoiceOver focus on report and lesson headings
+- **Model:** gpt-5
+- **Status:** partial
+- **What was done:** Added VoiceOver focus state for the report Takeaway label and the externally applied lesson-progress header. Focus is set when a report task begins, on lesson-content appearance, and after every step change.
+- **Files touched:** ios/SmallTalkCoach/CoachingView.swift; ios/SmallTalkCoach/LessonDetailView.swift; WORKER_LOG.md
+- **Result / verification:** `cd ios && xcodegen generate`, `xcrun swiftc -parse` for both edited views, and `git diff --check` passed. iPhone 16 `xcodebuild build` and `xcodebuild test` were attempted, but CoreSimulatorService became invalid and exposed no simulator runtimes; no XCTest cases ran.
+- **Open issues:** Run the iPhone 16 build and full XCTest suite on a host with a working simulator runtime.
