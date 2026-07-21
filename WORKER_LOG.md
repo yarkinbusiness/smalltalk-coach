@@ -794,3 +794,11 @@ Entry format (keep an entry under ~15 lines):
 - **Files touched:** ios/SmallTalkCoach/LessonDetailView.swift; WORKER_LOG.md
 - **Result / verification:** `cd ios && xcodegen generate`, `xcrun swiftc -parse SmallTalkCoach/LessonDetailView.swift`, and `git diff --check` passed. Simulator build reached asset compilation but failed because CoreSimulatorService has no available iOS runtimes; iPhone 16 `xcodebuild test` could not initialize a simulator, so no XCTest cases ran.
 - **Open issues:** Full iPhone 16 build/test and visual verification need a host with a working CoreSimulatorService.
+
+## 2026-07-21 17:42 UTC — DailyProgressRing on TodayCard
+- **Model:** gpt-5.6-terra
+- **Status:** partial
+- **What was done:** Added an always-rendered binary daily progress ring with a tokenized success track, animated completion/checkmark, Reduce Motion handling, stateful VoiceOver label, and light/dark previews. Replaced only TodayCard’s conditional done checkmark; its existing combined “done for today” label and flame/freeze logic remain unchanged.
+- **Files touched:** ios/SmallTalkCoach/DailyProgressRing.swift; ios/SmallTalkCoach/TodayCard.swift; WORKER_LOG.md
+- **Result / verification:** `cd ios && xcodegen generate`, `xcrun swiftc -parse` for both changed Swift files, and `git diff --check` passed. Simulator `xcodebuild build` reached asset compilation but failed (exit 65) because CoreSimulatorService exposes no iOS runtimes; `xcodebuild test` could not run tests on a concrete simulator (exit 70), so no XCTest cases ran.
+- **Open issues:** Run full build/test and visually inspect light/dark and Reduce Motion behavior on a host with a working iPhone 16 simulator runtime.

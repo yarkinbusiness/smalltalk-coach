@@ -279,11 +279,7 @@ struct TodayCard: View {
                         .font(AppTheme.Typography.helper)
                         .foregroundStyle(AppTheme.Colors.primary)
                 }
-                if streak.activeToday {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(AppTheme.Colors.success)
-                        .accessibilityLabel("Done for today")
-                }
+                DailyProgressRing(isComplete: streak.activeToday)
             }
             .accessibilityElement(children: .combine)
             .accessibilityLabel(streakAccessibilityLabel(streak))

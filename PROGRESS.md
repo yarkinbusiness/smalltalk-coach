@@ -315,6 +315,47 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-21 (cycle 63 — DailyProgressRing on TodayCard; ONE ROUND,
+  accepted as specified):** Worker: `gpt-5.6-terra`. Fifth perpetual-
+  loop cycle. New `DailyProgressRing.swift`: a small binary (0/1)
+  circular progress indicator — track + trimmed completion stroke +
+  checkmark, `AppTheme.Colors.success`-toned, animated via
+  `.motionAwareAnimation(AppTheme.Motion.celebrate, value: isComplete)`
+  — replaces `TodayCard`'s old plain `"checkmark.circle.fill"` icon
+  (previously only rendered *when* done, giving VoiceOver users no
+  signal at all in the not-done state). The ring is now always present,
+  visually representing both states. Matches three separate research
+  callouts in one component: "Daily progress strip: 0/1 action," "Animate
+  the Today progress ring after completion," and the component plan's
+  named `DailyProgressRing`.
+  **Verified, not just trusted — a real accessibility-composition
+  question worth tracing precisely:** the ring's own internal
+  `.accessibilityLabel` turns out to be inert in this specific embedding
+  — `streakLine`'s outer `HStack` has `.accessibilityElement(children:
+  .combine)` *plus* an explicit `.accessibilityLabel(streakAccessibilityLabel(streak))`,
+  and an explicit parent label wins over child combination. Checked
+  `streakAccessibilityLabel(_:)` directly (line 367): it already
+  independently appends `", done for today"` when `activeToday` is true,
+  unrelated to and unchanged by this diff — so the VoiceOver signal is
+  genuinely preserved, just via the pre-existing mechanism rather than
+  the ring's new one. Not a regression; the ring's own label is still
+  reasonable, forward-looking practice for any future reuse outside this
+  specific combined-parent context.
+  **Brain verification:** full source review found no other issues.
+  `xcodegen generate` + `xcodebuild build`/`test` — 76 passed, 3
+  pre-existing skips, 0 failures. Real Home screenshot (live backend,
+  current user's `activeToday: true` state) confirmed the completed ring
+  renders correctly in both light and dark — a genuine visual upgrade
+  from the old flat checkmark, clearly showing an outlined progress ring.
+  The empty-ring state wasn't separately re-screenshotted in the real
+  app (no easy way to force it without a fresh non-active-today user);
+  relied on the component's own two-state `#Preview` coverage (already
+  reviewed, both states present, light and dark) plus the simple,
+  single-branch `trim(from:to:)` logic being equally low-risk for either
+  state. **This closes out the perpetual loop's initial research
+  backlog except for the matched-geometry answer-feedback morph**
+  (flagged from the start as fussier, worth scoping carefully — next).
+
 - **2026-07-21 (cycle 62 — Differentiate Without Color: ChoiceButton fix
   + bounded audit; ONE ROUND, accepted as specified):** Worker:
   `gpt-5.6-terra`. Fourth perpetual-loop cycle. `ChoiceButton`
