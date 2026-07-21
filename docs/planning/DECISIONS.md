@@ -180,6 +180,96 @@ Use this file to preserve important product decisions and prevent the same quest
   launch (ToS subscription section); or a privacy review recommending
   auto-expiry.
 
+### 2026-07-21 — Screenshot Vision-Quality Eval Deferred Until Wider Launch
+
+- **Status:** Confirmed (founder decision)
+- **Decision:** The real-screenshot quality eval (COACHING_PIPELINE_V1 §6,
+  harness shipped `docs/planning/ROADMAP_REVIEW_2026-07-20.md` task T-B,
+  cycle 25) is deferred — no consented screenshots provided now, no eval
+  run yet. Revisit trigger is explicit, not silent: **before the app is
+  opened to wider/public use beyond the current small-scale/TestFlight
+  footprint.**
+- **Why:** Founder judgment 2026-07-21: real-world exposure at current
+  scale is low risk; the harness runs in one command whenever real
+  screenshots are provided, so there's no cost to waiting.
+- **Consequence:** Vision-extraction quality on real chat screenshots
+  (as opposed to synthetic/mock cases) remains formally unverified.
+  `backend/eval/vision_cases/real/` stays empty until this trigger fires.
+- **Revisit trigger:** Any concrete step toward wider/public launch
+  (App Store submission, broader TestFlight cohort, marketing push) —
+  run the eval before that step, not after.
+
+### 2026-07-21 — T-K Paywall: Infrastructure Now, Pricing Deferred
+
+- **Status:** Confirmed (founder decision)
+- **Decision:** Build StoreKit 2 purchase/restore/entitlement
+  infrastructure now, gated behind one feature flag defaulting to
+  **off** (today's fully-free behavior is unchanged until the flag
+  flips). The actual price point and free-tier boundary are explicitly
+  **not** decided in this entry — deferred to a dedicated pricing-test
+  decision before the flag ever ships on.
+- **Why:** PRODUCT_BRIEF §16 lists pricing as an open discovery
+  question; validation interviews were waived
+  (`docs/planning/DECISIONS.md` → "2026-07-18 — Validation Interviews
+  Deferred"), so there is zero direct willingness-to-pay evidence.
+  Building the infra now unblocks the code without locking in an
+  unvalidated number; Gleam's $12.99/mo–$69.99/yr anchor and its
+  paywall-aggression complaints (`DECISIONS.md` → "2026-07-17 — V1
+  Target Segment") remain the reference point for the eventual number.
+- **Consequence:** Implementation uses a local StoreKit Configuration
+  file for testing (no App Store Connect product setup needed yet, no
+  real transactions possible); no external payment links (Guideline
+  3.1.1). See `docs/planning/ROADMAP_REVIEW_2026-07-20.md` task T-K for
+  the original acceptance-criteria sketch (now superseded in scope by
+  this entry — infra ships, numbers don't).
+- **Revisit trigger:** Founder sets a concrete price + free-tier
+  boundary → flip the flag on in a follow-up decision entry.
+
+### 2026-07-21 — T-L Free-Draft Grading Approved, $5/mo Ceiling
+
+- **Status:** Confirmed (founder decision)
+- **Decision:** Lesson `free_draft` completion-check parts (currently
+  "deferred-v1," ungraded, on-device only per `CONTENT_MODEL_V1.md`)
+  become AI-graded via the existing Haiku-locked diagnosis adapter,
+  bounded by a hard **$5/month spend ceiling** specific to this feature
+  — tracked separately from (additive to) existing coaching spend.
+  Requests beyond the ceiling fail closed with a stable error, not a
+  silent fallback.
+- **Why:** Founder approved this as "the highest-leverage use of the
+  response-oriented pipeline" (BRIEF Flow C) at a modeled cost of
+  ~$0.001–$0.003/draft on Haiku, but chose the **strict** tier over a
+  more generous or unlimited one — consistent with the standing "very
+  limited API budget, cost floor takes priority" rule (root
+  `DECISIONS.md` → "2026-07-19 — Coaching Models Locked to Haiku 4.5
+  Only").
+- **Consequence:** New backend grading surface for `free_draft` parts;
+  new in-memory monthly-window cost tracker (same architectural pattern
+  as the T-J coaching rate limiter — `backend/app/coaching.py`
+  `_RateLimiter`, cycle 41); iOS gains a submit-draft-for-feedback flow
+  where today's UI explicitly says drafts are "not submitted." Content
+  model's `free_draft` kind moves from "deferred-v1" toward a real
+  grading contract.
+- **Revisit trigger:** $5/mo proves too tight in practice (raise it,
+  founder call) or usage data suggests the feature isn't earning its
+  cost (pull it back to ungraded).
+
+### 2026-07-21 — Anthropic Test-Key Rotation Scheduled, Not Immediate
+
+- **Status:** Confirmed (founder decision)
+- **Decision:** The test key in `~/.env` (transited chat once at
+  founder's explicit acceptance, 2026-07-19 milestone) is **not**
+  rotated now. It stays scheduled as an owed action, to be completed
+  before any production/wider exposure — not urgent at current
+  local-only usage.
+- **Why:** Founder judgment 2026-07-21: no immediate action needed;
+  rotation requires the founder's own Anthropic console access and a
+  `~/.env` edit, neither reachable from this sandbox by design.
+- **Consequence:** None to app behavior. Tracked as an open item in
+  `PROGRESS.md` until done.
+- **Revisit trigger:** Any step toward production/wider deployment
+  (same trigger class as the vision-eval deferral above) — rotate
+  before that step.
+
 ## Decision Template
 
 ### YYYY-MM-DD — Short Decision Name

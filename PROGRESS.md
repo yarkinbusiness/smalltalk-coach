@@ -69,16 +69,45 @@ deterministic — no new API calls) and the existing loop protocol.
       design). Founder action, whenever convenient: generate a new key
       → replace the value in `~/.env` → revoke the old one. Does not
       block anything else in the loop.
-- **P3 (founder-gated decisions):**
-  11. **T-K** — paywall experiment scaffolding (StoreKit 2, flag off) —
-      gated on founder pricing + free-tier decision.
-  12. **T-L** — free-draft grading costed proposal (docs-only) — gated
-      on founder budget approval.
 - ~~**T-G2** — deterministic runtime answer-option permutation~~ — done
   (cycle 43; root `DECISIONS.md` → "2026-07-21 — T-G2 Resolved").
   Backend-only, zero iOS changes needed.
-- **Standing founder-gated item:** vision-quality eval on real consented
-  screenshots (runs via the T-B harness once the founder provides them).
+
+## v3 roadmap — founder decisions resolved 2026-07-21, executing now
+
+All four founder gates from the v2 backlog were resolved in one session
+(decisions recorded in `docs/planning/DECISIONS.md`, four entries dated
+2026-07-21: "Screenshot Vision-Quality Eval Deferred...", "T-K Paywall:
+Infrastructure Now...", "T-L Free-Draft Grading Approved...", "Anthropic
+Test-Key Rotation Scheduled..."). Two are pure deferrals (no code work);
+two are now actionable and scoped below.
+
+- **Deferred, not actionable (tracked, not blocking):**
+  1. Real-screenshot vision eval — trigger: before wider/public launch.
+  2. Anthropic test-key rotation — trigger: same as above; founder action
+     only (console + `~/.env`), not reachable from this loop.
+- **Actionable now, in priority order:**
+  3. **T-K (scoped): StoreKit 2 paywall infrastructure, flag off.**
+     iOS-only (no backend change — nothing paid exists yet to gate
+     server-side). Local StoreKit Configuration file for testing, no
+     App Store Connect product setup needed. Purchase/restore flow +
+     entitlement state via `Transaction.currentEntitlements` (StoreKit
+     2's correct pattern, not a custom flag store). One feature flag
+     gates whether ANY paywall UI shows at all, default **off** — app
+     behavior is unchanged from today until the founder sets a price
+     and flips it. No external payment links (Guideline 3.1.1).
+  4. **T-L (scoped): free-draft grading + $5/mo cost ceiling.** Backend:
+     new grading path for `free_draft` completion-check parts reusing
+     the Haiku-locked diagnosis adapter; new in-memory monthly-window
+     cost tracker (same architectural pattern as T-J's coaching rate
+     limiter, `_RateLimiter` in `coaching.py`) computed from real
+     response usage/token counts, hard ceiling $5/month, fails closed
+     with a stable error past the ceiling — never silently ungrades.
+     iOS: `free_draft` parts move from "not submitted, on-device only"
+     to an actual submit-for-feedback flow.
+  Sequenced T-K before T-L: T-K is scoped, low-risk, self-contained
+  infrastructure; T-L is new-surface work with a new cost-tracking
+  mechanism, closer in nature to a feature build than scaffolding.
 
 **2026-07-18: BUILD MODE — build start approved, scope gate
 lifted.** Founder delegated the go/no-go to the brain (records: root
