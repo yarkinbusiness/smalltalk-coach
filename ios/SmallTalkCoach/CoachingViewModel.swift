@@ -341,9 +341,14 @@ final class CoachingHistoryViewModel: ObservableObject {
     @Published private(set) var phase: Phase = .idle
 
     private let client: any CoachingAPI
+    private let pendingReflectionStore: PendingReflectionStore
 
-    init(client: any CoachingAPI = APIClient()) {
+    init(
+        client: any CoachingAPI = APIClient(),
+        pendingReflectionStore: PendingReflectionStore = PendingReflectionStore()
+    ) {
         self.client = client
+        self.pendingReflectionStore = pendingReflectionStore
     }
 
     func load() async {
@@ -362,6 +367,19 @@ final class CoachingHistoryViewModel: ObservableObject {
             reports.removeAll { $0.id == summary.id }
         } catch {
             phase = .failed(error.localizedDescription)
+        }
+    }
+
+    func deleteAllCoachingData() async -> Bool {
+        do {
+            _ = try await client.deleteAllCoachingData()
+            reports = []
+            pendingReflectionStore.clear()
+            await load()
+            return true
+        } catch {
+            phase = .failed(CoachingErrorState.from(error).message)
+            return false
         }
     }
 }

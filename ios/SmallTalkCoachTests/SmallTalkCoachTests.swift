@@ -1131,6 +1131,59 @@ final class SmallTalkCoachTests: XCTestCase {
     }
 
     @MainActor
+    func testDeleteAllCoachingDataClearsHistoryAndPendingReflection() async throws {
+        let summary = CoachingReportSummary(id: "cr_123", createdAt: "2026-07-18T12:00:00+00:00", sourceKind: "text", weakestDimension: "flow", lessonID: "l06-follow-the-thread")
+        let suiteName = "DeleteAllCoachingData-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let creatingStore = PendingReflectionStore(defaults: defaults, sessionToken: "creating")
+        creatingStore.setPending(kind: "report", id: summary.id, title: "your coaching practice action")
+        let pendingStore = PendingReflectionStore(defaults: defaults, sessionToken: "pending")
+        let client = StubCoachingAPI(summariesResult: .success([summary]))
+        let viewModel = CoachingHistoryViewModel(client: client, pendingReflectionStore: pendingStore)
+
+        await viewModel.load()
+        let didDelete = await viewModel.deleteAllCoachingData()
+
+        XCTAssertTrue(didDelete)
+        XCTAssertEqual(client.deleteAllCallCount, 1)
+        XCTAssertTrue(viewModel.reports.isEmpty)
+        XCTAssertNil(pendingStore.pending())
+    }
+
+    @MainActor
+    func testDeleteAllCoachingDataFailureLeavesHistoryAndPendingReflection() async throws {
+        let summary = CoachingReportSummary(id: "cr_123", createdAt: "2026-07-18T12:00:00+00:00", sourceKind: "text", weakestDimension: "flow", lessonID: "l06-follow-the-thread")
+        let suiteName = "DeleteAllCoachingDataFailure-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let creatingStore = PendingReflectionStore(defaults: defaults, sessionToken: "creating")
+        creatingStore.setPending(kind: "report", id: summary.id, title: "your coaching practice action")
+        let pendingStore = PendingReflectionStore(defaults: defaults, sessionToken: "pending")
+        let client = StubCoachingAPI(
+            deleteAllResult: .failure(APIClientError.server(statusCode: 500, detail: "server_error")),
+            summariesResult: .success([summary])
+        )
+        let viewModel = CoachingHistoryViewModel(client: client, pendingReflectionStore: pendingStore)
+
+        await viewModel.load()
+        let didDelete = await viewModel.deleteAllCoachingData()
+
+        XCTAssertFalse(didDelete)
+        XCTAssertEqual(client.deleteAllCallCount, 1)
+        XCTAssertEqual(viewModel.reports, [summary])
+        XCTAssertNotNil(pendingStore.pending())
+    }
+
+    func testCoachingDataDeletedDecodesCounts() throws {
+        let decoded = try JSONDecoder().decode(
+            CoachingDataDeleted.self,
+            from: Data("{\"reports_deleted\":2,\"reflections_deleted\":3}".utf8)
+        )
+        XCTAssertEqual(decoded, CoachingDataDeleted(reportsDeleted: 2, reflectionsDeleted: 3))
+    }
+
+    @MainActor
     func testDetailViewModelRequiresAllChoicesAndBuildsStringKeyedAnswers() {
         let viewModel = LessonDetailViewModel(lesson: detailLesson(), client: StubLessonAPI())
 
@@ -1429,7 +1482,9 @@ private final class StubCoachingAPI: CoachingAPI {
     var screenshotResult: Result<CoachingDiagnosisJob, Error>
     var pollResults: [Result<CoachingDiagnosisJobResponse, Error>]
     var summariesResult: Result<[CoachingReportSummary], Error>
+    var deleteAllResult: Result<CoachingDataDeleted, Error>
     var deletedIDs: [String] = []
+    var deleteAllCallCount = 0
     var diagnosisRequestCount = 0
     var screenshotRequestCount = 0
     var polledJobIDs: [String] = []
@@ -1438,11 +1493,13 @@ private final class StubCoachingAPI: CoachingAPI {
         diagnosisResult: Result<CoachingDiagnosisResponse, Error> = .failure(StubError.unused),
         screenshotResult: Result<CoachingDiagnosisJob, Error> = .failure(StubError.unused),
         pollResults: [Result<CoachingDiagnosisJobResponse, Error>] = [],
+        deleteAllResult: Result<CoachingDataDeleted, Error> = .success(CoachingDataDeleted(reportsDeleted: 0, reflectionsDeleted: 0)),
         summariesResult: Result<[CoachingReportSummary], Error> = .success([])
     ) {
         self.diagnosisResult = diagnosisResult
         self.screenshotResult = screenshotResult
         self.pollResults = pollResults
+        self.deleteAllResult = deleteAllResult
         self.summariesResult = summariesResult
     }
 
@@ -1463,6 +1520,12 @@ private final class StubCoachingAPI: CoachingAPI {
     func coachingReports() async throws -> [CoachingReportSummary] { try summariesResult.get() }
     func coachingReport(id: String) async throws -> CoachingReport { Self.sampleReport }
     func deleteCoachingReport(id: String) async throws { deletedIDs.append(id) }
+    func deleteAllCoachingData() async throws -> CoachingDataDeleted {
+        deleteAllCallCount += 1
+        let result = try deleteAllResult.get()
+        summariesResult = .success([])
+        return result
+    }
 
     static let sampleReport = CoachingReport(
             id: "cr_123", status: "completed",

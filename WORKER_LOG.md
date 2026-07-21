@@ -464,3 +464,11 @@ Entry format (keep an entry under ~15 lines):
 - **Result / verification:** `backend/.venv/bin/python -m pytest backend/tests -q`:
   98 passed, 1 skipped, 1 warning; standalone real-loader audit passed for 12 lessons; `git diff --check` passed.
 - **Open issues:** none
+
+## 2026-07-21 08:40 UTC — T-I account-wide coaching-data deletion (code)
+- **Model:** gpt-5.6-terra
+- **Status:** partial
+- **What was done:** Added idempotent, ownership-scoped deletion of coaching reports/transcripts and reflections, preserving learning data. Added the iOS destructive confirmation, typed API response, state/pending-reflection clearing, history reload, and focused fake-backed tests.
+- **Files touched:** backend/app/store.py; backend/app/main.py; backend/tests/test_deletion.py; backend/README.md; ios/SmallTalkCoach/{APIClient,CoachingView,CoachingViewModel,Models}.swift; ios/SmallTalkCoachTests/SmallTalkCoachTests.swift; WORKER_LOG.md
+- **Result / verification:** `backend/.venv/bin/python -m pytest backend/tests -q`: 102 passed, 1 skipped, 1 warning. `xcodegen generate` and generic simulator `xcodebuild build-for-testing` succeeded; `git diff --check` passed. Named iPhone 16 XCTest was attempted but CoreSimulatorService had no available runtime.
+- **Open issues:** XCTest execution and simulator launch require a working CoreSimulatorService.

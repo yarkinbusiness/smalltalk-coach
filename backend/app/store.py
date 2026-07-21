@@ -304,6 +304,21 @@ class ProgressStore:
             ).fetchall()
         return [dict(row) for row in rows]
 
+    def delete_coaching_data(self, user_id: str) -> dict[str, int]:
+        """Delete all conversation-derived data for one user in one transaction."""
+        with closing(self._connect()) as connection:
+            with connection:
+                reports_deleted = connection.execute(
+                    "DELETE FROM coaching_reports WHERE user_id = ?", (user_id,)
+                ).rowcount
+                reflections_deleted = connection.execute(
+                    "DELETE FROM reflections WHERE user_id = ?", (user_id,)
+                ).rowcount
+        return {
+            "reports_deleted": reports_deleted,
+            "reflections_deleted": reflections_deleted,
+        }
+
     def delete_coaching_report(self, report_id: str, user_id: str) -> bool:
         """Delete the single record containing both report and transcript atomically."""
         with closing(self._connect()) as connection:

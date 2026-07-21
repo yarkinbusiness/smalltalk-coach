@@ -21,4 +21,5 @@ and review submissions, the coaching routes, `GET /users/{user_id}/streak?tz=<IA
 `GET /users/{user_id}/review-queue?tz=<IANA timezone>`, and
 `GET /users/{user_id}/profile`, plus reflection creation and history at
 `POST`/`GET /users/{user_id}/reflections`, and onboarding at
-`POST`/`GET /users/{user_id}/onboarding`.
+`POST`/`GET /users/{user_id}/onboarding`. `DELETE /users/{user_id}/coaching-data`
+removes coaching reports (including transcripts) and reflections while keeping lesson progress.

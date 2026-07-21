@@ -31,7 +31,11 @@ struct CoachingView: View {
             .toolbar {
                 if case .available = viewModel.availability {
                     ToolbarItem(placement: .topBarTrailing) {
-                        NavigationLink("History") { CoachingHistoryView() }
+                        NavigationLink("History") {
+                            CoachingHistoryView {
+                                viewModel.beginNewComposition()
+                            }
+                        }
                     }
                 }
             }
@@ -362,13 +366,26 @@ private struct EvidenceRow: View {
 @MainActor
 private struct CoachingHistoryView: View {
     @StateObject private var viewModel: CoachingHistoryViewModel
+    @State private var showsDeleteAllConfirmation = false
+    @State private var showsDeletionConfirmation = false
+    private let onCoachingDataDeleted: () -> Void
 
     init() {
         _viewModel = StateObject(wrappedValue: CoachingHistoryViewModel())
+        onCoachingDataDeleted = {}
     }
 
-    init(viewModel: CoachingHistoryViewModel) {
+    init(
+        viewModel: CoachingHistoryViewModel,
+        onCoachingDataDeleted: @escaping () -> Void = {}
+    ) {
         _viewModel = StateObject(wrappedValue: viewModel)
+        self.onCoachingDataDeleted = onCoachingDataDeleted
+    }
+
+    init(onCoachingDataDeleted: @escaping () -> Void) {
+        _viewModel = StateObject(wrappedValue: CoachingHistoryViewModel())
+        self.onCoachingDataDeleted = onCoachingDataDeleted
     }
 
     var body: some View {
@@ -379,10 +396,16 @@ private struct CoachingHistoryView: View {
             case .failed(let message) where viewModel.reports.isEmpty:
                 failed(message)
             default:
-                if viewModel.reports.isEmpty {
-                    ContentUnavailableView("No coaching reports yet", systemImage: "clock", description: Text("Your completed conversation analyses will appear here."))
-                } else {
-                    List {
+                List {
+                    if case .failed(let message) = viewModel.phase {
+                        Section {
+                            Text(message).foregroundStyle(.red)
+                        }
+                    }
+                    if viewModel.reports.isEmpty {
+                        ContentUnavailableView("No coaching reports yet", systemImage: "clock", description: Text("Your completed conversation analyses will appear here."))
+                    } else {
+                        Section {
                         ForEach(viewModel.reports) { summary in
                             NavigationLink { CoachingReportDetailView(reportID: summary.id) } label: {
                                 VStack(alignment: .leading, spacing: 4) {
@@ -394,13 +417,39 @@ private struct CoachingHistoryView: View {
                         .onDelete { offsets in
                             for offset in offsets { let summary = viewModel.reports[offset]; Task { await viewModel.delete(summary) } }
                         }
+                        }
                     }
-                    .refreshable { await viewModel.load() }
+
+                    Section {
+                        Button("Delete all coaching data", role: .destructive) {
+                            showsDeleteAllConfirmation = true
+                        }
+                    }
                 }
+                .refreshable { await viewModel.load() }
             }
         }
         .navigationTitle("Coaching history")
         .task { await viewModel.load() }
+        .confirmationDialog(
+            "Delete all coaching data?",
+            isPresented: $showsDeleteAllConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Delete all coaching data", role: .destructive) {
+                Task {
+                    if await viewModel.deleteAllCoachingData() {
+                        onCoachingDataDeleted()
+                        showsDeletionConfirmation = true
+                    }
+                }
+            }
+        } message: {
+            Text("This deletes all your coaching reports, transcripts, and reflections from the server. Lesson progress and streaks are kept. This cannot be undone.")
+        }
+        .alert("Coaching data deleted", isPresented: $showsDeletionConfirmation) {
+            Button("OK", role: .cancel) {}
+        }
     }
 
     private func failed(_ message: String) -> some View {

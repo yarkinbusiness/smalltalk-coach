@@ -325,6 +325,11 @@ def create_app(
         store = progress_store_for(request)
         return _profile_for(store, user_id, curriculum_for(request))
 
+    @app.delete("/users/{user_id}/coaching-data")
+    def delete_coaching_data(user_id: str, request: Request) -> dict[str, int]:
+        user_id = _require_user_id(user_id)
+        return progress_store_for(request).delete_coaching_data(user_id)
+
     @app.post("/users/{user_id}/onboarding", status_code=201)
     def create_onboarding(
         user_id: str,

@@ -228,6 +228,25 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-21 (cycle 37 — T-I code half: account-wide deletion):**
+  Worker: `gpt-5.6-terra`, one round, honest partial (sandbox blocks
+  simulator; brain ran tests). `DELETE /users/{id}/coaching-data` wipes
+  coaching_reports + reflections in one transaction (counts returned,
+  idempotent, ownership-safe); learning data (completions, reviews,
+  onboarding → streaks) explicitly survives; iOS "Delete all coaching
+  data" control with keep/delete confirmation, clears report state +
+  pending reflection on success only. 4 backend + 3 iOS tests. Brain
+  verification: **102 backend passed, 1 skipped** + **60 XCTests, 0
+  failures** (own runs); live probes (counts, idempotent zeros, streak
+  survival) correct; simulator launch clean — ACCEPTED. **Launch
+  verification also surfaced a latent cycle-35 bug** (logged as cycle
+  38): RootView presents onboarding via a get-only no-op Binding, and
+  when SwiftUI's first presentation attempt misfires it writes into the
+  no-op setter and never retries — app defaults confirmed unset yet no
+  cover presented on relaunch. Feature-logic fix routed to a worker
+  micro-cycle, not brain-implemented. **Next:** cycle 38 micro-fix,
+  then the T-I docs half (founder question pending).
+
 - **2026-07-21 (cycle 36 — truth-sync; audit-response complete):**
   External audit response, executed under the founder's instruction.
   Worker: `gpt-5.6-terra`, one round. VISION.md Phase 2 annotations

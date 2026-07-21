@@ -36,6 +36,7 @@ protocol CoachingAPI {
     func coachingReports() async throws -> [CoachingReportSummary]
     func coachingReport(id: String) async throws -> CoachingReport
     func deleteCoachingReport(id: String) async throws
+    func deleteAllCoachingData() async throws -> CoachingDataDeleted
 }
 
 struct APIConfiguration {
@@ -265,6 +266,12 @@ struct APIClient: LessonAPI, StreakAPI, ReviewAPI, ProfileAPI, ReflectionAPI, On
         ))
         request.httpMethod = "DELETE"
         _ = try await sendData(request)
+    }
+
+    func deleteAllCoachingData() async throws -> CoachingDataDeleted {
+        var request = URLRequest(url: try url(path: "users/\(userIdentityStore.userID())/coaching-data"))
+        request.httpMethod = "DELETE"
+        return try await send(request)
     }
 
     private func send<Response: Decodable>(path: String, queryItems: [URLQueryItem] = []) async throws -> Response {

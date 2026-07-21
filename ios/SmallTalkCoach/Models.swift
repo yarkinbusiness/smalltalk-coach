@@ -391,6 +391,16 @@ struct CoachingReportSummary: Codable, Equatable, Identifiable {
     }
 }
 
+struct CoachingDataDeleted: Codable, Equatable {
+    let reportsDeleted: Int
+    let reflectionsDeleted: Int
+
+    enum CodingKeys: String, CodingKey {
+        case reportsDeleted = "reports_deleted"
+        case reflectionsDeleted = "reflections_deleted"
+    }
+}
+
 struct CurriculumResponse: Codable, Equatable {
     let units: [CurriculumUnit]
 }
