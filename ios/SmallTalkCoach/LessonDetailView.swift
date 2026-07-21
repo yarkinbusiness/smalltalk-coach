@@ -24,9 +24,9 @@ struct LessonDetailView: View {
         Group {
             switch viewModel.loadPhase {
             case .loading:
-                ProgressView("Loading lesson…")
+                lessonLoadingSkeleton
             case .idle where viewModel.lesson == nil:
-                ProgressView("Loading lesson…")
+                lessonLoadingSkeleton
             case .failed(let message) where viewModel.lesson == nil:
                 ContentUnavailableView {
                     Label("Couldn’t load this lesson", systemImage: "exclamationmark.triangle")
@@ -53,6 +53,29 @@ struct LessonDetailView: View {
                 onCompleted(unlockedNext)
             }
         }
+    }
+
+    private var lessonLoadingSkeleton: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: AppTheme.Spacing.sectionSpacing) {
+                SkeletonBlock(width: 184, height: 26)
+                ForEach(0..<3, id: \.self) { index in
+                    VStack(alignment: .leading, spacing: AppTheme.Spacing.rowSpacing) {
+                        SkeletonBlock(width: index == 0 ? 98 : 132, height: 18)
+                        SkeletonBlock(height: index == 1 ? 72 : 16)
+                        SkeletonBlock(width: index == 1 ? 184 : 236, height: 16)
+                        if index == 2 {
+                            SkeletonBlock(height: 44)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .cardStyle()
+                }
+            }
+            .padding(AppTheme.Spacing.cardPadding)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Loading lesson")
     }
 
     private func lessonContent(_ lesson: Lesson) -> some View {

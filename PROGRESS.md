@@ -290,6 +290,97 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-21 (cycle 51 — UI quick win #5a: skeleton loading states +
+  richer coaching-history empty state; THREE ROUNDS, accepted):** Worker:
+  `gpt-5.6-terra`. New `SkeletonBlock` primitive (subtle
+  `AppTheme.Colors.primary`-tinted rounded rect, pulse animation,
+  static Reduce-Motion fallback) applied to all five scoped loading
+  spots (`HomeView` curriculum, `CoachingView`'s `.checking` state,
+  `CoachingHistoryView` loading, `ProfileView`, `LessonDetailView`),
+  each composed into a shape-appropriate silhouette (row/card stacks
+  matching the eventual content) rather than one undifferentiated
+  block. `CoachingHistoryView`'s empty state replaced with a headline,
+  a static sample report-row mockup, supporting copy, and an "Analyze
+  your first conversation" button wired through a new
+  `onStartComposing` closure (default `{}`, threaded from
+  `CoachingView`'s `NavigationLink("History")` call site) that resets
+  the composer and dismisses back via `NavigationStack`'s
+  `@Environment(\.dismiss)`. `ProfileView`'s existing empty-state copy
+  left untouched per spec.
+  **Round 1** (worker self-reported "partial," sandbox had no simulator
+  runtime): source review of all five files found the composition,
+  token usage, and accessibility collapsing (`.accessibilityElement
+  (children: .ignore)` + a single descriptive label, so VoiceOver
+  doesn't read out placeholder blocks) all correct — but the brain's
+  own independent `xcodebuild build`/`test` (Xcode 26.6, iOS 26.5 SDK)
+  failed outright: `SkeletonBlock.swift`'s second `#Preview` used
+  `.environment(\.accessibilityReduceMotion, true)`, and
+  `accessibilityReduceMotion` has no public setter in this SDK
+  (`KeyPath` vs required `WritableKeyPath`) — confirmed not a local
+  shadowing issue (no custom `EnvironmentValues` extension anywhere in
+  the codebase). This failed the whole target, so 0 of 76 tests ran;
+  the worker's own sandbox couldn't have caught it (its log already
+  flagged that Preview-macro type-checking is blocked there). Also
+  flagged in the same round: `opacity` computed `1.15` for the pulsed
+  state, outside SwiftUI's valid `0...1` range (silently clamped, not
+  broken, just imprecise). Rejected with both itemized.
+  **Round 2:** fixed the opacity bound to `1.0` correctly, but "fixed"
+  the compile error by switching to `\._accessibilityReduceMotion` — a
+  leading-underscore SwiftUI symbol, i.e. private/unsupported SPI, not
+  public API. It compiles and is confined to a `#Preview` block (never
+  ships in the archived binary, so zero App Store risk), but the brain
+  rejected it anyway: private-API patterns shouldn't sit in the
+  codebase even in dead preview code, since it invites copy-paste into
+  code that does ship, and a fully safe fallback (delete the one
+  preview variant) was already pre-approved in the round-2 spec.
+  **Round 3 (final, at the loop's 3-round cap):** worker deleted the
+  `.environment(\._accessibilityReduceMotion, true)` line and the
+  `#Preview("Skeleton blocks — Reduce Motion")` block it lived in,
+  leaving the primary preview and the legitimate public, read-only
+  `@Environment(\.accessibilityReduceMotion)` production usage
+  untouched. Verified clean: `grep` confirms zero `_accessibilityReduceMotion`
+  references remain and exactly one `#Preview` block.
+  **Brain verification (independent):** `xcodegen generate` +
+  `xcodebuild build`/`test` on iPhone 16/iOS 18.2 — 76 passed, 3
+  pre-existing skips, 0 failures, matching baseline exactly. Visual
+  check via three diagnostic-harness swaps (`SmallTalkCoachApp.swift`
+  temporarily repointed, plus a temporary, fully-reverted
+  `private struct` → `struct` relaxation on `CoachingHistoryView` to
+  reach it directly), each reverted before finalizing: (1)
+  `SkeletonBlock`'s own preview content, light + dark — clean, subtle
+  placeholder blocks, pulse cap looks correct; (2) `CoachingHistoryView`'s
+  new empty state on a fresh install (zero reports, real backend),
+  light + dark — headline, sample "Focus: Curiosity" card, supporting
+  copy, and the full-width "Analyze your first conversation" button all
+  render correctly and legibly, "Delete all coaching data" still
+  present below and unbroken; (3) the real `HomeView` curriculum
+  loading skeleton via a temporary `UserDefaults` base-URL override
+  (`smalltalkCoach.apiBaseURL` → a non-routable address, so the fetch
+  hangs indefinitely instead of failing fast) on a real app launch —
+  title/header lines, a Today-card-shaped block, and three lesson-row
+  shapes (leading circle, two lines, trailing badge) all in correct
+  proportion, tab bar intact. Override removed and app relaunched
+  against the real backend afterward to confirm a normal working state
+  (Today card, skill-profile prompt, Unit 1 list all rendering live
+  data correctly, no regression from cycles 47–50). The remaining two
+  skeleton spots (`CoachingView`'s `.checking` state,
+  `LessonDetailView`) were not individually screenshotted — same
+  primitive, same established composition pattern already visually
+  confirmed twice above, and both passed full source review.
+  **Side finding, not a defect in this cycle, worth a future backlog
+  line:** `AppSurface`/`.appSurface()` (the full-screen branded
+  background built in cycle 47) is applied in zero real screens today —
+  `grep` shows it used only inside component `#Preview` blocks; `RootView.swift`'s
+  `TabView` doesn't apply it either. Every screen (`HomeView`,
+  `CoachingView`, `ProfileView`, `LessonDetailView`) currently renders
+  on the plain system background in every state. Not blocking — quick
+  win #2 only asked for `TodayCard`'s own card-level surface, not a
+  screen-wide rollout — but flagging so it doesn't stay silently unused
+  indefinitely; candidate for a future quick win or one of the deeper
+  redesigns. **Next:** quick win #5b — copy-to-clipboard + toast +
+  success haptics for `ExampleResponseSuggestion` in
+  `CoachingReportView` (explicitly deferred out of 5a's scope).
+
 - **2026-07-21 (cycle 50 — UI quick win #4: reorder the coaching report;
   ONE ROUND, accepted as specified):** Worker: `gpt-5.6-terra`. Pure
   `Section` reorder inside `CoachingReportView` — no internals touched,

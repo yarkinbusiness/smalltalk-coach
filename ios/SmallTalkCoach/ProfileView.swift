@@ -106,7 +106,7 @@ struct ProfileView: View {
         Group {
             switch viewModel.phase {
             case .idle where viewModel.profile == nil, .loading where viewModel.profile == nil:
-                ProgressView("Loading your skill profile…")
+                profileLoadingSkeleton
             case .failed(let message) where viewModel.profile == nil:
                 ContentUnavailableView {
                     Label("Couldn’t load your skill profile", systemImage: "exclamationmark.triangle")
@@ -128,6 +128,26 @@ struct ProfileView: View {
         .task {
             await viewModel.loadIfNeeded()
         }
+    }
+
+    private var profileLoadingSkeleton: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: AppTheme.Spacing.sectionSpacing) {
+                SkeletonBlock(width: 132, height: 20)
+                ForEach(0..<3, id: \.self) { _ in
+                    VStack(alignment: .leading, spacing: AppTheme.Spacing.rowSpacing) {
+                        SkeletonBlock(width: 112, height: 17)
+                        SkeletonBlock(width: 92, height: 26, cornerRadius: 13)
+                        SkeletonBlock(height: 13)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .cardStyle()
+                }
+            }
+            .padding(AppTheme.Spacing.cardPadding)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Loading your skill profile")
     }
 
     private func profileList(_ profile: ProfileResponse) -> some View {

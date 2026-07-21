@@ -19,9 +19,9 @@ struct HomeView: View {
             Group {
                 switch viewModel.phase {
                 case .idle:
-                    ProgressView("Loading your learning path…")
+                    curriculumLoadingSkeleton
                 case .loading where viewModel.curriculum == nil:
-                    ProgressView("Loading your learning path…")
+                    curriculumLoadingSkeleton
                 case .failed(let message) where viewModel.curriculum == nil:
                     ContentUnavailableView {
                         Label("Couldn’t load your learning path", systemImage: "exclamationmark.triangle")
@@ -140,8 +140,38 @@ struct HomeView: View {
                 }
             }
         } else {
-            ProgressView("Loading your learning path…")
+            curriculumLoadingSkeleton
         }
+    }
+
+    private var curriculumLoadingSkeleton: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: AppTheme.Spacing.sectionSpacing) {
+                SkeletonBlock(width: 104, height: 20)
+
+                VStack(alignment: .leading, spacing: AppTheme.Spacing.rowSpacing) {
+                    SkeletonBlock(width: 132, height: 16)
+                    SkeletonBlock(height: 74, cornerRadius: AppTheme.Radius.card)
+                    SkeletonBlock(width: 208, height: 14)
+                }
+
+                SkeletonBlock(width: 88, height: 16)
+                ForEach(0..<3, id: \.self) { _ in
+                    HStack(spacing: AppTheme.Spacing.rowSpacing) {
+                        SkeletonBlock(width: 28, height: 28, cornerRadius: 14)
+                        VStack(alignment: .leading, spacing: 8) {
+                            SkeletonBlock(width: 190, height: 16)
+                            SkeletonBlock(width: 116, height: 12)
+                        }
+                        Spacer(minLength: 0)
+                        SkeletonBlock(width: 54, height: 22, cornerRadius: 11)
+                    }
+                }
+            }
+            .padding(AppTheme.Spacing.cardPadding)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Loading your learning path")
     }
 
     private func refreshHome() async {

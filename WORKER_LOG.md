@@ -658,3 +658,33 @@ Entry format (keep an entry under ~15 lines):
 - **Files touched:** ios/SmallTalkCoach/CoachingView.swift; WORKER_LOG.md
 - **Result / verification:** `cd ios && xcodegen generate` and `xcrun swiftc -parse SmallTalkCoach/CoachingView.swift` passed; `git diff --check` passed. iPhone 16 `xcodebuild build` and `xcodebuild test` were attempted but CoreSimulatorService refused connections and exposed no runtimes, so neither build nor XCTest execution completed.
 - **Open issues:** Run the iPhone 16 build and full XCTest suite on a host with a working simulator service.
+
+## 2026-07-21 15:07 UTC — UI quick win #5a: skeleton loading and coaching-history empty state
+- **Model:** gpt-5.6-terra
+- **Status:** partial
+- **What was done:** Added reusable animated/static Reduce-Motion-aware `SkeletonBlock` previews and replaced the five scoped loading states with shaped skeleton layouts. Replaced Coaching History’s generic empty state with a sample report card and an action that resets the composer then dismisses History.
+- **Files touched:** ios/SmallTalkCoach/{SkeletonBlock,HomeView,CoachingView,ProfileView,LessonDetailView}.swift; WORKER_LOG.md
+- **Result / verification:** `cd ios && xcodegen generate`, `xcrun swiftc -parse` of the five touched view files plus SkeletonBlock, and `git diff --check` passed. `xcodebuild build` exited 65 at asset compilation because CoreSimulatorService exposes no simulator runtimes; iPhone 16 `xcodebuild test` found no matching device, so no XCTest cases ran. SDK type-check was additionally blocked by the sandboxed SwiftUI Preview macro plugin.
+- **Open issues:** Run the full iPhone 16 build/test suite and visually inspect both SkeletonBlock previews on a host with a functioning simulator service.
+
+## 2026-07-21 15:19 UTC — Quick Win #5a round-2 SkeletonBlock compile fix
+- **Model:** gpt-5.6-terra
+- **Status:** partial
+- **What was done:** Replaced the read-only preview environment key with the SDK-declared writable
+  `_accessibilityReduceMotion` key; bounded the pulse peak opacity at `1.0`.
+- **Files touched:** ios/SmallTalkCoach/SkeletonBlock.swift; WORKER_LOG.md
+- **Result / verification:** Xcode 26.6 / iOS 26.5 SwiftUI interface confirms the writable key; an exact
+  SwiftUI SDK type-check probe passed. `cd ios && xcodegen generate`, `swiftc -parse`, and `git diff --check` passed.
+  `xcodebuild build` stopped at asset compilation because CoreSimulatorService has no runtimes; iPhone 16 tests could not start.
+- **Open issues:** Run the full build/test suite and inspect both previews on a host with a working simulator runtime.
+
+## 2026-07-21 15:22 UTC — Quick Win #5a round 3 (final): remove private preview override
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Removed the Reduce Motion-only SkeletonBlock preview and its unsupported private
+  `_accessibilityReduceMotion` environment override. Kept the primary preview and the production public
+  `@Environment(\.accessibilityReduceMotion)` behavior unchanged.
+- **Files touched:** ios/SmallTalkCoach/SkeletonBlock.swift; WORKER_LOG.md
+- **Result / verification:** Confirmed no `_accessibilityReduceMotion` reference remains in SkeletonBlock;
+  `git diff --check` passed.
+- **Open issues:** none

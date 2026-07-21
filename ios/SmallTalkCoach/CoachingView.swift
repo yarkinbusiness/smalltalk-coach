@@ -39,7 +39,7 @@ struct CoachingView: View {
             Group {
                 switch viewModel.availability {
                 case .checking:
-                    ProgressView("Checking coaching…")
+                    coachingAvailabilitySkeleton
                 case .unavailable:
                     ContentUnavailableView("Coaching is not available right now", systemImage: "sparkles.slash", description: Text("Please check back later."))
                 case .failed(let message):
@@ -53,9 +53,10 @@ struct CoachingView: View {
                 if case .available = viewModel.availability {
                     ToolbarItem(placement: .topBarTrailing) {
                         NavigationLink("History") {
-                            CoachingHistoryView {
-                                viewModel.beginNewComposition()
-                            }
+                            CoachingHistoryView(
+                                onCoachingDataDeleted: { viewModel.beginNewComposition() },
+                                onStartComposing: { viewModel.beginNewComposition() }
+                            )
                         }
                     }
                 }
@@ -87,6 +88,26 @@ struct CoachingView: View {
         } actions: {
             Button("Try Again") { Task { await viewModel.loadAvailability() } }
         }
+    }
+
+    private var coachingAvailabilitySkeleton: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: AppTheme.Spacing.sectionSpacing) {
+                SkeletonBlock(width: 176, height: 24)
+                ForEach(0..<2, id: \.self) { _ in
+                    VStack(alignment: .leading, spacing: AppTheme.Spacing.rowSpacing) {
+                        SkeletonBlock(width: 154, height: 18)
+                        SkeletonBlock(height: 16)
+                        SkeletonBlock(width: 178, height: 16)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .cardStyle()
+                }
+            }
+            .padding(AppTheme.Spacing.cardPadding)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Checking coaching availability")
     }
 }
 
@@ -484,34 +505,43 @@ private struct EvidenceRow: View {
 
 @MainActor
 private struct CoachingHistoryView: View {
+    @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel: CoachingHistoryViewModel
     @State private var showsDeleteAllConfirmation = false
     @State private var showsDeletionConfirmation = false
     private let onCoachingDataDeleted: () -> Void
+    private let onStartComposing: () -> Void
 
     init() {
         _viewModel = StateObject(wrappedValue: CoachingHistoryViewModel())
         onCoachingDataDeleted = {}
+        onStartComposing = {}
     }
 
     init(
         viewModel: CoachingHistoryViewModel,
-        onCoachingDataDeleted: @escaping () -> Void = {}
+        onCoachingDataDeleted: @escaping () -> Void = {},
+        onStartComposing: @escaping () -> Void = {}
     ) {
         _viewModel = StateObject(wrappedValue: viewModel)
         self.onCoachingDataDeleted = onCoachingDataDeleted
+        self.onStartComposing = onStartComposing
     }
 
-    init(onCoachingDataDeleted: @escaping () -> Void) {
+    init(
+        onCoachingDataDeleted: @escaping () -> Void,
+        onStartComposing: @escaping () -> Void = {}
+    ) {
         _viewModel = StateObject(wrappedValue: CoachingHistoryViewModel())
         self.onCoachingDataDeleted = onCoachingDataDeleted
+        self.onStartComposing = onStartComposing
     }
 
     var body: some View {
         Group {
             switch viewModel.phase {
             case .loading where viewModel.reports.isEmpty:
-                ProgressView("Loading history…")
+                historyLoadingSkeleton
             case .failed(let message) where viewModel.reports.isEmpty:
                 failed(message)
             default:
@@ -522,7 +552,7 @@ private struct CoachingHistoryView: View {
                         }
                     }
                     if viewModel.reports.isEmpty {
-                        ContentUnavailableView("No coaching reports yet", systemImage: "clock", description: Text("Your completed conversation analyses will appear here."))
+                        coachingHistoryEmptyState
                     } else {
                         Section {
                         ForEach(viewModel.reports) { summary in
@@ -577,6 +607,65 @@ private struct CoachingHistoryView: View {
         } description: { Text(message) } actions: {
             Button("Try Again") { Task { await viewModel.load() } }
         }
+    }
+
+    private var historyLoadingSkeleton: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: AppTheme.Spacing.rowSpacing) {
+                SkeletonBlock(width: 142, height: 20)
+                ForEach(0..<3, id: \.self) { _ in
+                    HStack(alignment: .top, spacing: AppTheme.Spacing.rowSpacing) {
+                        SkeletonBlock(width: 36, height: 36, cornerRadius: 18)
+                        VStack(alignment: .leading, spacing: 8) {
+                            SkeletonBlock(width: 164, height: 16)
+                            SkeletonBlock(width: 218, height: 13)
+                        }
+                        Spacer(minLength: 0)
+                    }
+                    .padding(AppTheme.Spacing.cardPadding)
+                    .background(AppTheme.Colors.primary.opacity(0.04), in: RoundedRectangle(cornerRadius: AppTheme.Radius.card))
+                }
+            }
+            .padding(AppTheme.Spacing.cardPadding)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Loading coaching history")
+    }
+
+    private var coachingHistoryEmptyState: some View {
+        Section {
+            VStack(alignment: .leading, spacing: AppTheme.Spacing.rowSpacing) {
+                Label("Your coaching history starts with one real conversation.", systemImage: "sparkles")
+                    .font(AppTheme.Typography.cardTitle)
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Focus: Curiosity")
+                        .font(AppTheme.Typography.cardTitle)
+                    Text("Example lesson · Keep the thread going")
+                        .font(AppTheme.Typography.helper)
+                        .foregroundStyle(.secondary)
+                    Label("Clear next move", systemImage: "arrow.right.circle.fill")
+                        .font(AppTheme.Typography.helper.weight(.semibold))
+                        .foregroundStyle(AppTheme.Colors.primary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .cardStyle()
+
+                Text("Analyze a conversation to get a helpful next move and a lesson recommendation.")
+                    .font(AppTheme.Typography.body)
+                    .foregroundStyle(.secondary)
+
+                Button("Analyze your first conversation") {
+                    onStartComposing()
+                    dismiss()
+                }
+                .buttonStyle(.borderedProminent)
+                .frame(maxWidth: .infinity, alignment: .center)
+            }
+            .padding(.vertical, AppTheme.Spacing.rowSpacing)
+        }
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
     }
 }
 
