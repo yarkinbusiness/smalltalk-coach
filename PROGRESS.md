@@ -315,6 +315,36 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-21 (cycle 62 — Differentiate Without Color: ChoiceButton fix
+  + bounded audit; ONE ROUND, accepted as specified):** Worker:
+  `gpt-5.6-terra`. Fourth perpetual-loop cycle. `ChoiceButton`
+  (`LessonDetailView.swift`) previously distinguished correct/incorrect
+  answer states *only* by color (blue/green/red); now shows a distinct
+  icon too — checkmark for correct, xmark for incorrect, unchanged
+  selected/unselected circle for neutral — reusing the exact icon names
+  already used by the nearby feedback `Label`, not inventing new ones.
+  Color values themselves untouched, exactly as scoped (Differentiate
+  Without Color means "don't rely on color alone," not "remove color").
+  Bounded spot-check of three other named risk spots, each reported with
+  its outcome rather than skipped or silently expanded: `CardStyle`'s
+  `.warning` variant has zero production call sites today (independently
+  verified via `grep` — confirmed accurate, nothing to fix); `TodayCard`'s
+  freeze indicator and "Done for today" checkmark already pair icon/text
+  with color; `SkillMetricBar`'s bars are always paired with a dimension-
+  name section header. No changes needed for any of the three.
+  **Brain verification:** full source review confirmed the fix is
+  minimal and correct, color logic untouched. `xcodegen generate` +
+  `xcodebuild build`/`test` — 76 passed, 3 pre-existing skips, 0
+  failures. Given the low mechanical risk (the exact SF Symbol strings
+  used are already proven correct elsewhere in this same file and app),
+  relied on build/test plus real-launch confirmation rather than forcing
+  an elaborate diagnostic override just to re-see two already-verified
+  icons — a proportionate call given the change's simplicity. Real
+  launch confirmed clean, no regression, cycle 61's coaching card still
+  rendering correctly. **Next:** remaining research-backlog candidates —
+  matched-geometry answer-feedback morph, and a daily progress indicator
+  (`DailyProgressRing`).
+
 - **2026-07-21 (cycle 61 — "Continue the coaching loop" card on Home;
   ONE ROUND, accepted as specified):** Worker: `gpt-5.6-terra`. Third
   perpetual-loop cycle, and the highest-value item on the research

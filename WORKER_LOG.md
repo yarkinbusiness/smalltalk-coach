@@ -786,3 +786,11 @@ Entry format (keep an entry under ~15 lines):
 - **Files touched:** ios/SmallTalkCoach/TodayCard.swift; ios/SmallTalkCoach/HomeView.swift; ios/SmallTalkCoach/RecentCoachingCard.swift; WORKER_LOG.md
 - **Result / verification:** `cd ios && xcodegen generate`, `xcrun swiftc -parse` for the three changed Swift files, project-source inclusion check, and `git diff --check` passed. iPhone 16 `xcodebuild build` and `xcodebuild test` were attempted, but CoreSimulatorService refused connections and exposed no simulator runtimes before compilation or XCTest execution.
 - **Open issues:** Run the iPhone 16 build/test suite and inspect the light/dark card previews on a host with a working simulator runtime.
+
+## 2026-07-21 17:36 UTC — Differentiate Without Color: ChoiceButton and spot-check
+- **Model:** gpt-5
+- **Status:** partial
+- **What was done:** Made ChoiceButton use checkmark.circle.fill for correct and xmark.circle.fill for incorrect; neutral retains its existing selected/unselected circle icons. Checked CardStyle warning: no production `.cardStyle(.warning)` call sites; TodayCard: freeze has snowflake plus count/context and done has checkmark/accessibility label; SkillMetricBar: every production chart has a dimension heading and Latest score text. All three were already fine, so no changes outside ChoiceButton.
+- **Files touched:** ios/SmallTalkCoach/LessonDetailView.swift; WORKER_LOG.md
+- **Result / verification:** `cd ios && xcodegen generate`, `xcrun swiftc -parse SmallTalkCoach/LessonDetailView.swift`, and `git diff --check` passed. Simulator build reached asset compilation but failed because CoreSimulatorService has no available iOS runtimes; iPhone 16 `xcodebuild test` could not initialize a simulator, so no XCTest cases ran.
+- **Open issues:** Full iPhone 16 build/test and visual verification need a host with a working CoreSimulatorService.

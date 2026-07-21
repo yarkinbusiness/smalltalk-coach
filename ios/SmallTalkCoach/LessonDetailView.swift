@@ -468,7 +468,7 @@ private struct ChoiceButton: View {
     var body: some View {
         Button(action: action) {
             HStack(alignment: .top, spacing: 8) {
-                Image(systemName: isSelected ? "largecircle.fill.circle" : "circle")
+                Image(systemName: iconName)
                 Text(text)
                     .multilineTextAlignment(.leading)
                 Spacer(minLength: 0)
@@ -479,5 +479,16 @@ private struct ChoiceButton: View {
             .background(state.color.opacity(isSelected ? 0.14 : 0.06), in: RoundedRectangle(cornerRadius: 10))
         }
         .buttonStyle(.plain)
+    }
+
+    private var iconName: String {
+        switch state {
+        case .neutral:
+            isSelected ? "largecircle.fill.circle" : "circle"
+        case .correct:
+            "checkmark.circle.fill"
+        case .incorrect:
+            "xmark.circle.fill"
+        }
     }
 }
