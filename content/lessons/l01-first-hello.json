@@ -48,19 +48,19 @@
     "prompt": "You are waiting at the coffee machine with a colleague you have not met. Which detail is a shared-context cue you could use?",
     "options": [
       {
-        "text": "The line is longer than you expected this morning.",
-        "feedback": "Yes. Anyone in the queue can notice the line, so it is a low-pressure topic the other person can respond to or leave alone."
-      },
-      {
         "text": "They look like they did not sleep much.",
         "feedback": "This guesses something personal about the other person. A shared-context cue should come from the situation, not an assumption about them."
+      },
+      {
+        "text": "The line is longer than you expected this morning.",
+        "feedback": "Yes. Anyone in the queue can notice the line, so it is a low-pressure topic the other person can respond to or leave alone."
       },
       {
         "text": "They seem like the most interesting person in the office.",
         "feedback": "This is a big judgment, not a small observable detail you both share in the moment."
       }
     ],
-    "correct_option_index": 0
+    "correct_option_index": 1
   },
   "practice": {
     "type": "Short roleplay",

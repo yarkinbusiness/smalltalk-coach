@@ -156,8 +156,10 @@ since shipped and what remains in the v2 backlog:
    model per CONTENT_MODEL_V1.md; 12 lessons authored and served]**
 2. **Daily habit loop.** Streak model + persistence, notification
    scheduling (needs APNs/push setup — a real new technical + Apple
-   Developer requirement), a "today's lesson" home surface. **[NOT BUILT
-   — v2 backlog T-D; local notifications chosen over APNs]**
+   Developer requirement), a "today's lesson" home surface. **[BUILT
+   2026-07-21 — streak + freezes + Today card (cycles 27–28); opt-in local
+   notifications placed in onboarding (cycle 35); local notifications chosen
+   over APNs]**
 3. **Screenshot import pipeline.** Upload/share UI on iOS, backend
    endpoint, vision-model call to extract a clean transcript, the privacy
    disclosure noted above. **[BUILT 2026-07-19 — COACHING_PIPELINE_V1
@@ -179,7 +181,9 @@ since shipped and what remains in the v2 backlog:
    real-world patterns over time that makes later diagnoses sharper —
    distinct from (may build on top of) the existing local `reports`
    table and/or the CMA memory_store already used for the coordinator's
-   cross-session context. **[NOT BUILT — v2 backlog T-E]**
+   cross-session context. **[BUILT 2026-07-21 — deterministic aggregation +
+   GET /users/{id}/profile + Home surface (cycles 29–30); reflection loop
+   (cycles 31–32) and spaced review (cycles 33–34) build on it]**
 7. **Cost-tiered model routing for all of the above** — wire in whichever
    cheap model gets chosen (DeepSeek or Haiku) for steps 4/5/6, keep
    vision-capable model only for step 3's extraction. **[SUPERSEDED —
@@ -193,9 +197,10 @@ since shipped and what remains in the v2 backlog:
   screenshot for review also count? (User's framing leaned toward lesson
   activity as the base engagement signal, with the real differentiator
   being the compounding diagnosis loop rather than the streak rule itself
-  — but the exact rule wasn't pinned down.) **[Being resolved by v2 task
-  T-D: lesson/review completion or coaching submission all count as daily
-  activity.]**
+  — but the exact rule wasn't pinned down.) **[Resolved and implemented
+  (cycles 27–34): lesson completion, review completion, or coaching
+  submission each keep the day active; freezes earned per completed unit,
+  cap 2.]**
 - **DeepSeek vs. Haiku 4.5** for the downstream cheap-reasoning steps —
   not decided; worth a real cost/quality comparison once Phase 2 scoping
   starts. **[Resolved by the 2026-07-19 Haiku-only lock.]**

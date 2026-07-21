@@ -183,6 +183,30 @@ Read by the brain and by every Codex worker at cycle start (see
   retention tier); or any P1 task turns out to require model calls after
   all (then it needs a costed founder decision first, per the Haiku lock).
 
+### 2026-07-21 — T-G Shuffle Criterion Deviation Recorded
+
+- **Status:** Confirmed (brain decision under the founder's audit-response
+  execution instruction; flagged for founder override)
+- **Decision:** v2 task T-G's written acceptance criterion "option-order
+  shuffling for reused checks" was implemented as **static content-level
+  answer-position variation**, not runtime shuffling: grading is
+  index-based end to end (client submits option indices; the server
+  compares against `correct_option_index`), so a naive serve-time shuffle
+  would desynchronize submitted answers from the key. Cycle 33 varied
+  L02's positions; cycle 36 added a mechanical audit test (every lesson
+  with ≥2 choice parts must use ≥2 distinct correct indices — this caught
+  and fixed L01, whose exercise + check answers all sat at one position).
+  True review-time permutation is backlogged as **T-G2**: deterministic
+  per-(user, lesson, review-count) seeded permutation applied at both
+  serve and grade time — sequenced after T-J.
+- **Why:** The 2026-07-21 external audit correctly flagged that this
+  deviation was decided in a worker spec but never recorded here, and
+  that PROGRESS.md's "done" label hid it. Deviations from written
+  acceptance criteria must be decision-logged, not buried in specs.
+- **Revisit trigger:** Founder orders T-G2 sooner; or repeat-review
+  usage shows memorization is degrading review value (then T-G2 or
+  variant question pools become priority).
+
 ### 2026-07-20 — Stale VISION/ARCHITECTURE Status Synced to Rebuilt v1
 
 - **Status:** Confirmed (executes task T-A of the founder-approved v2

@@ -452,3 +452,15 @@ Entry format (keep an entry under ~15 lines):
 - **Files touched:** backend/app/store.py; backend/app/main.py; backend/tests/test_onboarding.py; backend/README.md; ios/SmallTalkCoach/{OnboardingView,Models,APIClient,TodayCard,HomeView,RootView}.swift; ios/SmallTalkCoachTests/SmallTalkCoachTests.swift; WORKER_LOG.md
 - **Result / verification:** `backend/.venv/bin/python -m pytest backend/tests -q`: 97 passed, 1 skipped; `xcodegen generate` and generic simulator `xcodebuild build-for-testing` succeeded; `git diff --check` passed.
 - **Open issues:** Named iPhone 16 build/XCTest could not execute because CoreSimulatorService had no available simulator runtime.
+
+## 2026-07-21 08:29 UTC — Truth-sync docs and answer-index audit
+- **Model:** gpt-5.6-terra
+- **Status:** done
+- **What was done:** Synced the shipped T-D/T-E and streak-rule VISION annotations;
+  added the accept-path sibling-doc sync requirement and a real-content answer-index audit.
+  Reordered L01's exercise options so its correct answers use two positions.
+- **Files touched:** VISION.md; .claude/skills/brain-worker-loop/SKILL.md;
+  backend/tests/test_content.py; content/lessons/l01-first-hello.json; WORKER_LOG.md
+- **Result / verification:** `backend/.venv/bin/python -m pytest backend/tests -q`:
+  98 passed, 1 skipped, 1 warning; standalone real-loader audit passed for 12 lessons; `git diff --check` passed.
+- **Open issues:** none

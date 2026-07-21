@@ -44,8 +44,12 @@ deterministic — no new API calls) and the existing loop protocol.
   5. ~~**T-E** — skill profile v1~~ — done (profile endpoint + Home
      surface).
   6. ~~**T-F** — reflection loop~~ — done (Flow D end to end).
-  7. ~~**T-G** — review/spaced repetition~~ — done (3/7/21 ladder,
-     prioritized queue, review mode; L02 nit cleared).
+  7. ~~**T-G** — review/spaced repetition~~ — done **with one recorded
+     deviation**: static content-level answer variation instead of the
+     written "option-order shuffling" criterion (root `DECISIONS.md` →
+     "2026-07-21 — T-G Shuffle Criterion Deviation Recorded"; mechanical
+     audit test added cycle 36, caught+fixed L01). True runtime
+     permutation = backlog item **T-G2**, sequenced after T-J.
 - **P2 (activation + v1 Must-Haves):**
   8. ~~**T-H** — onboarding + baseline (BRIEF Flow A), hosts notification
      opt-in~~ — done (cycle 35; also completes T-D's deferred
@@ -223,6 +227,24 @@ items assume. -->
    4 workers → synthesized report) against real CMA.
 
 ## Cycle log
+
+- **2026-07-21 (cycle 36 — truth-sync; audit-response complete):**
+  External audit response, executed under the founder's instruction.
+  Worker: `gpt-5.6-terra`, one round. VISION.md Phase 2 annotations
+  corrected (T-D and T-E now marked BUILT with cycle references; streak
+  rule marked implemented); SKILL.md accept-path now REQUIRES sibling-
+  doc sync in the same commit (a cycle that ships a feature while a
+  sibling doc calls it unbuilt is a defective cycle); new mechanical
+  audit test — every lesson with ≥2 choice parts must vary correct-
+  answer positions — which **caught L01** (all answers at one index)
+  and fixed it content-level. Brain-side records added at acceptance:
+  DECISIONS.md "T-G Shuffle Criterion Deviation Recorded" + backlog
+  T-G2; P1 backlog line softened accordingly. Brain verification: **98
+  backend passed, 1 skipped** + **57 XCTests, 0 failures** (own runs);
+  mandatory simulator launch clean — ACCEPTED. Audit findings now all
+  addressed or formally recorded; remaining audit items are founder-
+  gated (real-screenshot set, T-K, T-L). **Next:** T-I (privacy policy,
+  ToS, account-wide deletion, App Store disclosure).
 
 - **2026-07-21 (cycle 35 — T-H onboarding + baseline; closes the T-D
   placement caveat):** Worker: `gpt-5.6-terra`, one round, honest

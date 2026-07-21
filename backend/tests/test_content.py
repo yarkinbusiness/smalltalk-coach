@@ -43,6 +43,23 @@ def test_real_manifest_is_consistent_and_authored_lessons_load() -> None:
     assert curriculum.content["l01-first-hello"]["title"] == "First hello"
 
 
+def test_real_lessons_vary_correct_choice_answer_positions() -> None:
+    curriculum = load_curriculum(MANIFEST_PATH, LESSONS_DIR)
+
+    for lesson_id, lesson in curriculum.content.items():
+        choice_parts = [
+            lesson["exercise"],
+            *(part for part in lesson["completion_check"]["parts"] if part["kind"] == "choice"),
+        ]
+        if len(choice_parts) >= 2:
+            correct_option_indices = {
+                part["correct_option_index"] for part in choice_parts
+            }
+            assert len(correct_option_indices) >= 2, (
+                f"{lesson_id} has every correct choice answer at one position"
+            )
+
+
 Mutation = Callable[[dict[str, Any]], None]
 
 

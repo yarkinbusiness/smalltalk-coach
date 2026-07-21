@@ -102,8 +102,12 @@ truth, and no loop state may live only in a mirror.
    exception to the brain-never-implements rule, then re-runs the launch until
    clean.
 5. **Accept or iterate.** Accept → record the result in `PROGRESS.md` (cycle
-   log entry: date, what shipped, test status, next item), commit, then
-   auto-push:
+   log entry: date, what shipped, test status, next item). Before committing,
+   also sync sibling living docs: if accepted work completes or changes the
+   status of any roadmap task or `VISION.md` Phase-2 item, the same commit
+   must update those annotations (`VISION.md`, `PROGRESS.md` backlog line). A
+   cycle that ships a feature while a sibling doc still calls it unbuilt is a
+   defective cycle (audit finding, 2026-07-21). Commit, then auto-push:
 
    ```bash
    .claude/skills/brain-worker-loop/auto_push.sh -b "$BASELINE" \
