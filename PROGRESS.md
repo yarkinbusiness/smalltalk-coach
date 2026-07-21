@@ -315,6 +315,46 @@ items assume. -->
 
 ## Cycle log
 
+- **2026-07-21 (cycle 61 — "Continue the coaching loop" card on Home;
+  ONE ROUND, accepted as specified):** Worker: `gpt-5.6-terra`. Third
+  perpetual-loop cycle, and the highest-value item on the research
+  backlog — closes the product's literal core loop (Executive Verdict)
+  by surfacing the most recent coaching report's takeaway + a CTA to its
+  recommended lesson directly on Home. `TodayViewModel` gained a fourth
+  parallel `async let` fetch (`coachingClient.coachingReports()` →
+  `.first` → `coachingClient.coachingReport(id:)`, wrapped exactly like
+  the existing `fetchStreak`/`fetchReviewQueue` helpers), degrading
+  silently on failure (matching how `reviewQueue`/`onboarding` already
+  behave) and correctly clearing to `nil` (not left stale) when the
+  fetch succeeds with zero history. New `RecentCoachingCard.swift`: shows
+  only when a report exists, takeaway capped at 3 lines, CTA to
+  `LessonDetailView` for the recommended lesson styled to match
+  `TodayCard`'s existing full-width CTA look. Wired into `HomeView`'s
+  "Today" section right after `TodayCard`.
+  **Verified, not just trusted:** the worker's ordering claim
+  ("`summaries.first` is most recent, corroborated by History's
+  descending sort") was independently checked at the SQL level —
+  `backend/app/store.py:257`, `coaching_report_summaries()`:
+  `ORDER BY created_at DESC, id DESC` — confirmed accurate. Also
+  independently tested the "no card when nil" mechanism (`if let report
+  { ... }` with no `else`, inside a List row) via a targeted harness
+  isolating just that SwiftUI behavior — confirmed empirically it
+  produces zero visible gap/row, not just trusted by inspection, since
+  this is a genuine, plausible SwiftUI List-row-sizing risk worth
+  checking rather than assuming.
+  **Brain verification:** full source review found no bugs, including a
+  correct, complete update to `TodayCardPreview`'s test-double client
+  (now conforming to `CoachingAPI` too, all methods stubbed sensibly).
+  `xcodegen generate` + `xcodebuild build`/`test` — 76 passed, 3
+  pre-existing skips, 0 failures. Real Home screenshot (live backend,
+  real persisted user with 2 real coaching reports from this session's
+  own diagnostic testing) confirmed correct in both light and dark: card
+  renders with real takeaway text, correct truncation, working-looking
+  CTA, consistent styling, no regression to `TodayCard` or the rest of
+  Home. **Next:** remaining research-backlog candidates — matched-
+  geometry answer-feedback morph, a daily progress indicator, and a
+  Differentiate Without Color audit.
+
 - **2026-07-21 (cycle 60 — typography-token adoption in CoachingView.swift;
   ONE ROUND, accepted as specified):** Worker: `gpt-5.6-terra`. Second
   perpetual-loop cycle. Exactly the five standalone `.font(.headline)`

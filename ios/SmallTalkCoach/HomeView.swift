@@ -82,6 +82,10 @@ struct HomeView: View {
                     }
                     .listRowBackground(Color.clear)
                     .listRowSeparator(.hidden)
+
+                    RecentCoachingCard(report: todayViewModel.recentCoachingReport)
+                        .listRowBackground(Color.clear)
+                        .listRowSeparator(.hidden)
                 }
 
                 Section("Your skills") {

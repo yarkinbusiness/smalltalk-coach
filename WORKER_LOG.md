@@ -778,3 +778,11 @@ Entry format (keep an entry under ~15 lines):
   and `xcodebuild test` were attempted, but CoreSimulatorService refused connections and
   exposed no runtimes, so neither command could run against a simulator and no XCTest cases ran.
 - **Open issues:** Run the iPhone 16 build and full XCTest suite on a host with a working simulator runtime.
+
+## 2026-07-21 17:26 UTC — Continue the coaching loop card on Home
+- **Model:** gpt-5.6-terra
+- **Status:** partial
+- **What was done:** TodayViewModel now fetches the latest coaching report in parallel with its existing Home data; Home renders its capped takeaway and a recommended-lesson CTA only when a report exists. The backend explicitly orders summaries by `created_at DESC, id DESC`, and History also sorts `createdAt` descending, so the fetch correctly uses `summaries.first` as most recent.
+- **Files touched:** ios/SmallTalkCoach/TodayCard.swift; ios/SmallTalkCoach/HomeView.swift; ios/SmallTalkCoach/RecentCoachingCard.swift; WORKER_LOG.md
+- **Result / verification:** `cd ios && xcodegen generate`, `xcrun swiftc -parse` for the three changed Swift files, project-source inclusion check, and `git diff --check` passed. iPhone 16 `xcodebuild build` and `xcodebuild test` were attempted, but CoreSimulatorService refused connections and exposed no simulator runtimes before compilation or XCTest execution.
+- **Open issues:** Run the iPhone 16 build/test suite and inspect the light/dark card previews on a host with a working simulator runtime.

@@ -18,22 +18,26 @@ final class TodayViewModel: ObservableObject {
     @Published private(set) var streak: StreakResponse?
     @Published private(set) var reviewQueue: ReviewQueueResponse?
     @Published private(set) var onboarding: OnboardingResponse?
+    @Published private(set) var recentCoachingReport: CoachingReport?
     @Published private(set) var phase: Phase = .idle
 
     private let client: any StreakAPI
     private let reviewClient: any ReviewAPI
     private let onboardingClient: (any OnboardingAPI)?
+    private let coachingClient: any CoachingAPI
     let reminderScheduler: any ReminderScheduling
 
     init(
         client: any StreakAPI = APIClient(),
         reviewClient: any ReviewAPI = APIClient(),
         onboardingClient: (any OnboardingAPI)? = nil,
+        coachingClient: any CoachingAPI = APIClient(),
         reminderScheduler: any ReminderScheduling = LocalReminderScheduler()
     ) {
         self.client = client
         self.reviewClient = reviewClient
         self.onboardingClient = onboardingClient
+        self.coachingClient = coachingClient
         self.reminderScheduler = reminderScheduler
     }
 
@@ -44,7 +48,13 @@ final class TodayViewModel: ObservableObject {
         async let streakResult = fetchStreak()
         async let reviewQueueResult = fetchReviewQueue()
         async let onboardingResult = fetchOnboarding()
-        let (loadedStreak, loadedReviewQueue, loadedOnboarding) = await (streakResult, reviewQueueResult, onboardingResult)
+        async let recentCoachingResult = fetchRecentCoachingReport()
+        let (loadedStreak, loadedReviewQueue, loadedOnboarding, loadedRecentCoachingReport) = await (
+            streakResult,
+            reviewQueueResult,
+            onboardingResult,
+            recentCoachingResult
+        )
 
         switch loadedStreak {
         case .success(let streak):
@@ -65,6 +75,10 @@ final class TodayViewModel: ObservableObject {
             case .failure:
                 self.onboarding = nil
             }
+        }
+
+        if case .success(let recentCoachingReport) = loadedRecentCoachingReport {
+            self.recentCoachingReport = recentCoachingReport
         }
     }
 
@@ -88,6 +102,18 @@ final class TodayViewModel: ObservableObject {
         guard let onboardingClient else { return nil }
         do {
             return .success(try await onboardingClient.onboarding())
+        } catch {
+            return .failure(error)
+        }
+    }
+
+    private func fetchRecentCoachingReport() async -> Result<CoachingReport?, Error> {
+        do {
+            let summaries = try await coachingClient.coachingReports()
+            guard let mostRecent = summaries.first else {
+                return .success(nil)
+            }
+            return .success(try await coachingClient.coachingReport(id: mostRecent.id))
         } catch {
             return .failure(error)
         }
@@ -414,6 +440,7 @@ private struct TodayCardPreview: View {
             client: client,
             reviewClient: client,
             onboardingClient: client,
+            coachingClient: client,
             reminderScheduler: TodayCardPreviewReminderScheduler()
         ))
     }
@@ -430,7 +457,7 @@ private struct TodayCardPreview: View {
     }
 }
 
-private final class TodayCardPreviewClient: StreakAPI, ReviewAPI, OnboardingAPI {
+private final class TodayCardPreviewClient: StreakAPI, ReviewAPI, OnboardingAPI, CoachingAPI {
     private let previewStreak: StreakResponse
     private let previewOnboarding: OnboardingResponse?
 
@@ -457,6 +484,43 @@ private final class TodayCardPreviewClient: StreakAPI, ReviewAPI, OnboardingAPI 
 
     func onboarding() async throws -> OnboardingResponse? {
         previewOnboarding
+    }
+
+    func health() async throws -> HealthResponse {
+        throw TodayCardPreviewError.unavailable
+    }
+
+    func diagnose(text: String, consentToProcess: Bool) async throws -> CoachingDiagnosisResponse {
+        throw TodayCardPreviewError.unavailable
+    }
+
+    func diagnoseScreenshot(
+        imageBase64: String,
+        mediaType: String,
+        userMessageSide: CoachingUserMessageSide,
+        consentToProcess: Bool
+    ) async throws -> CoachingDiagnosisJob {
+        throw TodayCardPreviewError.unavailable
+    }
+
+    func coachingDiagnosisJob(id: String) async throws -> CoachingDiagnosisJobResponse {
+        throw TodayCardPreviewError.unavailable
+    }
+
+    func coachingReports() async throws -> [CoachingReportSummary] {
+        []
+    }
+
+    func coachingReport(id: String) async throws -> CoachingReport {
+        throw TodayCardPreviewError.unavailable
+    }
+
+    func deleteCoachingReport(id: String) async throws {
+        throw TodayCardPreviewError.unavailable
+    }
+
+    func deleteAllCoachingData() async throws -> CoachingDataDeleted {
+        throw TodayCardPreviewError.unavailable
     }
 }
 
