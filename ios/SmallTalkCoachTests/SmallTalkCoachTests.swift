@@ -1424,6 +1424,67 @@ final class SmallTalkCoachTests: XCTestCase {
         XCTAssertEqual(viewModel.completionState, .failed("You appear to be offline."))
     }
 
+    @MainActor
+    func testDetailViewModelGradesNonEmptyDraftWithoutChangingCompletionAnswers() async {
+        let result = DraftGradingResult(
+            metCriteria: true,
+            feedback: "The phrase ‘this room is busy’ is an easy shared cue."
+        )
+        let client = StubLessonAPI(draftGradingResult: .success(result))
+        client.suspendsDraftGrading = true
+        let viewModel = LessonDetailViewModel(lesson: detailLesson(), client: client)
+        viewModel.selectAnswer(1, forPartAt: 0)
+
+        XCTAssertEqual(viewModel.draftGradingStates[1] ?? .idle, .idle)
+        XCTAssertFalse(viewModel.canSubmit)
+        XCTAssertEqual(viewModel.submissionAnswers, ["0": 1])
+        viewModel.updateFreeDraft("Hi, this room is busy today.", at: 1)
+        let grading = Task { await viewModel.gradeDraft(at: 1) }
+        for _ in 0..<10 where client.draftGradingContinuation == nil {
+            await Task.yield()
+        }
+        XCTAssertEqual(viewModel.draftGradingStates[1], .grading)
+        client.resumeDraftGrading()
+        await grading.value
+
+        XCTAssertEqual(viewModel.draftGradingStates[1], .graded(result))
+        XCTAssertEqual(client.draftGradingCallCount, 1)
+        XCTAssertFalse(viewModel.canSubmit)
+        XCTAssertEqual(viewModel.submissionAnswers, ["0": 1])
+    }
+
+    @MainActor
+    func testDetailViewModelDoesNotGradeEmptyDraft() async {
+        let client = StubLessonAPI(draftGradingResult: .success(DraftGradingResult(
+            metCriteria: true, feedback: "Unused."
+        )))
+        let viewModel = LessonDetailViewModel(lesson: detailLesson(), client: client)
+        viewModel.updateFreeDraft(" \n ", at: 1)
+
+        await viewModel.gradeDraft(at: 1)
+
+        XCTAssertEqual(viewModel.draftGradingStates[1] ?? .idle, .idle)
+        XCTAssertEqual(client.draftGradingCallCount, 0)
+    }
+
+    @MainActor
+    func testDetailViewModelMapsDraftBudgetAndOtherFailures() async {
+        let client = StubLessonAPI(draftGradingResult: .failure(APIClientError.server(
+            statusCode: 503, detail: "draft_grading_budget_exceeded"
+        )))
+        let viewModel = LessonDetailViewModel(lesson: detailLesson(), client: client)
+        viewModel.updateFreeDraft("Hi, this room is busy today.", at: 1)
+
+        await viewModel.gradeDraft(at: 1)
+        XCTAssertEqual(viewModel.draftGradingStates[1], .budgetExceeded)
+
+        client.draftGradingResult = .failure(StubError.offline)
+        await viewModel.gradeDraft(at: 1)
+        XCTAssertEqual(viewModel.draftGradingStates[1], .failed("You appear to be offline."))
+        XCTAssertFalse(viewModel.canSubmit)
+        XCTAssertTrue(viewModel.submissionAnswers.isEmpty)
+    }
+
     private func detailLesson() -> Lesson {
         Lesson(
             schemaVersion: 1,
@@ -1561,17 +1622,23 @@ private final class StubLessonAPI: LessonAPI, ReviewAPI {
     var lessonResult: Result<Lesson, Error>
     var completionResult: Result<CompletionResponse, Error>
     var reviewResult: Result<CompletionResponse, Error>
+    var draftGradingResult: Result<DraftGradingResult, Error>
     var completedLessonIDs: [String] = []
     var reviewedLessonIDs: [String] = []
+    var draftGradingCallCount = 0
+    var suspendsDraftGrading = false
+    var draftGradingContinuation: CheckedContinuation<Void, Never>?
 
     init(
         lessonResult: Result<Lesson, Error> = .failure(StubError.unused),
         completionResult: Result<CompletionResponse, Error> = .failure(StubError.unused),
-        reviewResult: Result<CompletionResponse, Error> = .failure(StubError.unused)
+        reviewResult: Result<CompletionResponse, Error> = .failure(StubError.unused),
+        draftGradingResult: Result<DraftGradingResult, Error> = .failure(StubError.unused)
     ) {
         self.lessonResult = lessonResult
         self.completionResult = completionResult
         self.reviewResult = reviewResult
+        self.draftGradingResult = draftGradingResult
     }
 
     func curriculum() async throws -> CurriculumResponse {
@@ -1585,6 +1652,21 @@ private final class StubLessonAPI: LessonAPI, ReviewAPI {
     func completeLesson(id: String, answers: [String: Int]) async throws -> CompletionResponse {
         completedLessonIDs.append(id)
         return try completionResult.get()
+    }
+
+    func gradeDraft(lessonID: String, partIndex: Int, draft: String) async throws -> DraftGradingResult {
+        draftGradingCallCount += 1
+        if suspendsDraftGrading {
+            await withCheckedContinuation { continuation in
+                draftGradingContinuation = continuation
+            }
+        }
+        return try draftGradingResult.get()
+    }
+
+    func resumeDraftGrading() {
+        draftGradingContinuation?.resume()
+        draftGradingContinuation = nil
     }
 
     func reviewQueue(timezoneIdentifier: String) async throws -> ReviewQueueResponse {

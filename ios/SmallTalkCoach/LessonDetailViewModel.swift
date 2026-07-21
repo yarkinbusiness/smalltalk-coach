@@ -6,6 +6,14 @@ enum LessonDetailMode: Equatable {
     case review
 }
 
+enum DraftGradingState: Equatable {
+    case idle
+    case grading
+    case graded(DraftGradingResult)
+    case failed(String)
+    case budgetExceeded
+}
+
 @MainActor
 final class LessonDetailViewModel: ObservableObject {
     enum LoadPhase: Equatable {
@@ -29,6 +37,7 @@ final class LessonDetailViewModel: ObservableObject {
     @Published private(set) var selectedAnswers: [Int: Int] = [:]
     @Published private(set) var completionFeedback: [String: String] = [:]
     @Published private(set) var freeDrafts: [Int: String] = [:]
+    @Published private(set) var draftGradingStates: [Int: DraftGradingState] = [:]
 
     let lessonID: String
     let mode: LessonDetailMode
@@ -111,6 +120,20 @@ final class LessonDetailViewModel: ObservableObject {
 
     func updateFreeDraft(_ text: String, at partIndex: Int) {
         freeDrafts[partIndex] = text
+    }
+
+    func gradeDraft(at partIndex: Int) async {
+        let draft = (freeDrafts[partIndex] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !draft.isEmpty else { return }
+        draftGradingStates[partIndex] = .grading
+        do {
+            let result = try await client.gradeDraft(lessonID: lessonID, partIndex: partIndex, draft: draft)
+            draftGradingStates[partIndex] = .graded(result)
+        } catch APIClientError.server(statusCode: 503, detail: let detail) where detail == "draft_grading_budget_exceeded" {
+            draftGradingStates[partIndex] = .budgetExceeded
+        } catch {
+            draftGradingStates[partIndex] = .failed(error.localizedDescription)
+        }
     }
 
     func submit() async {

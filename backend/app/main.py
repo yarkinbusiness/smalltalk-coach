@@ -20,6 +20,16 @@ from pydantic import BaseModel
 from .content import Curriculum, load_curriculum
 from .coaching import setup_coaching
 from .diagnosis import DIMENSIONS, DiagnosisAdapter
+from .draft_grading import (
+    AnthropicDraftGradingAdapter,
+    BudgetExceededError,
+    DraftGradingAdapter,
+    DraftGradingBudget,
+    DraftGradingError,
+    DraftGradingRefusedError,
+    _draft_grading_budget,
+    grade_draft,
+)
 from .profile import build_profile
 from .review import build_review_queue
 from .streak import compute_streak, parse_activity_timestamp
@@ -27,11 +37,18 @@ from .store import ProgressStore
 
 
 LOGGER = logging.getLogger(__name__)
+_MAX_DRAFT_LENGTH = 2000
 
 
 class CompletionRequest(BaseModel):
     user_id: str
     answers: dict[str, object]
+
+
+class DraftGradingRequest(BaseModel):
+    user_id: str
+    part_index: int
+    draft: str
 
 
 class ReflectionRequest(BaseModel):
@@ -212,6 +229,7 @@ def _review_queue_for(
 def create_app(
     *, manifest_path: Path | None = None, lessons_dir: Path | None = None,
     database_path: Path | None = None, diagnosis_adapter: DiagnosisAdapter | None = None,
+    draft_grading_adapter: DraftGradingAdapter | None = None,
 ) -> FastAPI:
     """Create an app whose curriculum is loaded and validated at startup."""
     repo_root = _default_repo_root()
@@ -232,6 +250,8 @@ def create_app(
 
     app = FastAPI(title="Smalltalk Coach", lifespan=lifespan)
     setup_coaching(app, (lambda: diagnosis_adapter) if diagnosis_adapter is not None else None)
+    app.state.draft_grading_adapter = draft_grading_adapter or AnthropicDraftGradingAdapter()
+    app.state.draft_grading_budget = _draft_grading_budget()
 
     @app.middleware("http")
     async def require_bearer_auth(request: Request, call_next: Callable) -> Any:
@@ -522,6 +542,48 @@ def create_app(
             "completed": True,
             "unlocked_next": _unlocked_lesson_id(curriculum, updated_completed),
         }
+
+    @app.post("/lessons/{lesson_id}/draft-grading")
+    def grade_lesson_draft(
+        lesson_id: str,
+        body: DraftGradingRequest,
+        request: Request,
+    ) -> dict[str, object]:
+        user_id = _require_user_id(body.user_id)
+        curriculum = curriculum_for(request)
+        if lesson_id not in curriculum.lessons_by_id:
+            raise HTTPException(status_code=404, detail="lesson_not_found")
+        if lesson_id not in curriculum.content:
+            raise HTTPException(status_code=404, detail="content_pending")
+        parts = curriculum.content[lesson_id]["completion_check"]["parts"]
+        if not 0 <= body.part_index < len(parts) or parts[body.part_index]["kind"] != "free_draft":
+            raise HTTPException(status_code=422, detail="invalid_part")
+        draft = body.draft.strip()
+        if not draft or len(draft) > _MAX_DRAFT_LENGTH:
+            raise HTTPException(status_code=422, detail="invalid_draft")
+
+        part = parts[body.part_index]
+        try:
+            return grade_draft(
+                request.app.state.draft_grading_adapter,
+                request.app.state.draft_grading_budget,
+                part["prompt"],
+                part["good_answer_demonstrates"],
+                draft,
+            )
+        except BudgetExceededError:
+            resets_at = request.app.state.draft_grading_budget.resets_at(datetime.now(UTC))
+            return JSONResponse(
+                status_code=503,
+                content={
+                    "detail": "draft_grading_budget_exceeded",
+                    "resets_at": resets_at.isoformat(),
+                },
+            )
+        except DraftGradingRefusedError:
+            raise HTTPException(status_code=422, detail="draft_grading_refused") from None
+        except DraftGradingError:
+            raise HTTPException(status_code=502, detail="ai_unavailable") from None
 
     @app.post("/lessons/{lesson_id}/review")
     def review_lesson(

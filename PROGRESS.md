@@ -95,18 +95,26 @@ two are now actionable and scoped below.
      interactive Cmd+U path, not `xcodebuild test` CLI) — **run them
      manually via Xcode's Test navigator before ever flipping the flag
      on.**
-  4. **T-L (scoped): free-draft grading + $5/mo cost ceiling.** Backend:
-     new grading path for `free_draft` completion-check parts reusing
-     the Haiku-locked diagnosis adapter; new in-memory monthly-window
-     cost tracker (same architectural pattern as T-J's coaching rate
-     limiter, `_RateLimiter` in `coaching.py`) computed from real
-     response usage/token counts, hard ceiling $5/month, fails closed
-     with a stable error past the ceiling — never silently ungrades.
-     iOS: `free_draft` parts move from "not submitted, on-device only"
-     to an actual submit-for-feedback flow.
+  4. ~~**T-L (scoped): free-draft grading + $5/mo cost ceiling.**~~ —
+     done (cycle 45). New `backend/app/draft_grading.py`: Haiku-locked
+     grading adapter (reuses `COACHING_MODEL`) plus an in-memory
+     UTC-calendar-month `DraftGradingBudget` (same architectural pattern
+     as T-J's `_RateLimiter`) metering real per-token cost from every
+     API response — including refused/failed attempts, which still cost
+     money — against a hard $5/month ceiling. Budget admission is
+     checked once per grading operation, before any retries; exceeding
+     it fails closed (503, zero API calls made) rather than silently
+     ungrading. `POST /lessons/{id}/draft-grading` serves it. iOS:
+     `free_draft` parts gained an optional "Get feedback" flow
+     (`LessonDetailViewModel.gradeDraft`, 5-state UI) fully orthogonal
+     to lesson completion — completion gating is unchanged.
   Sequenced T-K before T-L: T-K is scoped, low-risk, self-contained
   infrastructure; T-L is new-surface work with a new cost-tracking
   mechanism, closer in nature to a feature build than scaffolding.
+
+  **Both actionable v3 items are now done.** Only the two deferred,
+  founder-gated items remain (real-screenshot vision eval; Anthropic
+  test-key rotation) — neither is reachable from this loop; see above.
 
 **2026-07-18: BUILD MODE — build start approved, scope gate
 lifted.** Founder delegated the go/no-go to the brain (records: root
@@ -268,6 +276,74 @@ items assume. -->
    4 workers → synthesized report) against real CMA.
 
 ## Cycle log
+
+- **2026-07-21 (cycle 45 — T-L: free-draft grading + $5/mo cost ceiling;
+  ONE ROUND, accepted as specified):** Worker: `gpt-5.6-terra`. Backend:
+  `draft_grading.py` mirrors `diagnosis.py`'s adapter/retry structure
+  (lazy client, 3-attempt bounded retry, 5xx/429-retry vs.
+  other-4xx-raise-immediately, refusal never retried) with its own
+  minimal 2-field JSON schema (`met_criteria`, `feedback`) rather than
+  reusing the diagnosis contract, which doesn't fit an open-ended
+  writing exercise. `DraftGradingBudget` is Lock-guarded, resets on UTC
+  calendar-month rollover (December→January verified by test), and the
+  brain's spec called for a specific, easy-to-get-wrong ordering that
+  the worker implemented exactly: budget admission (`has_room`) is
+  checked once before the retry loop begins, but `record_cost` runs
+  immediately after every `adapter.request()` call returns — before
+  parsing or validating the payload — so a refused or malformed
+  response still meters its real cost; only a request that never
+  reaches the provider (budget already exhausted) costs nothing.
+  Verified this specific invariant myself: budget-exceeded makes zero
+  adapter calls (asserted via a call counter), and a refusal both
+  raises `DraftGradingRefusedError` *and* increases recorded spend in
+  the same test. Pricing verified live against
+  `platform.claude.com/docs/en/about-claude/models/overview` the same
+  session before writing the spec — Haiku 4.5 is $1.00/MTok input,
+  $5.00/MTok output, matching the cached skill data with no drift.
+  `POST /lessons/{id}/draft-grading` follows its sibling
+  `/complete`/`/review` endpoints' conventions exactly (404
+  `lesson_not_found`/`content_pending`, 422 for bad part index/kind/
+  draft length) plus new 422 `draft_grading_refused` and 503
+  `draft_grading_budget_exceeded` (with `resets_at`) — deliberately
+  *not* rate-limited like `/coaching/diagnoses`, matching its immediate
+  siblings rather than the differently-shaped coaching router. iOS:
+  `LessonDetailViewModel` gained `draftGradingStates` and `gradeDraft`;
+  `LessonDetailView` gained a conditional "Get feedback" button and a
+  5-state render (idle/grading/graded/budgetExceeded/failed) with
+  copy updated off the old "not submitted" framing. Worker's own test
+  for the `.grading` transition used a `CheckedContinuation` to
+  deterministically suspend the fake adapter and assert the
+  intermediate state — beyond what the spec asked for, and correctly
+  reasoned given that state is otherwise a race to observe. Both new
+  ViewModel tests and the endpoint tests explicitly re-assert
+  `canSubmit`/`submissionAnswers` are byte-for-byte unaffected by
+  draft-grading state, matching the spec's hard orthogonality
+  constraint. Brain verification (own run, not the worker's — worker's
+  sandbox lacked a simulator runtime): backend 128 passed / 1
+  pre-existing unrelated skip (`test_live_smoke.py`, gated on
+  `SMALLTALK_LIVE_SMOKE=1`); iOS 76 passed / 3 pre-existing skips (the
+  T-K StoreKit skips, correctly untouched) / 0 failures, all 3 new
+  tests independently re-run in isolation to confirm; full diff read
+  file-by-file against the spec; fresh build + install + launch on
+  iPhone 16 clean (Home screen renders, no crash) — did not attempt
+  deeper UI-automation navigation into the lesson screen itself
+  (`simctl` has no synthetic-tap primitive; judged the marginal
+  confidence not worth the fragility given compilation success +
+  thorough ViewModel-level state-transition coverage already
+  constrain the residual risk to pure SwiftUI rendering, which a
+  launch-clean build partially covers via shared Codable/Models.swift
+  paths). File scope matched the spec exactly (`diagnosis.py`,
+  `coaching.py`, and all completion-gating logic untouched). ACCEPTED
+  as specified — zero rounds of rejection. **Follow-up flagged by the
+  worker, not yet actioned:** `docs/legal/PRIVACY_POLICY.md`'s
+  Anthropic-disclosure wording currently names conversation
+  text/screenshots but not practice drafts; drafts are now genuinely
+  sent to Anthropic for grading, so this is a real wording gap, not
+  speculative. **Next:** a small, separately-scoped docs-only
+  micro-cycle to close that gap — this is a doc-completeness fix
+  syncing disclosure to founder-approved functionality already shipped
+  in this cycle, not a new product decision, so no founder gate blocks
+  it.
 
 - **2026-07-21 (cycle 44 — T-K: StoreKit 2 paywall infrastructure, flag
   off; FOUR ROUNDS — 3-round cap + one correctly-scoped follow-up):**

@@ -4,6 +4,7 @@ protocol LessonAPI {
     func curriculum() async throws -> CurriculumResponse
     func lesson(id: String) async throws -> Lesson
     func completeLesson(id: String, answers: [String: Int]) async throws -> CompletionResponse
+    func gradeDraft(lessonID: String, partIndex: Int, draft: String) async throws -> DraftGradingResult
 }
 
 protocol StreakAPI {
@@ -209,6 +210,17 @@ struct APIClient: LessonAPI, StreakAPI, ReviewAPI, ProfileAPI, ReflectionAPI, On
 
     func reviewLesson(id: String, answers: [String: Int]) async throws -> CompletionResponse {
         try await submitCompletion(path: "lessons/\(id)/review", answers: answers)
+    }
+
+    func gradeDraft(lessonID: String, partIndex: Int, draft: String) async throws -> DraftGradingResult {
+        let request = DraftGradingRequest(
+            userID: userIdentityStore.userID(), partIndex: partIndex, draft: draft
+        )
+        var urlRequest = URLRequest(url: try url(path: "lessons/\(lessonID)/draft-grading"))
+        urlRequest.httpMethod = "POST"
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        urlRequest.httpBody = try encoder.encode(request)
+        return try await send(urlRequest)
     }
 
     private func submitCompletion(path: String, answers: [String: Int]) async throws -> CompletionResponse {

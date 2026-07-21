@@ -345,3 +345,49 @@ Read by the brain and by every Codex worker at cycle start (see
   self-contained first.
 - **Revisit trigger:** The planning project is archived — remaining
   references to it become historical-only.
+
+### 2026-07-21 — T-L Implemented: Separate Grading Contract, Admit-Once/Meter-Every-Attempt Budget
+
+- **Status:** Confirmed (shipped, cycle 45)
+- **Decision:** `free_draft` grading (product decision:
+  `docs/planning/DECISIONS.md` → "2026-07-21 — T-L Free-Draft Grading
+  Approved, $5/mo Ceiling") does **not** reuse the diagnosis contract
+  (`DIAGNOSIS_SCHEMA`/`validate_diagnosis` in `diagnosis.py`) — a new,
+  minimal 2-field schema (`met_criteria`, `feedback`) in a new
+  `backend/app/draft_grading.py` module instead. The two problems don't
+  share a shape: diagnosis scores four dimensions with turn-indexed,
+  quote-verified evidence against a real conversation; draft grading is
+  "does this one piece of writing demonstrate what's described,"
+  against author-supplied criteria, no turns, no dimensions. Reusing
+  `COACHING_MODEL` (the Haiku-lock constant) is correct and done; reusing
+  the schema/validator would not have been.
+- **Why:** Forcing an ill-fitting shared schema would have meant either
+  padding draft-grading responses with meaningless dimension/turn-index
+  fields, or weakening the diagnosis schema's real invariants to
+  accommodate a different problem. A second small adapter module,
+  mirroring `diagnosis.py`'s adapter/retry structure but with its own
+  contract, was more honest than a forced merge.
+- **Budget semantics (load-bearing, don't "simplify" later):** the
+  monthly $5 ceiling in `DraftGradingBudget` is checked for admission
+  **once**, before a grading operation's retry loop starts — not
+  per-attempt. Real cost is metered from **every** attempt that reaches
+  the provider, including ones that are later refused or fail
+  validation, immediately after the response is obtained and before any
+  parsing. A request blocked by the ceiling makes zero provider calls
+  and costs nothing. This means a burst of concurrent requests right at
+  the boundary can overshoot the ceiling by a small, bounded amount
+  (at most a few in-flight operations' worth) — an accepted tradeoff
+  given ~$0.001–0.003 per draft and low expected call volume, not an
+  oversight.
+- **Consequence:** `POST /lessons/{id}/draft-grading` is deliberately
+  **not** behind the per-user `_RateLimiter` that guards
+  `/coaching/diagnoses` — it follows its immediate REST siblings
+  (`/lessons/{id}/complete`, `/review`), neither of which is
+  rate-limited either. The budget ceiling is the founder-approved
+  protection mechanism for this feature; a second one wasn't asked for
+  and wasn't added.
+- **Revisit trigger:** Real usage data shows the admit-once/meter-every-
+  attempt overshoot is larger than expected, or a future feature wants
+  to reuse `draft_grading.py`'s schema for a different grading shape
+  (don't force it — same reasoning as above applies to that decision
+  too).

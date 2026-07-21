@@ -580,3 +580,18 @@ Entry format (keep an entry under ~15 lines):
   build-for-testing` succeeded. Named iPhone 16 / iOS 18.2 `xcodebuild test` was attempted,
   but CoreSimulatorService refused the connection before XCTest execution; `git diff --check` passed before this append.
 - **Open issues:** Run the three StoreKit purchase-flow tests manually through Xcode's Test navigator before a release; this sandbox cannot run the simulator suite.
+
+## 2026-07-21 11:21 UTC — T-L free-draft grading with monthly cost ceiling
+- **Model:** gpt-5.6-terra
+- **Status:** partial
+- **What was done:** Added the Haiku-locked optional draft-grading adapter, strict response validation,
+  in-memory UTC-month $5 budget guard, and lesson endpoint. Added the iOS feedback flow and focused tests;
+  lesson completion submission remains independent of draft feedback.
+- **Files touched:** backend/app/{draft_grading,main}.py; backend/tests/test_draft_grading.py;
+  ios/SmallTalkCoach/{APIClient,Models,LessonDetailViewModel,LessonDetailView}.swift;
+  ios/SmallTalkCoachTests/SmallTalkCoachTests.swift; WORKER_LOG.md
+- **Result / verification:** `cd backend && source .venv/bin/activate && PYTHONPATH=.. pytest`: 128 passed,
+  1 skipped, 1 warning. `cd ios && xcodegen generate` and generic-simulator `xcodebuild build-for-testing`
+  passed; `git diff --check` passed.
+- **Open issues:** iPhone 16 XCTest could not execute: CoreSimulatorService refused connections and no runtime
+  was available. Privacy policy currently scopes Anthropic sharing to conversation text/screenshots, not practice drafts.

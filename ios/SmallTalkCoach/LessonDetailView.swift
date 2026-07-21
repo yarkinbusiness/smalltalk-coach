@@ -162,7 +162,7 @@ struct LessonDetailView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(part.prompt)
                         .font(.body.weight(.semibold))
-                    Text("Ungraded practice — this draft stays on this device and is not submitted.")
+                    Text("Optional practice — write a draft, then get feedback if you'd like.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     TextEditor(text: Binding(
@@ -172,6 +172,44 @@ struct LessonDetailView: View {
                     .frame(minHeight: 120)
                     .padding(8)
                     .background(.quaternary, in: RoundedRectangle(cornerRadius: 10))
+                    if !(viewModel.freeDrafts[partIndex] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        Button("Get feedback") {
+                            Task { await viewModel.gradeDraft(at: partIndex) }
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(viewModel.draftGradingStates[partIndex] == .grading)
+                    }
+                    switch viewModel.draftGradingStates[partIndex] ?? .idle {
+                    case .idle:
+                        EmptyView()
+                    case .grading:
+                        ProgressView()
+                            .controlSize(.small)
+                    case .graded(let result):
+                        Label {
+                            Text(result.feedback)
+                        } icon: {
+                            Image(systemName: result.metCriteria ? "checkmark.circle.fill" : "info.circle.fill")
+                                .foregroundStyle(result.metCriteria ? .green : .blue)
+                        }
+                        .font(.subheadline)
+                        .padding(10)
+                        .background(.quaternary, in: RoundedRectangle(cornerRadius: 10))
+                    case .budgetExceeded:
+                        Text("Feedback is temporarily unavailable right now. Try again later.")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    case .failed(let message):
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(message)
+                                .font(.subheadline)
+                                .foregroundStyle(.red)
+                            Button("Retry") {
+                                Task { await viewModel.gradeDraft(at: partIndex) }
+                            }
+                            .buttonStyle(.bordered)
+                        }
+                    }
                 }
             }
         }

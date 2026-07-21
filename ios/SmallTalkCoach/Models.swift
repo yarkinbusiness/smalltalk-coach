@@ -796,6 +796,28 @@ struct CompletionRequest: Codable, Equatable {
     }
 }
 
+struct DraftGradingRequest: Codable, Equatable {
+    let userID: String
+    let partIndex: Int
+    let draft: String
+
+    enum CodingKeys: String, CodingKey {
+        case userID = "user_id"
+        case partIndex = "part_index"
+        case draft
+    }
+}
+
+struct DraftGradingResult: Codable, Equatable {
+    let metCriteria: Bool
+    let feedback: String
+
+    enum CodingKeys: String, CodingKey {
+        case metCriteria = "met_criteria"
+        case feedback
+    }
+}
+
 enum JSONValue: Codable, Equatable {
     case string(String)
     case integer(Int)
