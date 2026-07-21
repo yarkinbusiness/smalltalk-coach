@@ -47,8 +47,9 @@ deterministic — no new API calls) and the existing loop protocol.
   7. ~~**T-G** — review/spaced repetition~~ — done (3/7/21 ladder,
      prioritized queue, review mode; L02 nit cleared).
 - **P2 (activation + v1 Must-Haves):**
-  8. **T-H** — onboarding + baseline (BRIEF Flow A), hosts notification
-     opt-in.
+  8. ~~**T-H** — onboarding + baseline (BRIEF Flow A), hosts notification
+     opt-in~~ — done (cycle 35; also completes T-D's deferred
+     "opt-in during onboarding" placement).
   9. **T-I** — privacy policy/ToS, account-wide coaching-data deletion,
      App Store third-party-AI disclosure + Privacy Nutrition Label
      mapping.
@@ -222,6 +223,29 @@ items assume. -->
    4 workers → synthesized report) against real CMA.
 
 ## Cycle log
+
+- **2026-07-21 (cycle 35 — T-H onboarding + baseline; closes the T-D
+  placement caveat):** Worker: `gpt-5.6-terra`, one round, honest
+  partial (sandbox blocks simulator; brain ran tests). Backend:
+  `onboarding` table (INSERT OR REPLACE), POST with stable 422 codes
+  (`invalid_goal`/`invalid_context`/`invalid_baseline`), GET with 404
+  `not_onboarded` and manifest-derived `emphasis` (lowest baseline
+  dimension, DIMENSIONS-order tie-break, first routed lesson from
+  `curriculum.routing` — no hardcoded ids); 5 new tests. iOS:
+  `OnboardingView` 4-step skippable flow (goal/context/baseline/
+  reminder opt-in reusing ReminderSettingsViewModel — **the T-D
+  "opt-in during onboarding" acceptance item is now properly placed**),
+  `OnboardingStateStore` (skip and finish both permanent), full-screen
+  cover from RootView, POST-failure non-blocking, Today card emphasis
+  line from a concurrent non-blocking fetch; 6 new tests. Brain
+  verification: **97 backend passed, 1 skipped** + **57 XCTests, 0
+  failures** (own runs); fresh-install simulator launch shows the
+  onboarding welcome step (screenshot-verified; first frame was the
+  cover transition on a cold-booted simulator). ACCEPTED. This cycle
+  ran under the audit-response plan (see the 2026-07-21 audit note
+  below). **Next:** truth-sync cycle (audit items: VISION.md
+  re-annotation, T-G deviation record, protocol amendment, answer-index
+  audit test).
 
 - **2026-07-21 (cycle 34 — T-G iOS: review mode; T-G COMPLETE — P1 TIER
   COMPLETE):** Worker: `gpt-5.6-terra`, one round. LessonDetail gains a

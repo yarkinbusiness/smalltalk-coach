@@ -15,7 +15,7 @@ from pydantic import BaseModel
 
 from .content import Curriculum, load_curriculum
 from .coaching import setup_coaching
-from .diagnosis import DiagnosisAdapter
+from .diagnosis import DIMENSIONS, DiagnosisAdapter
 from .profile import build_profile
 from .review import build_review_queue
 from .streak import compute_streak, parse_activity_timestamp
@@ -32,6 +32,12 @@ class ReflectionRequest(BaseModel):
     subject_id: str
     outcome: str
     note: object = ""
+
+
+class OnboardingRequest(BaseModel):
+    goal: object = None
+    context: object = None
+    baseline: object = None
 
 
 def _default_repo_root() -> Path:
@@ -110,6 +116,33 @@ def _review_priority_dimension(profile: dict[str, object]) -> str | None:
             priority = dimension
             highest_count = flagged_count
     return priority
+
+
+def _onboarding_emphasis(
+    curriculum: Curriculum, baseline: dict[str, int]
+) -> dict[str, str]:
+    """Choose the lowest self-rating in the diagnosis dimension order."""
+    dimension = min(DIMENSIONS, key=lambda item: baseline[item])
+    routed_ids = set(curriculum.routing[dimension])
+    lesson = next(lesson for lesson in curriculum.lessons if lesson["id"] in routed_ids)
+    return {
+        "dimension": dimension,
+        "lesson_id": lesson["id"],
+        "title": lesson["title"],
+    }
+
+
+def _validated_onboarding_baseline(value: object) -> dict[str, int]:
+    if not isinstance(value, dict) or set(value) != set(DIMENSIONS):
+        raise HTTPException(status_code=422, detail="invalid_baseline")
+    if any(
+        not isinstance(value[dimension], int)
+        or isinstance(value[dimension], bool)
+        or not 1 <= value[dimension] <= 5
+        for dimension in DIMENSIONS
+    ):
+        raise HTTPException(status_code=422, detail="invalid_baseline")
+    return {dimension: value[dimension] for dimension in DIMENSIONS}
 
 
 def _review_queue_for(
@@ -291,6 +324,47 @@ def create_app(
         user_id = _require_user_id(user_id)
         store = progress_store_for(request)
         return _profile_for(store, user_id, curriculum_for(request))
+
+    @app.post("/users/{user_id}/onboarding", status_code=201)
+    def create_onboarding(
+        user_id: str,
+        body: OnboardingRequest,
+        request: Request,
+    ) -> dict[str, str]:
+        user_id = _require_user_id(user_id)
+        if not isinstance(body.goal, str) or body.goal not in {
+            "meet_people_at_work",
+            "make_friends_on_campus",
+            "confident_at_events",
+            "keep_conversations_going",
+        }:
+            raise HTTPException(status_code=422, detail="invalid_goal")
+        if not isinstance(body.context, str) or body.context not in {"office", "campus", "other"}:
+            raise HTTPException(status_code=422, detail="invalid_context")
+        baseline = _validated_onboarding_baseline(body.baseline)
+        created_at = progress_store_for(request).save_onboarding(
+            user_id=user_id,
+            goal=body.goal,
+            context=body.context,
+            baseline=baseline,
+        )
+        return {"created_at": created_at}
+
+    @app.get("/users/{user_id}/onboarding")
+    def get_onboarding(user_id: str, request: Request) -> dict[str, object]:
+        user_id = _require_user_id(user_id)
+        record = progress_store_for(request).onboarding(user_id)
+        if record is None:
+            raise HTTPException(status_code=404, detail="not_onboarded")
+        baseline = record["baseline"]
+        if not isinstance(baseline, dict):
+            raise RuntimeError("stored onboarding baseline is invalid")
+        return {
+            "goal": record["goal"],
+            "context": record["context"],
+            "baseline": baseline,
+            "emphasis": _onboarding_emphasis(curriculum_for(request), baseline),
+        }
 
     @app.post("/users/{user_id}/reflections", status_code=201)
     def create_reflection(

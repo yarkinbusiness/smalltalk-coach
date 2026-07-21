@@ -20,4 +20,5 @@ Endpoints include `GET /curriculum?user_id=...`, lesson reads, completions,
 and review submissions, the coaching routes, `GET /users/{user_id}/streak?tz=<IANA timezone>`,
 `GET /users/{user_id}/review-queue?tz=<IANA timezone>`, and
 `GET /users/{user_id}/profile`, plus reflection creation and history at
-`POST`/`GET /users/{user_id}/reflections`.
+`POST`/`GET /users/{user_id}/reflections`, and onboarding at
+`POST`/`GET /users/{user_id}/onboarding`.

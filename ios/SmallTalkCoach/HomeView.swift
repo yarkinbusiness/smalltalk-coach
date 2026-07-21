@@ -2,8 +2,9 @@ import SwiftUI
 
 struct HomeView: View {
     @Environment(\.scenePhase) private var scenePhase
+    @AppStorage(OnboardingStateStore.hasCompletedOnboardingKey) private var hasCompletedOnboarding = false
     @StateObject private var viewModel = CurriculumViewModel()
-    @StateObject private var todayViewModel = TodayViewModel()
+    @StateObject private var todayViewModel = TodayViewModel(onboardingClient: APIClient())
     @StateObject private var profileViewModel = ProfileViewModel()
     @StateObject private var reflectionPromptViewModel = ReflectionPromptViewModel()
 
@@ -45,6 +46,11 @@ struct HomeView: View {
         .onChange(of: reflectionPromptViewModel.didSubmit) { _, didSubmit in
             if didSubmit {
                 Task { await refreshHome() }
+            }
+        }
+        .onChange(of: hasCompletedOnboarding) { _, hasCompleted in
+            if hasCompleted {
+                Task { await todayViewModel.load() }
             }
         }
         .sheet(isPresented: $reflectionPromptViewModel.isPresented) {

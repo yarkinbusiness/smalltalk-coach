@@ -11,6 +11,79 @@ struct HealthResponse: Codable, Equatable {
     }
 }
 
+enum OnboardingGoal: String, Codable, CaseIterable, Equatable, Identifiable {
+    case meetPeopleAtWork = "meet_people_at_work"
+    case makeFriendsOnCampus = "make_friends_on_campus"
+    case confidentAtEvents = "confident_at_events"
+    case keepConversationsGoing = "keep_conversations_going"
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .meetPeopleAtWork: return "Meet people at work"
+        case .makeFriendsOnCampus: return "Make friends on campus"
+        case .confidentAtEvents: return "Feel confident at events"
+        case .keepConversationsGoing: return "Keep conversations going"
+        }
+    }
+}
+
+enum OnboardingContext: String, Codable, CaseIterable, Equatable, Identifiable {
+    case office
+    case campus
+    case other
+
+    var id: String { rawValue }
+
+    var label: String {
+        switch self {
+        case .office: return "Mostly office"
+        case .campus: return "Mostly campus"
+        case .other: return "Somewhere else"
+        }
+    }
+}
+
+struct OnboardingBaseline: Codable, Equatable {
+    let warmth: Int
+    let curiosity: Int
+    let reciprocity: Int
+    let flow: Int
+}
+
+struct OnboardingRequest: Codable, Equatable {
+    let goal: OnboardingGoal
+    let context: OnboardingContext
+    let baseline: OnboardingBaseline
+}
+
+struct OnboardingCreated: Codable, Equatable {
+    let createdAt: String
+
+    enum CodingKeys: String, CodingKey {
+        case createdAt = "created_at"
+    }
+}
+
+struct OnboardingEmphasis: Codable, Equatable {
+    let dimension: String
+    let lessonID: String
+    let title: String
+
+    enum CodingKeys: String, CodingKey {
+        case dimension, title
+        case lessonID = "lesson_id"
+    }
+}
+
+struct OnboardingResponse: Codable, Equatable {
+    let goal: OnboardingGoal
+    let context: OnboardingContext
+    let baseline: OnboardingBaseline
+    let emphasis: OnboardingEmphasis?
+}
+
 struct CoachingDiagnosisRequest: Codable, Equatable {
     let userID: String
     let consentToProcess: Bool

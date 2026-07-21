@@ -444,3 +444,11 @@ Entry format (keep an entry under ~15 lines):
   and `git diff --check` passed. iPhone 16 destination build/XCTest were blocked by CoreSimulatorService
   connection refusal and no available runtimes.
 - **Open issues:** Run XCTest on a host with a working iPhone 16 simulator service.
+
+## 2026-07-20 22:21 UTC — T-H onboarding + baseline (Flow A), backend + iOS
+- **Model:** gpt-5.6-terra
+- **Status:** partial
+- **What was done:** Added deterministic onboarding persistence/API emphasis routing and the one-time four-step iOS flow with optional reminders, non-blocking submission, and Today focus copy.
+- **Files touched:** backend/app/store.py; backend/app/main.py; backend/tests/test_onboarding.py; backend/README.md; ios/SmallTalkCoach/{OnboardingView,Models,APIClient,TodayCard,HomeView,RootView}.swift; ios/SmallTalkCoachTests/SmallTalkCoachTests.swift; WORKER_LOG.md
+- **Result / verification:** `backend/.venv/bin/python -m pytest backend/tests -q`: 97 passed, 1 skipped; `xcodegen generate` and generic simulator `xcodebuild build-for-testing` succeeded; `git diff --check` passed.
+- **Open issues:** Named iPhone 16 build/XCTest could not execute because CoreSimulatorService had no available simulator runtime.

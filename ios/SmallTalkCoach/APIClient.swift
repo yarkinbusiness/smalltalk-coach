@@ -23,6 +23,11 @@ protocol ReflectionAPI {
     func submitReflection(subjectKind: String, subjectID: String, outcome: ReflectionOutcome, note: String) async throws -> ReflectionCreated
 }
 
+protocol OnboardingAPI {
+    func submitOnboarding(_ request: OnboardingRequest) async throws -> OnboardingCreated
+    func onboarding() async throws -> OnboardingResponse?
+}
+
 protocol CoachingAPI {
     func health() async throws -> HealthResponse
     func diagnose(text: String, consentToProcess: Bool) async throws -> CoachingDiagnosisResponse
@@ -103,7 +108,7 @@ enum APIClientError: LocalizedError {
     }
 }
 
-struct APIClient: LessonAPI, StreakAPI, ReviewAPI, ProfileAPI, ReflectionAPI, CoachingAPI {
+struct APIClient: LessonAPI, StreakAPI, ReviewAPI, ProfileAPI, ReflectionAPI, OnboardingAPI, CoachingAPI {
     private let session: URLSession
     private let configuration: APIConfiguration
     private let userIdentityStore: UserIdentityStore
@@ -146,6 +151,22 @@ struct APIClient: LessonAPI, StreakAPI, ReviewAPI, ProfileAPI, ReflectionAPI, Co
 
     func profile() async throws -> ProfileResponse {
         try await send(path: "users/\(userIdentityStore.userID())/profile")
+    }
+
+    func submitOnboarding(_ request: OnboardingRequest) async throws -> OnboardingCreated {
+        var urlRequest = URLRequest(url: try url(path: "users/\(userIdentityStore.userID())/onboarding"))
+        urlRequest.httpMethod = "POST"
+        urlRequest.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        urlRequest.httpBody = try encoder.encode(request)
+        return try await send(urlRequest)
+    }
+
+    func onboarding() async throws -> OnboardingResponse? {
+        do {
+            return try await send(path: "users/\(userIdentityStore.userID())/onboarding")
+        } catch APIClientError.server(statusCode: 404, detail: _) {
+            return nil
+        }
     }
 
     func submitReflection(subjectKind: String, subjectID: String, outcome: ReflectionOutcome, note: String) async throws -> ReflectionCreated {

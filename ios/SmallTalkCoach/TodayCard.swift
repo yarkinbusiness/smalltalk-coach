@@ -17,19 +17,23 @@ final class TodayViewModel: ObservableObject {
 
     @Published private(set) var streak: StreakResponse?
     @Published private(set) var reviewQueue: ReviewQueueResponse?
+    @Published private(set) var onboarding: OnboardingResponse?
     @Published private(set) var phase: Phase = .idle
 
     private let client: any StreakAPI
     private let reviewClient: any ReviewAPI
+    private let onboardingClient: (any OnboardingAPI)?
     let reminderScheduler: any ReminderScheduling
 
     init(
         client: any StreakAPI = APIClient(),
         reviewClient: any ReviewAPI = APIClient(),
+        onboardingClient: (any OnboardingAPI)? = nil,
         reminderScheduler: any ReminderScheduling = LocalReminderScheduler()
     ) {
         self.client = client
         self.reviewClient = reviewClient
+        self.onboardingClient = onboardingClient
         self.reminderScheduler = reminderScheduler
     }
 
@@ -39,7 +43,8 @@ final class TodayViewModel: ObservableObject {
         phase = .loading
         async let streakResult = fetchStreak()
         async let reviewQueueResult = fetchReviewQueue()
-        let (loadedStreak, loadedReviewQueue) = await (streakResult, reviewQueueResult)
+        async let onboardingResult = fetchOnboarding()
+        let (loadedStreak, loadedReviewQueue, loadedOnboarding) = await (streakResult, reviewQueueResult, onboardingResult)
 
         switch loadedStreak {
         case .success(let streak):
@@ -51,6 +56,15 @@ final class TodayViewModel: ObservableObject {
 
         if case .success(let reviewQueue) = loadedReviewQueue {
             self.reviewQueue = reviewQueue
+        }
+
+        if let loadedOnboarding {
+            switch loadedOnboarding {
+            case .success(let onboarding):
+                self.onboarding = onboarding
+            case .failure:
+                self.onboarding = nil
+            }
         }
     }
 
@@ -65,6 +79,15 @@ final class TodayViewModel: ObservableObject {
     private func fetchReviewQueue() async -> Result<ReviewQueueResponse, Error> {
         do {
             return .success(try await reviewClient.reviewQueue(timezoneIdentifier: TimeZone.current.identifier))
+        } catch {
+            return .failure(error)
+        }
+    }
+
+    private func fetchOnboarding() async -> Result<OnboardingResponse?, Error>? {
+        guard let onboardingClient else { return nil }
+        do {
+            return .success(try await onboardingClient.onboarding())
         } catch {
             return .failure(error)
         }
@@ -175,6 +198,12 @@ struct TodayCard: View {
             }
 
             targetLine
+
+            if let emphasis = viewModel.onboarding?.emphasis {
+                Text("Your focus: \(emphasis.dimension.capitalized) — \(emphasis.title) will matter most")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
 
             if case .loading = viewModel.phase, viewModel.streak == nil {
                 ProgressView()
@@ -288,33 +317,41 @@ private struct ReminderSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                Toggle("Daily practice reminder", isOn: Binding(
+                ReminderSettingsControls(viewModel: viewModel)
+            }
+            .navigationTitle("Reminder")
+            .navigationBarTitleDisplayMode(.inline)
+        }
+    }
+}
+
+struct ReminderSettingsControls: View {
+    @ObservedObject var viewModel: ReminderSettingsViewModel
+
+    var body: some View {
+        Toggle("Daily practice reminder", isOn: Binding(
                     get: { viewModel.isEnabled },
                     set: { enabled in
                         Task { await viewModel.setEnabled(enabled) }
                     }
                 ))
 
-                DatePicker(
-                    "Reminder time",
-                    selection: Binding(
-                        get: { viewModel.selectedTime },
-                        set: { time in
-                            Task { await viewModel.setTime(time) }
-                        }
-                    ),
-                    displayedComponents: .hourAndMinute
-                )
-                .disabled(!viewModel.isEnabled)
-
-                if viewModel.authorizationDenied {
-                    Text("Enable notifications in Settings")
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
+        DatePicker(
+            "Reminder time",
+            selection: Binding(
+                get: { viewModel.selectedTime },
+                set: { time in
+                    Task { await viewModel.setTime(time) }
                 }
-            }
-            .navigationTitle("Reminder")
-            .navigationBarTitleDisplayMode(.inline)
+            ),
+            displayedComponents: .hourAndMinute
+        )
+        .disabled(!viewModel.isEnabled)
+
+        if viewModel.authorizationDenied {
+            Text("Enable notifications in Settings")
+                .font(.footnote)
+                .foregroundStyle(.secondary)
         }
     }
 }

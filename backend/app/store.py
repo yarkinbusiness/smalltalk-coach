@@ -68,7 +68,57 @@ class ProgressStore:
             )
             """
         )
+        connection.execute(
+            """
+            CREATE TABLE IF NOT EXISTS onboarding (
+                user_id TEXT PRIMARY KEY,
+                goal TEXT NOT NULL,
+                context TEXT NOT NULL,
+                baseline_json TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            )
+            """
+        )
         return connection
+
+    def save_onboarding(
+        self,
+        *,
+        user_id: str,
+        goal: str,
+        context: str,
+        baseline: dict[str, int],
+    ) -> str:
+        """Persist a user's latest deterministic onboarding choices."""
+        created_at = datetime.now(UTC).isoformat()
+        with closing(self._connect()) as connection:
+            with connection:
+                connection.execute(
+                    """
+                    INSERT OR REPLACE INTO onboarding
+                    (user_id, goal, context, baseline_json, created_at)
+                    VALUES (?, ?, ?, ?, ?)
+                    """,
+                    (user_id, goal, context, json.dumps(baseline), created_at),
+                )
+        return created_at
+
+    def onboarding(self, user_id: str) -> dict[str, Any] | None:
+        """Return a user's stored onboarding choices, if they have any."""
+        with closing(self._connect()) as connection:
+            connection.row_factory = sqlite3.Row
+            row = connection.execute(
+                """
+                SELECT goal, context, baseline_json, created_at
+                FROM onboarding WHERE user_id = ?
+                """,
+                (user_id,),
+            ).fetchone()
+        if row is None:
+            return None
+        result = dict(row)
+        result["baseline"] = json.loads(result.pop("baseline_json"))
+        return result
 
     def completed_lesson_ids(self, user_id: str) -> set[str]:
         with closing(self._connect()) as connection:

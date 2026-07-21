@@ -62,6 +62,113 @@ final class SmallTalkCoachTests: XCTestCase {
         defaults.removePersistentDomain(forName: suiteName)
     }
 
+    func testOnboardingModelsDecodeBackendContract() throws {
+        let fixture = """
+        {
+          "goal": "meet_people_at_work", "context": "office",
+          "baseline": {"warmth": 4, "curiosity": 2, "reciprocity": 3, "flow": 3},
+          "emphasis": {"dimension": "curiosity", "lesson_id": "l03-easy-first-question", "title": "Ask an easy first question"}
+        }
+        """
+
+        let response = try JSONDecoder().decode(OnboardingResponse.self, from: Data(fixture.utf8))
+
+        XCTAssertEqual(response.goal, .meetPeopleAtWork)
+        XCTAssertEqual(response.context, .office)
+        XCTAssertEqual(response.baseline.curiosity, 2)
+        XCTAssertEqual(response.emphasis?.lessonID, "l03-easy-first-question")
+    }
+
+    @MainActor
+    func testOnboardingStateFreshSuiteSkipAndFinishPersist() async throws {
+        let suiteName = "OnboardingState-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        let skippedStore = OnboardingStateStore(defaults: defaults, key: "skipped")
+        XCTAssertFalse(skippedStore.hasCompletedOnboarding)
+        let skippedViewModel = OnboardingViewModel(client: StubOnboardingAPI(), stateStore: skippedStore)
+        skippedViewModel.skip()
+        XCTAssertTrue(OnboardingStateStore(defaults: defaults, key: "skipped").hasCompletedOnboarding)
+
+        let completedStore = OnboardingStateStore(defaults: defaults, key: "completed")
+        let completedViewModel = OnboardingViewModel(client: StubOnboardingAPI(), stateStore: completedStore)
+        completedViewModel.select(goal: .meetPeopleAtWork)
+        completedViewModel.advance()
+        completedViewModel.select(context: .office)
+        completedViewModel.advance()
+        completedViewModel.advance()
+        let completedSubmissionFailed = await completedViewModel.submit()
+        XCTAssertFalse(completedSubmissionFailed)
+        XCTAssertTrue(OnboardingStateStore(defaults: defaults, key: "completed").hasCompletedOnboarding)
+    }
+
+    @MainActor
+    func testOnboardingViewModelProgressesAndPostsExactPayload() async {
+        let suiteName = "OnboardingPayload-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let client = StubOnboardingAPI(submitResult: .success(OnboardingCreated(createdAt: "2026-07-21T00:00:00+00:00")))
+        let viewModel = OnboardingViewModel(
+            client: client,
+            stateStore: OnboardingStateStore(defaults: defaults)
+        )
+
+        XCTAssertEqual(viewModel.step, .goal)
+        viewModel.select(goal: .keepConversationsGoing)
+        viewModel.advance()
+        XCTAssertEqual(viewModel.step, .context)
+        viewModel.select(context: .other)
+        viewModel.advance()
+        viewModel.setRating(5, for: "warmth")
+        viewModel.setRating(2, for: "curiosity")
+        viewModel.setRating(4, for: "reciprocity")
+        viewModel.setRating(1, for: "flow")
+        viewModel.advance()
+        XCTAssertEqual(viewModel.step, .reminder)
+
+        let submissionFailed = await viewModel.submit()
+        XCTAssertFalse(submissionFailed)
+        XCTAssertEqual(client.requests, [OnboardingRequest(
+            goal: .keepConversationsGoing,
+            context: .other,
+            baseline: OnboardingBaseline(warmth: 5, curiosity: 2, reciprocity: 4, flow: 1)
+        )])
+    }
+
+    @MainActor
+    func testOnboardingSkipPostsNothing() {
+        let suiteName = "OnboardingSkip-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let client = StubOnboardingAPI()
+        let viewModel = OnboardingViewModel(client: client, stateStore: OnboardingStateStore(defaults: defaults))
+
+        viewModel.skip()
+
+        XCTAssertTrue(client.requests.isEmpty)
+        XCTAssertTrue(OnboardingStateStore(defaults: defaults).hasCompletedOnboarding)
+    }
+
+    @MainActor
+    func testOnboardingSubmissionFailureStillCompletesLocally() async {
+        let suiteName = "OnboardingFailure-\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let client = StubOnboardingAPI(submitResult: .failure(StubError.offline))
+        let stateStore = OnboardingStateStore(defaults: defaults)
+        let viewModel = OnboardingViewModel(client: client, stateStore: stateStore)
+        viewModel.select(goal: .meetPeopleAtWork)
+        viewModel.advance()
+        viewModel.select(context: .office)
+
+        let submissionFailed = await viewModel.submit()
+
+        XCTAssertTrue(submissionFailed)
+        XCTAssertTrue(stateStore.hasCompletedOnboarding)
+        XCTAssertEqual(client.requests.count, 1)
+    }
+
     func testCompletionRequestEncodesBackendShape() throws {
         let request = CompletionRequest(
             userID: "b4f4497c-3c87-4f86-a77b-706c1b9dfa8e",
@@ -553,6 +660,29 @@ final class SmallTalkCoachTests: XCTestCase {
         XCTAssertEqual(viewModel.phase, .loaded)
         XCTAssertEqual(viewModel.streak, response)
         XCTAssertEqual(viewModel.dueLessons, [due])
+    }
+
+    @MainActor
+    func testTodayViewModelHasNoEmphasisWhenOnboardingIsNotFound() async {
+        let streak = StreakResponse(
+            streakDays: 0,
+            activeToday: false,
+            freezes: 0,
+            today: TodayTarget(kind: "lesson", lessonID: "l01-first-hello", title: "First hello", unitID: "u1")
+        )
+        let streakClient = StubStreakAPI(result: .success(streak), reviewQueueResult: .success(ReviewQueueResponse(due: [])))
+        let onboardingClient = StubOnboardingAPI(onboardingResult: .success(nil))
+        let viewModel = TodayViewModel(
+            client: streakClient,
+            reviewClient: streakClient,
+            onboardingClient: onboardingClient,
+            reminderScheduler: StubReminderScheduler()
+        )
+
+        await viewModel.load()
+
+        XCTAssertEqual(viewModel.phase, .loaded)
+        XCTAssertNil(viewModel.onboarding)
     }
 
     @MainActor
@@ -1208,6 +1338,29 @@ private final class StubProfileAPI: ProfileAPI {
 
     func profile() async throws -> ProfileResponse {
         try result.get()
+    }
+}
+
+private final class StubOnboardingAPI: OnboardingAPI {
+    var submitResult: Result<OnboardingCreated, Error>
+    var onboardingResult: Result<OnboardingResponse?, Error>
+    var requests: [OnboardingRequest] = []
+
+    init(
+        submitResult: Result<OnboardingCreated, Error> = .success(OnboardingCreated(createdAt: "created")),
+        onboardingResult: Result<OnboardingResponse?, Error> = .success(nil)
+    ) {
+        self.submitResult = submitResult
+        self.onboardingResult = onboardingResult
+    }
+
+    func submitOnboarding(_ request: OnboardingRequest) async throws -> OnboardingCreated {
+        requests.append(request)
+        return try submitResult.get()
+    }
+
+    func onboarding() async throws -> OnboardingResponse? {
+        try onboardingResult.get()
     }
 }
 
